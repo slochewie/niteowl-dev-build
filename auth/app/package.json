@@ -1,8 +1,13 @@
 {
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "@better-auth/api-key": "^1.6.25",
     "@better-auth/redis-storage": "^1.6.25",
     "better-auth": "^1.6.25",
+    "express": "^5.1.0",
     "ioredis": "^5.11.1",
     "pg": "^8.22.0"
   }

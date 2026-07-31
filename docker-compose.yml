@@ -3,7 +3,6 @@ name: niteowl-dev
 services:
   postgres:
     image: postgres:18
-#    container_name: niteowl-dev-postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -21,7 +20,6 @@ services:
 
   redis:
     image: redis:8-alpine
-#    container_name: niteowl-dev-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
     volumes:
@@ -49,27 +47,27 @@ services:
       - './node-upstream/app:/app'
     restart: unless-stopped
     networks: [niteowl-dev]
-#    environment:
-#      - 'UID=${UID}'
-#      - 'GID=${GID}'
 
   auth:
     image: 'node:26-trixie'
     working_dir: /app
-    command:
-      - sleep
-      - infinity
+    command: ["npm", "start"]
+#    command:
+#      - sleep
+#      - infinity
     stdin_open: true
     tty: true
     volumes:
       - './auth/app:/app'
     restart: unless-stopped
     networks: [niteowl-dev]
+    ports:
+      - "3031:3000"
     environment:
       NODE_ENV: ${NODE_ENV}
-      PORT: 3000
-      PGHOST: postgres
-      PGPORT: 5432
+      PORT: ${PORT}
+      PGHOST: ${PGHOST}
+      PGPORT: ${PGPORT}
       PGDATABASE: ${POSTGRES_DB}
       PGUSER: ${POSTGRES_USER}
       PGPASSWORD: ${POSTGRES_PASSWORD}
@@ -92,11 +90,13 @@ services:
       - './admin/app:/app'
     restart: unless-stopped
     networks: [niteowl-dev]
+    ports:
+      - "3030:3000"
     environment:
       NODE_ENV: ${NODE_ENV}
-      PORT: 3000
-      PGHOST: postgres
-      PGPORT: 5432
+      PORT: ${PORT}
+      PGHOST: ${PGHOST}
+      PGPORT: ${PGPORT}
       PGDATABASE: ${POSTGRES_DB}
       PGUSER: ${POSTGRES_USER}
       PGPASSWORD: ${POSTGRES_PASSWORD}
