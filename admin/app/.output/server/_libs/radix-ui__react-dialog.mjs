@@ -282,17 +282,22 @@ var DialogClose = /* @__PURE__ */ React.forwardRef(
     );
   }, "DialogClose")
 );
+var WarningProvider = /* @__PURE__ */ __name((props) => {
+  return props.children;
+}, "WarningProvider");
 function getState(open) {
   return open ? "open" : "closed";
 }
 __name(getState, "getState");
 export {
   Dialog as D,
-  DialogContent as a,
-  DialogClose as b,
-  DialogTitle as c,
-  DialogDescription as d,
-  DialogPortal as e,
-  DialogOverlay as f,
-  DialogTrigger as g
+  WarningProvider as W,
+  DialogPortal as a,
+  DialogOverlay as b,
+  DialogContent as c,
+  DialogTrigger as d,
+  DialogTitle as e,
+  DialogClose as f,
+  DialogDescription as g,
+  createDialogScope as h
 };

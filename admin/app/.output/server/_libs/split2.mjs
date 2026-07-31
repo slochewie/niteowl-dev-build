@@ -1,5 +1,5 @@
-import require$$0 from "stream";
 import require$$1 from "string_decoder";
+import require$$0 from "stream";
 var split2;
 var hasRequiredSplit2;
 function requireSplit2() {

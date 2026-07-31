@@ -1,0 +1,1 @@
+import{I as u}from"./infiniteQueryObserver-BDY_2Wkc.js";import{u as s,d as n}from"./useBaseQuery-Cd63ip7r.js";function a(r,e){return s({...r,enabled:!0,suspense:!0,throwOnError:n},u,e)}export{a as u};

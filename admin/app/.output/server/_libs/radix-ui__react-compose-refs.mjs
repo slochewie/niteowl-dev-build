@@ -39,5 +39,6 @@ function useComposedRefs(...refs) {
 }
 __name(useComposedRefs, "useComposedRefs");
 export {
+  composeRefs as c,
   useComposedRefs as u
 };

@@ -15,6 +15,15 @@ export default defineConfig({
     ],
   },
 
+  ssr: {
+    noExternal: [
+      "@btst/stack",
+      "@btst/better-auth-ui",
+      "@tanstack/react-query",
+      "@tanstack/query-core",
+    ],
+  },
+
   plugins: [
     tailwindcss(),
     tsconfigPaths(),

@@ -1,4 +1,4 @@
-import { c as computePosition, o as offset$1, s as shift$1, f as flip$1, a as size$1, h as hide$1, b as arrow$2, l as limitShift$1 } from "./floating-ui__dom.mjs";
+import { c as computePosition, o as offset$1, s as shift$1, f as flip$1, b as size$1, h as hide$1, d as arrow$2, l as limitShift$1 } from "./floating-ui__dom.mjs";
 import * as React from "react";
 import { useLayoutEffect } from "react";
 import * as ReactDOM from "react-dom";

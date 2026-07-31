@@ -1,12 +1,12 @@
-import require$$0$2 from "events";
+import require$$0$1 from "events";
 import require$$1$1 from "util/types";
-import require$$0 from "crypto";
-import require$$0$1 from "dns";
-import require$$0$3 from "net";
+import require$$0 from "dns";
+import require$$0$2 from "net";
 import require$$1$2 from "tls";
 import { c as commonjsGlobal, g as getAugmentedNamespace, a as getDefaultExportFromCjs } from "./react.mjs";
 import { r as requirePgTypes } from "./pg-types.mjs";
-import require$$0$4 from "util";
+import require$$0$3 from "util";
+import crypto from "crypto";
 import { r as requirePgConnectionString } from "./pg-connection-string.mjs";
 import { r as requireDist } from "./pg-protocol.mjs";
 import { r as requireEmpty } from "./pg-cloudflare.mjs";
@@ -237,7 +237,7 @@ var hasRequiredUtils;
 function requireUtils() {
   if (hasRequiredUtils) return utils;
   hasRequiredUtils = 1;
-  const nodeCrypto = require$$0;
+  const nodeCrypto = crypto;
   utils = {
     postgresMd5PasswordHash,
     randomBytes,
@@ -403,7 +403,7 @@ var hasRequiredSasl;
 function requireSasl() {
   if (hasRequiredSasl) return sasl;
   hasRequiredSasl = 1;
-  const crypto = requireUtils();
+  const crypto2 = requireUtils();
   const { signatureAlgorithmHashFromCertificate } = requireCertSignatures();
   function saslprep(password) {
     const nonAsciiSpace = /[\u00A0\u1680\u2000-\u200B\u202F\u205F\u3000]/g;
@@ -421,7 +421,7 @@ function requireSasl() {
     if (mechanism === "SCRAM-SHA-256-PLUS" && typeof stream2.getPeerCertificate !== "function") {
       throw new Error("SASL: Mechanism SCRAM-SHA-256-PLUS requires a certificate");
     }
-    const clientNonce = crypto.randomBytes(18).toString("base64");
+    const clientNonce = crypto2.randomBytes(18).toString("base64");
     const gs2Header = mechanism === "SCRAM-SHA-256-PLUS" ? "p=tls-server-end-point" : stream2 ? "y" : "n";
     return {
       mechanism,
@@ -463,20 +463,20 @@ function requireSasl() {
       const peerCert = stream2.getPeerCertificate().raw;
       let hashName = signatureAlgorithmHashFromCertificate(peerCert);
       if (hashName === "MD5" || hashName === "SHA-1") hashName = "SHA-256";
-      const certHash = await crypto.hashByName(hashName, peerCert);
+      const certHash = await crypto2.hashByName(hashName, peerCert);
       const bindingData = Buffer.concat([Buffer.from("p=tls-server-end-point,,"), Buffer.from(certHash)]);
       channelBinding = bindingData.toString("base64");
     }
     const clientFinalMessageWithoutProof = "c=" + channelBinding + ",r=" + sv.nonce;
     const authMessage = clientFirstMessageBare + "," + serverFirstMessage + "," + clientFinalMessageWithoutProof;
     const saltBytes = Buffer.from(sv.salt, "base64");
-    const saltedPassword = await crypto.deriveKey(saslprep(password), saltBytes, sv.iteration);
-    const clientKey = await crypto.hmacSha256(saltedPassword, "Client Key");
-    const storedKey = await crypto.sha256(clientKey);
-    const clientSignature = await crypto.hmacSha256(storedKey, authMessage);
+    const saltedPassword = await crypto2.deriveKey(saslprep(password), saltBytes, sv.iteration);
+    const clientKey = await crypto2.hmacSha256(saltedPassword, "Client Key");
+    const storedKey = await crypto2.sha256(clientKey);
+    const clientSignature = await crypto2.hmacSha256(storedKey, authMessage);
     const clientProof = xorBuffers(Buffer.from(clientKey), Buffer.from(clientSignature)).toString("base64");
-    const serverKey = await crypto.hmacSha256(saltedPassword, "Server Key");
-    const serverSignatureBytes = await crypto.hmacSha256(serverKey, authMessage);
+    const serverKey = await crypto2.hmacSha256(saltedPassword, "Server Key");
+    const serverSignatureBytes = await crypto2.hmacSha256(serverKey, authMessage);
     session.message = "SASLResponse";
     session.serverSignature = Buffer.from(serverSignatureBytes).toString("base64");
     session.response = clientFinalMessageWithoutProof + ",p=" + clientProof;
@@ -623,7 +623,7 @@ var hasRequiredConnectionParameters;
 function requireConnectionParameters() {
   if (hasRequiredConnectionParameters) return connectionParameters;
   hasRequiredConnectionParameters = 1;
-  const dns = require$$0$1;
+  const dns = require$$0;
   const defaults2 = requireDefaults();
   const parse = requirePgConnectionString().parse;
   const val = function(key, config, envVar) {
@@ -865,7 +865,7 @@ var hasRequiredQuery$1;
 function requireQuery$1() {
   if (hasRequiredQuery$1) return query$1;
   hasRequiredQuery$1 = 1;
-  const { EventEmitter } = require$$0$2;
+  const { EventEmitter } = require$$0$1;
   const Result = requireResult();
   const utils2 = requireUtils$1();
   class Query extends EventEmitter {
@@ -1080,7 +1080,7 @@ function requireStream() {
   };
   function getNodejsStreamFuncs() {
     function getStream2(ssl) {
-      const net = require$$0$3;
+      const net = require$$0$2;
       return new net.Socket();
     }
     function getSecureStream2(options) {
@@ -1131,7 +1131,7 @@ var hasRequiredConnection;
 function requireConnection() {
   if (hasRequiredConnection) return connection;
   hasRequiredConnection = 1;
-  const EventEmitter = require$$0$2.EventEmitter;
+  const EventEmitter = require$$0$1.EventEmitter;
   const { parse, serialize } = requireDist();
   const stream2 = requireStream();
   const { getStream } = stream2;
@@ -1218,7 +1218,7 @@ function requireConnection() {
       if (self.sslNegotiation === "direct") {
         options.ALPNProtocols = ["postgresql"];
       }
-      const net = require$$0$3;
+      const net = require$$0$2;
       if (net.isIP && net.isIP(host) === 0) {
         options.servername = host;
       }
@@ -1328,16 +1328,16 @@ var hasRequiredClient$1;
 function requireClient$1() {
   if (hasRequiredClient$1) return client$1;
   hasRequiredClient$1 = 1;
-  const EventEmitter = require$$0$2.EventEmitter;
+  const EventEmitter = require$$0$1.EventEmitter;
   const utils2 = requireUtils$1();
-  const nodeUtils = require$$0$4;
+  const nodeUtils = require$$0$3;
   const sasl2 = requireSasl();
   const TypeOverrides = requireTypeOverrides();
   const ConnectionParameters = requireConnectionParameters();
   const Query = requireQuery$1();
   const defaults2 = requireDefaults();
   const Connection = requireConnection();
-  const crypto = requireUtils();
+  const crypto2 = requireUtils();
   const activeQueryDeprecationNotice = nodeUtils.deprecate(
     () => {
     },
@@ -1588,7 +1588,7 @@ function requireClient$1() {
     _handleAuthMD5Password(msg) {
       this._getPassword(async () => {
         try {
-          const hashedPassword = await crypto.postgresMd5PasswordHash(this.user, this.password, msg.salt);
+          const hashedPassword = await crypto2.postgresMd5PasswordHash(this.user, this.password, msg.salt);
           this.connection.password(hashedPassword);
         } catch (e) {
           this.emit("error", e);
@@ -1978,8 +1978,8 @@ var hasRequiredQuery;
 function requireQuery() {
   if (hasRequiredQuery) return query.exports;
   hasRequiredQuery = 1;
-  const EventEmitter = require$$0$2.EventEmitter;
-  const util = require$$0$4;
+  const EventEmitter = require$$0$1.EventEmitter;
+  const util = require$$0$3;
   const utils2 = requireUtils$1();
   const NativeQuery = query.exports = function(config, values, callback) {
     EventEmitter.call(this);
@@ -2118,7 +2118,7 @@ var hasRequiredClient;
 function requireClient() {
   if (hasRequiredClient) return client.exports;
   hasRequiredClient = 1;
-  const nodeUtils = require$$0$4;
+  const nodeUtils = require$$0$3;
   var Native;
   try {
     Native = require$$1;
@@ -2126,8 +2126,8 @@ function requireClient() {
     throw e;
   }
   const TypeOverrides = requireTypeOverrides();
-  const EventEmitter = require$$0$2.EventEmitter;
-  const util = require$$0$4;
+  const EventEmitter = require$$0$1.EventEmitter;
+  const util = require$$0$3;
   const ConnectionParameters = requireConnectionParameters();
   const NativeQuery = requireQuery();
   const queryQueueLengthDeprecationNotice = nodeUtils.deprecate(

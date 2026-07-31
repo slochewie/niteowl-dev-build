@@ -1,5 +1,5 @@
-import { c as computePosition$1, o as offset$1, s as shift$1, f as flip$1, a as size$1, h as hide$1, b as arrow$1, l as limitShift$1 } from "./floating-ui__core.mjs";
-import { p as getOverflowAncestors, q as isElement, t as getDocumentElement, u as getWindow, r as rectToClientRect, v as floor, w as isHTMLElement, x as createCoords, y as round, k as max, m as min, z as getComputedStyle$1, A as isTopLayer, B as getParentNode, C as isLastTraversableNode, D as isTableElement, E as isContainingBlock, F as getContainingBlock, G as getNodeName, H as isOverflowElement, I as getNodeScroll, J as isWebKit, K as getFrameElement } from "./floating-ui__utils.mjs";
+import { c as computePosition$1, f as flip$1, o as offset$1, s as shift$1, a as size$1, h as hide$1, b as arrow$1, l as limitShift$1 } from "./floating-ui__core.mjs";
+import { p as getOverflowAncestors, q as isElement, t as getDocumentElement, u as getWindow, r as rectToClientRect, v as floor, w as isHTMLElement, x as createCoords, y as round, o as max, n as min, z as getComputedStyle$1, A as isTopLayer, B as getParentNode, C as isLastTraversableNode, D as isTableElement, E as isContainingBlock, F as getContainingBlock, G as getNodeName, H as isOverflowElement, I as getNodeScroll, J as isWebKit, K as getFrameElement } from "./floating-ui__utils.mjs";
 function getCssDimensions(element) {
   const css = getComputedStyle$1(element);
   let width = parseFloat(css.width) || 0;
@@ -608,10 +608,10 @@ const computePosition = (reference, floating, options) => {
   });
 };
 export {
-  size as a,
-  arrow as b,
+  autoUpdate as a,
+  size as b,
   computePosition as c,
-  autoUpdate as d,
+  arrow as d,
   flip as f,
   hide as h,
   limitShift as l,

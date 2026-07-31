@@ -407,6 +407,17 @@ function useController(props) {
   }), [field, formState, fieldState]);
 }
 const Controller = (props) => props.render(useController(props));
+var generateId = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  const d = typeof performance === "undefined" ? Date.now() : performance.now() * 1e3;
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16 + d) % 16 | 0;
+    return (c == "x" ? r : r & 3 | 8).toString(16);
+  });
+};
+var getFocusFieldName = (name, index, options = {}) => options.shouldFocus || isUndefined(options.shouldFocus) ? options.focusName || `${name}.${isUndefined(options.focusIndex) ? index : options.focusIndex}.` : "";
 var getValidationModes = (mode) => ({
   isOnSubmit: !mode || mode === VALIDATION_MODE.onSubmit,
   isOnBlur: mode === VALIDATION_MODE.onBlur,
@@ -668,7 +679,46 @@ var validateField = async (field, disabledFieldNames, formValues, validateAllFie
   return error;
 };
 var convertToArrayPayload = (value) => Array.isArray(value) ? value : [value];
+var appendAt = (data, value) => [
+  ...data,
+  ...convertToArrayPayload(value)
+];
+var fillEmptyArray = (value) => Array.isArray(value) ? value.map(() => void 0) : void 0;
+function insert(data, index, value) {
+  return [
+    ...data.slice(0, index),
+    ...convertToArrayPayload(value),
+    ...data.slice(index)
+  ];
+}
+var moveArrayAt = (data, from, to) => {
+  if (!Array.isArray(data)) {
+    return [];
+  }
+  if (isUndefined(data[to])) {
+    data[to] = void 0;
+  }
+  data.splice(to, 0, data.splice(from, 1)[0]);
+  return data;
+};
+var prependAt = (data, value) => [
+  ...convertToArrayPayload(value),
+  ...convertToArrayPayload(data)
+];
 var compact = (value) => Array.isArray(value) ? value.filter(Boolean) : [];
+function removeAtIndexes(data, indexes) {
+  let i = 0;
+  const temp = [...data];
+  for (const index of indexes) {
+    temp.splice(index - i, 1);
+    i++;
+  }
+  return compact(temp).length ? temp : [];
+}
+var removeArrayAt = (data, index) => isUndefined(index) ? [] : removeAtIndexes(data, convertToArrayPayload(index).sort((a, b) => a - b));
+var swapArrayAt = (data, indexA, indexB) => {
+  [data[indexA], data[indexB]] = [data[indexB], data[indexA]];
+};
 function baseGet(object, updatePath) {
   const length = updatePath.slice(0, -1).length;
   let index = 0;
@@ -709,6 +759,254 @@ function unset(object, path) {
     unset(object, paths.slice(0, -1));
   }
   return object;
+}
+var updateAt = (fieldValues, index, value) => {
+  fieldValues[index] = value;
+  return fieldValues;
+};
+function useFieldArray(props) {
+  const formControl = useFormControlContext();
+  const { control = formControl, name, keyName = "id", disabled, shouldUnregister, rules } = props;
+  const [fields, setFields] = React__default.useState(control._getFieldArray(name));
+  const ids = React__default.useRef(control._getFieldArray(name).map(generateId));
+  const _actioned = React__default.useRef(false);
+  if (!disabled) {
+    control._names.array.add(name);
+  }
+  React__default.useMemo(() => !disabled && rules && fields.length >= 0 && control.register(name, rules), [control, name, fields.length, rules, disabled]);
+  useIsomorphicLayoutEffect(() => {
+    if (disabled) {
+      return;
+    }
+    return control._subjects.array.subscribe({
+      next: ({ values, name: fieldArrayName }) => {
+        if (fieldArrayName === name || !fieldArrayName) {
+          const fieldValues = get(values, name);
+          if (Array.isArray(fieldValues)) {
+            setFields(fieldValues);
+            ids.current = fieldValues.map(generateId);
+          } else if (!fieldArrayName) {
+            setFields([]);
+            ids.current = [];
+          }
+        }
+      }
+    }).unsubscribe;
+  }, [control, name, disabled]);
+  const updateValues = React__default.useCallback((updatedFieldArrayValues) => {
+    _actioned.current = true;
+    control._setFieldArray(name, updatedFieldArrayValues);
+  }, [control, name]);
+  const append = (value, options) => {
+    if (disabled) {
+      return;
+    }
+    const appendValue = convertToArrayPayload(cloneObject(value));
+    const updatedFieldArrayValues = appendAt(control._getFieldArray(name), appendValue);
+    control._names.focus = getFocusFieldName(name, updatedFieldArrayValues.length - 1, options);
+    ids.current = appendAt(ids.current, appendValue.map(generateId));
+    updateValues(updatedFieldArrayValues);
+    setFields(updatedFieldArrayValues);
+    control._setFieldArray(name, updatedFieldArrayValues, appendAt, {
+      argA: fillEmptyArray(value)
+    });
+  };
+  const prepend = (value, options) => {
+    if (disabled) {
+      return;
+    }
+    const prependValue = convertToArrayPayload(cloneObject(value));
+    const updatedFieldArrayValues = prependAt(control._getFieldArray(name), prependValue);
+    control._names.focus = getFocusFieldName(name, 0, options);
+    ids.current = prependAt(ids.current, prependValue.map(generateId));
+    updateValues(updatedFieldArrayValues);
+    setFields(updatedFieldArrayValues);
+    control._setFieldArray(name, updatedFieldArrayValues, prependAt, {
+      argA: fillEmptyArray(value)
+    });
+  };
+  const remove = (index) => {
+    if (disabled) {
+      return;
+    }
+    const updatedFieldArrayValues = removeArrayAt(control._getFieldArray(name), index);
+    ids.current = removeArrayAt(ids.current, index);
+    updateValues(updatedFieldArrayValues);
+    setFields(updatedFieldArrayValues);
+    !Array.isArray(get(control._fields, name)) && set(control._fields, name, void 0);
+    control._setFieldArray(name, updatedFieldArrayValues, removeArrayAt, {
+      argA: index
+    });
+  };
+  const insert$1 = (index, value, options) => {
+    if (disabled) {
+      return;
+    }
+    const insertValue = convertToArrayPayload(cloneObject(value));
+    const updatedFieldArrayValues = insert(control._getFieldArray(name), index, insertValue);
+    control._names.focus = getFocusFieldName(name, index, options);
+    ids.current = insert(ids.current, index, insertValue.map(generateId));
+    updateValues(updatedFieldArrayValues);
+    setFields(updatedFieldArrayValues);
+    control._setFieldArray(name, updatedFieldArrayValues, insert, {
+      argA: index,
+      argB: fillEmptyArray(value)
+    });
+  };
+  const swap = (indexA, indexB) => {
+    if (disabled) {
+      return;
+    }
+    const updatedFieldArrayValues = control._getFieldArray(name);
+    swapArrayAt(updatedFieldArrayValues, indexA, indexB);
+    swapArrayAt(ids.current, indexA, indexB);
+    updateValues(updatedFieldArrayValues);
+    setFields(updatedFieldArrayValues);
+    control._setFieldArray(name, updatedFieldArrayValues, swapArrayAt, {
+      argA: indexA,
+      argB: indexB
+    }, false);
+  };
+  const move = (from, to) => {
+    if (disabled) {
+      return;
+    }
+    const updatedFieldArrayValues = control._getFieldArray(name);
+    moveArrayAt(updatedFieldArrayValues, from, to);
+    moveArrayAt(ids.current, from, to);
+    updateValues(updatedFieldArrayValues);
+    setFields(updatedFieldArrayValues);
+    control._setFieldArray(name, updatedFieldArrayValues, moveArrayAt, {
+      argA: from,
+      argB: to
+    }, false);
+  };
+  const update = (index, value) => {
+    if (disabled) {
+      return;
+    }
+    const updateValue = cloneObject(value);
+    const updatedFieldArrayValues = updateAt(control._getFieldArray(name), index, updateValue);
+    ids.current = [...updatedFieldArrayValues].map((item, i) => !item || i === index ? generateId() : ids.current[i]);
+    updateValues(updatedFieldArrayValues);
+    setFields([...updatedFieldArrayValues]);
+    control._setFieldArray(name, updatedFieldArrayValues, updateAt, {
+      argA: index,
+      argB: updateValue
+    }, true, false);
+  };
+  const replace = (value) => {
+    if (disabled) {
+      return;
+    }
+    const updatedFieldArrayValues = convertToArrayPayload(cloneObject(value));
+    ids.current = updatedFieldArrayValues.map(generateId);
+    updateValues([...updatedFieldArrayValues]);
+    setFields([...updatedFieldArrayValues]);
+    control._setFieldArray(name, [...updatedFieldArrayValues], (data) => data, {}, true, false);
+  };
+  React__default.useEffect(() => {
+    if (disabled) {
+      return;
+    }
+    control._state.action = false;
+    isWatched(name, control._names) && control._subjects.state.next({
+      ...control._formState
+    });
+    const validationModes = getValidationModes(control._options.mode);
+    if (_actioned.current && (!validationModes.isOnSubmit || control._formState.isSubmitted) && !getValidationModes(control._options.reValidateMode).isOnSubmit && !validationModes.isOnBlur) {
+      if (control._options.resolver) {
+        control._runSchema([name]).then((result) => {
+          var _a, _b;
+          control._updateIsValidating([name]);
+          const error = get(result.errors, name);
+          const existingError = get(control._formState.errors, name);
+          const existingErrorType = existingError && (existingError.type || ((_a = existingError.root) === null || _a === void 0 ? void 0 : _a.type));
+          const existingErrorMessage = existingError && (existingError.message || ((_b = existingError.root) === null || _b === void 0 ? void 0 : _b.message));
+          if (existingError ? !error && existingErrorType || error && (existingErrorType !== error.type || existingErrorMessage !== error.message) : error && error.type) {
+            if (error) {
+              isObject(error) && !Object.keys(error).some((key) => !Number.isNaN(+key)) ? updateFieldArrayRootError(control._formState.errors, { [name]: error }, name) : set(control._formState.errors, name, error);
+            } else {
+              unset(control._formState.errors, name);
+            }
+            control._subjects.state.next({
+              errors: control._formState.errors
+            });
+          }
+        });
+      } else {
+        const field = get(control._fields, name);
+        if (field && field._f && !(getValidationModes(control._options.reValidateMode).isOnSubmit && getValidationModes(control._options.mode).isOnSubmit)) {
+          validateField(field, control._names.disabled, control._formValues, control._options.criteriaMode === VALIDATION_MODE.all, control._options.shouldUseNativeValidation, true).then((error) => !isEmptyObject(error) && control._subjects.state.next({
+            errors: updateFieldArrayRootError(control._formState.errors, error, name)
+          }));
+        }
+      }
+    }
+    _actioned.current && control._subjects.state.next({
+      name,
+      values: cloneObject(control._formValues)
+    });
+    control._names.focus && iterateFieldsByAction(control._fields, (ref, key) => {
+      if (control._names.focus && key.startsWith(control._names.focus) && ref.focus) {
+        ref.focus();
+        return 1;
+      }
+      return;
+    });
+    control._names.focus = "";
+    control._setValid();
+    _actioned.current = false;
+  }, [fields, name, control, disabled]);
+  React__default.useEffect(() => {
+    if (!disabled) {
+      !get(control._formValues, name) && control._setFieldArray(name);
+    }
+    return () => {
+      if (disabled) {
+        return;
+      }
+      const shouldKeepFieldArrayValues = !(control._options.shouldUnregister || shouldUnregister);
+      const updateMounted = (name2, value) => {
+        const field = get(control._fields, name2);
+        if (field && field._f) {
+          field._f.mount = value;
+        }
+      };
+      if (_actioned.current && shouldKeepFieldArrayValues) {
+        control._subjects.state.next({
+          name,
+          values: cloneObject(control._formValues)
+        });
+      }
+      shouldKeepFieldArrayValues ? updateMounted(name, false) : control.unregister(name);
+    };
+  }, [name, control, keyName, shouldUnregister, disabled]);
+  return {
+    swap: React__default.useCallback(swap, [updateValues, name, control, disabled]),
+    move: React__default.useCallback(move, [updateValues, name, control, disabled]),
+    prepend: React__default.useCallback(prepend, [
+      updateValues,
+      name,
+      control,
+      disabled
+    ]),
+    append: React__default.useCallback(append, [updateValues, name, control, disabled]),
+    remove: React__default.useCallback(remove, [updateValues, name, control, disabled]),
+    insert: React__default.useCallback(insert$1, [updateValues, name, control, disabled]),
+    update: React__default.useCallback(update, [updateValues, name, control, disabled]),
+    replace: React__default.useCallback(replace, [
+      updateValues,
+      name,
+      control,
+      disabled
+    ]),
+    fields: React__default.useMemo(() => fields.map((field, index) => ({
+      ...field,
+      ...isBoolean(disabled) ? { disabled } : {},
+      [keyName]: ids.current[index] || generateId()
+    })), [fields, keyName, disabled])
+  };
 }
 const flatten = (obj) => {
   const output = {};
@@ -2275,10 +2573,12 @@ function useForm(props = {}) {
 export {
   Controller as C,
   FormProvider as F,
-  useFormState as a,
-  useForm as b,
-  appendErrors as c,
+  appendErrors as a,
+  useFormContext as b,
+  useFormState as c,
+  useFieldArray as d,
+  useWatch as e,
   get as g,
   set as s,
-  useFormContext as u
+  useForm as u
 };

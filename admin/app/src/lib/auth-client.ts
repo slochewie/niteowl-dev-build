@@ -19,6 +19,10 @@ function getAuthBaseURL() {
 export const authClient = createAuthClient({
   baseURL: getAuthBaseURL(),
 
+  fetchOptions: {
+    credentials: "include",
+  },
+
   plugins: [
     organizationClient(),
   ],

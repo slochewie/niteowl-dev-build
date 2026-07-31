@@ -8,7 +8,7 @@ import { u as useCallbackRef } from "./@radix-ui/react-use-callback-ref+[...].mj
 import { u as useLayoutEffect2 } from "./@radix-ui/react-use-layout-effect+[...].mjs";
 import { u as useSize } from "./radix-ui__react-use-size.mjs";
 import { jsx } from "react/jsx-runtime";
-import { d as autoUpdate } from "./floating-ui__dom.mjs";
+import { a as autoUpdate } from "./floating-ui__dom.mjs";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var POPPER_NAME = "Popper";

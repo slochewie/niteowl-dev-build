@@ -1,3 +1,4 @@
+import "./better-call.mjs";
 import { c as createRandomStringGenerator } from "./better-auth__utils.mjs";
 import { s as srcExports } from "./@opentelemetry/semantic-conventions+[...].mjs";
 function defineErrorCodes(codes) {

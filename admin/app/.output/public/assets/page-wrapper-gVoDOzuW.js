@@ -1,1 +1,0 @@
-import{u as o,j as i,P as u}from"./index-CmFwZL-K.js";function n({children:r,className:t,testId:s}){const{showAttribution:e}=o("cms",{showAttribution:!0});return i.jsx(u,{className:t,testId:s,showAttribution:e,children:r})}export{n as P};

@@ -1,4 +1,4 @@
-import { g as get, s as set, c as appendErrors } from "./react-hook-form.mjs";
+import { g as get, s as set, a as appendErrors } from "./react-hook-form.mjs";
 const t$1 = (r, t2, s2) => {
   if (r && "reportValidity" in r) {
     const o2 = get(s2, t2);
