@@ -12,10 +12,12 @@ export default defineConfig({
   plugins: [
     tsconfigPaths(),
     tanstackStart(),
+
     nitro({
       preset: "node-server",
-      inlineDynamicImports: true,
+      traceDeps: ["@btst/stack"],
     }),
+
     viteReact(),
   ],
 });

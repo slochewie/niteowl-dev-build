@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "vite build && rm -rf .output/server/node_modules/@btst/stack && mkdir -p .output/server/node_modules/@btst && cp -a node_modules/@btst/stack .output/server/node_modules/@btst/stack",
     "start": "node .output/server/index.mjs"
   },
   "dependencies": {
