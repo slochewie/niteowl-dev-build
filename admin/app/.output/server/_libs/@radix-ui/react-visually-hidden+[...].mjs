@@ -1,5 +1,6 @@
-import { r as reactExports, j as jsxRuntimeExports } from "../react.mjs";
+import * as React from "react";
 import { P as Primitive } from "../radix-ui__react-primitive.mjs";
+import { jsx } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var VISUALLY_HIDDEN_STYLES = Object.freeze({
@@ -15,9 +16,9 @@ var VISUALLY_HIDDEN_STYLES = Object.freeze({
   whiteSpace: "nowrap",
   wordWrap: "normal"
 });
-var VisuallyHidden = /* @__PURE__ */ reactExports.forwardRef(
+var VisuallyHidden = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function VisuallyHidden2(props, forwardedRef) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       Primitive.span,
       {
         ...props,

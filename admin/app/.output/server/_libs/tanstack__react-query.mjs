@@ -1,18 +1,19 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
-var QueryClientContext = reactExports.createContext(
+import * as React from "react";
+import { jsx } from "react/jsx-runtime";
+var QueryClientContext = React.createContext(
   void 0
 );
 var QueryClientProvider = ({
   client,
   children
 }) => {
-  reactExports.useEffect(() => {
+  React.useEffect(() => {
     client.mount();
     return () => {
       client.unmount();
     };
   }, [client]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(QueryClientContext.Provider, { value: client, children });
+  return /* @__PURE__ */ jsx(QueryClientContext.Provider, { value: client, children });
 };
 export {
   QueryClientProvider as Q

@@ -1,1 +1,0 @@
-import{b as o,j as i,P as a}from"./index-BMV-jPyK.js";function u({children:r,className:t,testId:s}){const{showAttribution:e}=o("cms",{showAttribution:!0});return i.jsx(a,{className:t,testId:s,showAttribution:e,children:r})}export{u as P};

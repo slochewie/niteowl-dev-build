@@ -1,4 +1,4 @@
-import { r as reactExports, R as React } from "./react.mjs";
+import React__default, { forwardRef, useState, useRef, useImperativeHandle, useEffect } from "react";
 var __async = (__this, __arguments, generator) => {
   return new Promise((resolve, reject) => {
     var fulfilled = (value) => {
@@ -76,7 +76,7 @@ var setVersion = (name) => {
   };
 };
 var isApiReady = () => typeof (window == null ? void 0 : window.captchafox) !== "undefined";
-var CaptchaFox = reactExports.forwardRef(
+var CaptchaFox = forwardRef(
   ({
     executeTimeoutSeconds = 30,
     sitekey,
@@ -97,14 +97,14 @@ var CaptchaFox = reactExports.forwardRef(
     onChallengeOpen,
     onExpire
   }, ref) => {
-    const [containerRef, setContainerRef] = reactExports.useState();
-    const [widgetId, setWidgetId] = reactExports.useState();
-    const firstRendered = reactExports.useRef(false);
-    const onReady = reactExports.useRef();
-    const executeTimeout = reactExports.useRef();
-    const scriptErrorListener = reactExports.useRef();
-    const hasScriptError = reactExports.useRef(false);
-    reactExports.useImperativeHandle(
+    const [containerRef, setContainerRef] = useState();
+    const [widgetId, setWidgetId] = useState();
+    const firstRendered = useRef(false);
+    const onReady = useRef();
+    const executeTimeout = useRef();
+    const scriptErrorListener = useRef();
+    const hasScriptError = useRef(false);
+    useImperativeHandle(
       ref,
       () => {
         return {
@@ -149,18 +149,18 @@ var CaptchaFox = reactExports.forwardRef(
       },
       [widgetId]
     );
-    reactExports.useEffect(() => {
+    useEffect(() => {
       if (widgetId) {
         onLoad == null ? void 0 : onLoad();
       }
     }, [widgetId]);
-    reactExports.useEffect(() => {
+    useEffect(() => {
       setVersion("rj");
       return () => {
         clearEvents();
       };
     }, []);
-    reactExports.useEffect(() => {
+    useEffect(() => {
       if (!containerRef) return;
       if (firstRendered.current) {
         if (isApiReady()) {
@@ -237,7 +237,7 @@ var CaptchaFox = reactExports.forwardRef(
         onReady.current = void 0;
       }
     });
-    return /* @__PURE__ */ React.createElement("div", { ref: setContainerRef, id: widgetId, className });
+    return /* @__PURE__ */ React__default.createElement("div", { ref: setContainerRef, id: widgetId, className });
   }
 );
 CaptchaFox.displayName = "CaptchaFox";

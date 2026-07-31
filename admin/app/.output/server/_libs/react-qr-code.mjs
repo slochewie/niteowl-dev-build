@@ -1,6 +1,6 @@
 import { P as PropTypes } from "./prop-types.mjs";
 import { q as qrcode } from "./qrcode-generator.mjs";
-import { r as reactExports, R as React } from "./react.mjs";
+import React__default, { forwardRef } from "react";
 function _extends() {
   return _extends = Object.assign ? Object.assign.bind() : function(n) {
     for (var e = 1; e < arguments.length; e++) {
@@ -39,18 +39,18 @@ var propTypes$1 = {
   viewBoxSize: PropTypes.number.isRequired,
   xmlns: PropTypes.string
 };
-var QRCodeSvg = /* @__PURE__ */ reactExports.forwardRef(function(_ref, ref) {
+var QRCodeSvg = /* @__PURE__ */ forwardRef(function(_ref, ref) {
   var bgColor = _ref.bgColor, bgD = _ref.bgD, fgD = _ref.fgD, fgColor = _ref.fgColor, size = _ref.size, title = _ref.title, viewBoxSize = _ref.viewBoxSize, _ref$xmlns = _ref.xmlns, xmlns = _ref$xmlns === void 0 ? "http://www.w3.org/2000/svg" : _ref$xmlns, props = _objectWithoutProperties(_ref, _excluded$1);
-  return /* @__PURE__ */ React.createElement("svg", _extends({}, props, {
+  return /* @__PURE__ */ React__default.createElement("svg", _extends({}, props, {
     height: size,
     ref,
     viewBox: "0 0 ".concat(viewBoxSize, " ").concat(viewBoxSize),
     width: size,
     xmlns
-  }), title ? /* @__PURE__ */ React.createElement("title", null, title) : null, /* @__PURE__ */ React.createElement("path", {
+  }), title ? /* @__PURE__ */ React__default.createElement("title", null, title) : null, /* @__PURE__ */ React__default.createElement("path", {
     d: bgD,
     fill: bgColor
-  }), /* @__PURE__ */ React.createElement("path", {
+  }), /* @__PURE__ */ React__default.createElement("path", {
     d: fgD,
     fill: fgColor
   }));
@@ -68,7 +68,7 @@ var propTypes = {
   size: PropTypes.number,
   value: PropTypes.string.isRequired
 };
-var QRCode = /* @__PURE__ */ reactExports.forwardRef(function(_ref, ref) {
+var QRCode = /* @__PURE__ */ forwardRef(function(_ref, ref) {
   var _ref$bgColor = _ref.bgColor, bgColor = _ref$bgColor === void 0 ? "#FFFFFF" : _ref$bgColor, _ref$fgColor = _ref.fgColor, fgColor = _ref$fgColor === void 0 ? "#000000" : _ref$fgColor, _ref$level = _ref.level, level = _ref$level === void 0 ? "L" : _ref$level, _ref$size = _ref.size, size = _ref$size === void 0 ? 256 : _ref$size, value = _ref.value, props = _objectWithoutProperties(_ref, _excluded);
   var qr = qrcode(0, level);
   qr.addData(value);
@@ -83,7 +83,7 @@ var QRCode = /* @__PURE__ */ reactExports.forwardRef(function(_ref, ref) {
       return qr.isDark(rowIndex, colIndex);
     });
   });
-  return /* @__PURE__ */ React.createElement(QRCodeSvg, _extends({}, props, {
+  return /* @__PURE__ */ React__default.createElement(QRCodeSvg, _extends({}, props, {
     bgColor,
     bgD: cells.map(function(row, rowIndex) {
       return row.map(function(cell, cellIndex) {

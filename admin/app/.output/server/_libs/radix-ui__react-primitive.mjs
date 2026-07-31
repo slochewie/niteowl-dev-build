@@ -1,6 +1,7 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
-import { r as reactDomExports } from "./react-dom.mjs";
+import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { c as createSlot } from "./radix-ui__react-slot.mjs";
+import { jsx } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var NODES = [
@@ -24,19 +25,19 @@ var NODES = [
 ];
 var Primitive = NODES.reduce((primitive, node) => {
   const Slot = createSlot(`Primitive.${node}`);
-  const Node = reactExports.forwardRef((props, forwardedRef) => {
+  const Node = React.forwardRef((props, forwardedRef) => {
     const { asChild, ...primitiveProps } = props;
     const Comp = asChild ? Slot : node;
     if (typeof window !== "undefined") {
       window[/* @__PURE__ */ Symbol.for("radix-ui")] = true;
     }
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Comp, { ...primitiveProps, ref: forwardedRef });
+    return /* @__PURE__ */ jsx(Comp, { ...primitiveProps, ref: forwardedRef });
   });
   Node.displayName = `Primitive.${node}`;
   return { ...primitive, [node]: Node };
 }, {});
 function dispatchDiscreteCustomEvent(target, event) {
-  if (target) reactDomExports.flushSync(() => target.dispatchEvent(event));
+  if (target) ReactDOM.flushSync(() => target.dispatchEvent(event));
 }
 __name(dispatchDiscreteCustomEvent, "dispatchDiscreteCustomEvent");
 export {

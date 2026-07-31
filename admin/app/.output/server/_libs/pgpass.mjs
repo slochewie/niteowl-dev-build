@@ -1,8 +1,8 @@
-import require$$0 from "path";
-import require$$0$2 from "fs";
-import require$$5 from "stream";
+import require$$0$2 from "util";
+import require$$0$1 from "path";
+import require$$0$3 from "fs";
+import require$$0 from "stream";
 import { r as requireSplit2 } from "./split2.mjs";
-import require$$0$1 from "util";
 var lib = { exports: {} };
 var helper = { exports: {} };
 var hasRequiredHelper;
@@ -10,7 +10,7 @@ function requireHelper() {
   if (hasRequiredHelper) return helper.exports;
   hasRequiredHelper = 1;
   (function(module) {
-    var path = require$$0, Stream = require$$5.Stream, split = requireSplit2(), util = require$$0$1, defaultPort = 5432, isWin = process.platform === "win32", warnStream = process.stderr;
+    var path = require$$0$1, Stream = require$$0.Stream, split = requireSplit2(), util = require$$0$2, defaultPort = 5432, isWin = process.platform === "win32", warnStream = process.stderr;
     var S_IRWXG = 56, S_IRWXO = 7, S_IFMT = 61440, S_IFREG = 32768;
     function isRegFile(mode) {
       return (mode & S_IFMT) == S_IFREG;
@@ -171,7 +171,7 @@ var hasRequiredLib;
 function requireLib() {
   if (hasRequiredLib) return lib.exports;
   hasRequiredLib = 1;
-  var fs = require$$0$2, helper2 = requireHelper();
+  var fs = require$$0$3, helper2 = requireHelper();
   lib.exports = function(connInfo, cb) {
     var file = helper2.getFileName();
     fs.stat(file, function(err, stat) {

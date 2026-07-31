@@ -1,4 +1,4 @@
-import { r as reactExports } from "./react.mjs";
+import { useContext, createContext, forwardRef, createElement } from "react";
 const mergeClasses = (...classes) => classes.filter((className, index, array) => {
   return Boolean(className) && className.trim() !== "" && array.indexOf(className) === index;
 }).join(" ").trim();
@@ -30,9 +30,9 @@ const hasA11yProp = (props) => {
   }
   return false;
 };
-const LucideContext = reactExports.createContext({});
-const useLucideContext = () => reactExports.useContext(LucideContext);
-const Icon = reactExports.forwardRef(
+const LucideContext = createContext({});
+const useLucideContext = () => useContext(LucideContext);
+const Icon = forwardRef(
   ({ color, size, strokeWidth, absoluteStrokeWidth, className = "", children, iconNode, ...rest }, ref) => {
     const {
       size: contextSize = 24,
@@ -42,7 +42,7 @@ const Icon = reactExports.forwardRef(
       className: contextClass = ""
     } = useLucideContext() ?? {};
     const calculatedStrokeWidth = absoluteStrokeWidth ?? contextAbsoluteStrokeWidth ? Number(strokeWidth ?? contextStrokeWidth) * 24 / Number(size ?? contextSize) : strokeWidth ?? contextStrokeWidth;
-    return reactExports.createElement(
+    return createElement(
       "svg",
       {
         ref,
@@ -56,15 +56,15 @@ const Icon = reactExports.forwardRef(
         ...rest
       },
       [
-        ...iconNode.map(([tag, attrs]) => reactExports.createElement(tag, attrs)),
+        ...iconNode.map(([tag, attrs]) => createElement(tag, attrs)),
         ...Array.isArray(children) ? children : [children]
       ]
     );
   }
 );
 const createLucideIcon = (iconName, iconNode) => {
-  const Component = reactExports.forwardRef(
-    ({ className, ...props }, ref) => reactExports.createElement(Icon, {
+  const Component = forwardRef(
+    ({ className, ...props }, ref) => createElement(Icon, {
       ref,
       iconNode,
       className: mergeClasses(

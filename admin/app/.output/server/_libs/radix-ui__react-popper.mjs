@@ -1,4 +1,4 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
 import { u as useFloating, o as offset, s as shift, f as flip, a as size, b as arrow, h as hide, l as limitShift } from "./floating-ui__react-dom.mjs";
 import { R as Root } from "./radix-ui__react-arrow.mjs";
 import { u as useComposedRefs } from "./radix-ui__react-compose-refs.mjs";
@@ -7,6 +7,7 @@ import { P as Primitive } from "./radix-ui__react-primitive.mjs";
 import { u as useCallbackRef } from "./@radix-ui/react-use-callback-ref+[...].mjs";
 import { u as useLayoutEffect2 } from "./@radix-ui/react-use-layout-effect+[...].mjs";
 import { u as useSize } from "./radix-ui__react-use-size.mjs";
+import { jsx } from "react/jsx-runtime";
 import { d as autoUpdate } from "./floating-ui__dom.mjs";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
@@ -15,9 +16,9 @@ var [createPopperContext, createPopperScope] = createContextScope(POPPER_NAME);
 var [PopperProvider, usePopperContext] = createPopperContext(POPPER_NAME);
 var Popper = /* @__PURE__ */ __name((props) => {
   const { __scopePopper, children } = props;
-  const [anchor, setAnchor] = reactExports.useState(null);
-  const [placementState, setPlacementState] = reactExports.useState(void 0);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  const [anchor, setAnchor] = React.useState(null);
+  const [placementState, setPlacementState] = React.useState(void 0);
+  return /* @__PURE__ */ jsx(
     PopperProvider,
     {
       scope: __scopePopper,
@@ -30,13 +31,13 @@ var Popper = /* @__PURE__ */ __name((props) => {
   );
 }, "Popper");
 var ANCHOR_NAME = "PopperAnchor";
-var PopperAnchor = /* @__PURE__ */ reactExports.forwardRef(
+var PopperAnchor = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function PopperAnchor2(props, forwardedRef) {
     const { __scopePopper, virtualRef, ...anchorProps } = props;
     const context = usePopperContext(ANCHOR_NAME, __scopePopper);
-    const ref = reactExports.useRef(null);
+    const ref = React.useRef(null);
     const onAnchorChange = context.onAnchorChange;
-    const callbackRef = reactExports.useCallback(
+    const callbackRef = React.useCallback(
       (node) => {
         ref.current = node;
         if (node) {
@@ -46,8 +47,8 @@ var PopperAnchor = /* @__PURE__ */ reactExports.forwardRef(
       [onAnchorChange]
     );
     const composedRefs = useComposedRefs(forwardedRef, callbackRef);
-    const anchorRef = reactExports.useRef(null);
-    reactExports.useEffect(() => {
+    const anchorRef = React.useRef(null);
+    React.useEffect(() => {
       if (!virtualRef) {
         return;
       }
@@ -60,7 +61,7 @@ var PopperAnchor = /* @__PURE__ */ reactExports.forwardRef(
     const sideAndAlign = context.placementState && getSideAndAlignFromPlacement(context.placementState);
     const placedSide = sideAndAlign?.[0];
     const placedAlign = sideAndAlign?.[1];
-    return virtualRef ? null : /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return virtualRef ? null : /* @__PURE__ */ jsx(
       Primitive.div,
       {
         "data-radix-popper-side": placedSide,
@@ -73,7 +74,7 @@ var PopperAnchor = /* @__PURE__ */ reactExports.forwardRef(
 );
 var CONTENT_NAME = "PopperContent";
 var [PopperContentProvider, useContentContext] = createPopperContext(CONTENT_NAME);
-var PopperContent = /* @__PURE__ */ reactExports.forwardRef(
+var PopperContent = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function PopperContent2(props, forwardedRef) {
     const {
       __scopePopper,
@@ -92,9 +93,9 @@ var PopperContent = /* @__PURE__ */ reactExports.forwardRef(
       ...contentProps
     } = props;
     const context = usePopperContext(CONTENT_NAME, __scopePopper);
-    const [content, setContent] = reactExports.useState(null);
+    const [content, setContent] = React.useState(null);
     const composedRefs = useComposedRefs(forwardedRef, setContent);
-    const [arrow$1, setArrow] = reactExports.useState(null);
+    const [arrow$1, setArrow] = React.useState(null);
     const arrowSize = useSize(arrow$1);
     const arrowWidth = arrowSize?.width ?? 0;
     const arrowHeight = arrowSize?.height ?? 0;
@@ -174,11 +175,11 @@ var PopperContent = /* @__PURE__ */ reactExports.forwardRef(
     const arrowX = middlewareData.arrow?.x;
     const arrowY = middlewareData.arrow?.y;
     const cannotCenterArrow = middlewareData.arrow?.centerOffset !== 0;
-    const [contentZIndex, setContentZIndex] = reactExports.useState();
+    const [contentZIndex, setContentZIndex] = React.useState();
     useLayoutEffect2(() => {
       if (content) setContentZIndex(window.getComputedStyle(content).zIndex);
     }, [content]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       "div",
       {
         ref: refs.setFloating,
@@ -202,7 +203,7 @@ var PopperContent = /* @__PURE__ */ reactExports.forwardRef(
           }
         },
         dir: props.dir,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(
           PopperContentProvider,
           {
             scope: __scopePopper,
@@ -212,7 +213,7 @@ var PopperContent = /* @__PURE__ */ reactExports.forwardRef(
             arrowX,
             arrowY,
             shouldHideArrow: cannotCenterArrow,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: /* @__PURE__ */ jsx(
               Primitive.div,
               {
                 "data-side": placedSide,
@@ -241,7 +242,7 @@ var OPPOSITE_SIDE = {
   bottom: "top",
   left: "right"
 };
-var PopperArrow = /* @__PURE__ */ reactExports.forwardRef(
+var PopperArrow = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function PopperArrow2(props, forwardedRef) {
     const { __scopePopper, ...arrowProps } = props;
     const contentContext = useContentContext(ARROW_NAME, __scopePopper);
@@ -250,7 +251,7 @@ var PopperArrow = /* @__PURE__ */ reactExports.forwardRef(
       // we have to use an extra wrapper because `ResizeObserver` (used by `useSize`)
       // doesn't report size as we'd expect on SVG elements.
       // it reports their bounding box which is effectively the largest path inside the SVG.
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "span",
         {
           ref: contentContext.onArrowChange,
@@ -273,7 +274,7 @@ var PopperArrow = /* @__PURE__ */ reactExports.forwardRef(
             }[contentContext.placedSide],
             visibility: contentContext.shouldHideArrow ? "hidden" : void 0
           },
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          children: /* @__PURE__ */ jsx(
             Root,
             {
               ...arrowProps,

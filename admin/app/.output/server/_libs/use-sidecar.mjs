@@ -1,4 +1,4 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
 import { __assign, __rest } from "tslib";
 function ItoI(a) {
   return a;
@@ -93,7 +93,7 @@ var SideCar = function(_a) {
   if (!Target) {
     throw new Error("Sidecar medium not found");
   }
-  return reactExports.createElement(Target, __assign({}, rest));
+  return React.createElement(Target, __assign({}, rest));
 };
 SideCar.isSideCarExport = true;
 function exportSidecar(medium, exported) {

@@ -1,4 +1,4 @@
-import { g as getDefaultExportFromCjs } from "./react.mjs";
+import { a as getDefaultExportFromCjs } from "./react.mjs";
 var propTypes = { exports: {} };
 var ReactPropTypesSecret_1;
 var hasRequiredReactPropTypesSecret;

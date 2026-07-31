@@ -1,3 +1,4 @@
+import { authClient } from "@/lib/auth-client"
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router"
 import { Link as RouterLink } from "@tanstack/react-router"
 import { StackProvider } from "@btst/stack/context"
@@ -80,7 +81,7 @@ function BtstPagesLayout() {
 						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
 					},
 					auth: {
-						authClient: undefined as any,
+						authClient,
 						navigate: (path: string) => navigate({ to: path }),
 						replace: (path: string) => navigate({ to: path, replace: true }),
 						onSessionChange: () => window.location.reload(),
@@ -89,7 +90,7 @@ function BtstPagesLayout() {
 						redirectTo: "/pages/account/settings",
 					},
 					account: {
-						authClient: undefined as any,
+						authClient,
 						navigate: (path: string) => navigate({ to: path }),
 						replace: (path: string) => navigate({ to: path, replace: true }),
 						onSessionChange: () => window.location.reload(),
@@ -98,7 +99,7 @@ function BtstPagesLayout() {
 						account: { fields: ["image", "name"] },
 					},
 					organization: {
-						authClient: undefined as any,
+						authClient,
 						navigate: (path: string) => navigate({ to: path }),
 						replace: (path: string) => navigate({ to: path, replace: true }),
 						onSessionChange: () => window.location.reload(),

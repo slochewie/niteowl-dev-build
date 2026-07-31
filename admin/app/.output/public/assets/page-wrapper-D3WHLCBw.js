@@ -1,0 +1,1 @@
+import{u as o,j as i,P as u}from"./index-CmFwZL-K.js";function n({children:r,className:t,testId:e}){const{showAttribution:s}=o("form-builder",{showAttribution:!0});return i.jsx(u,{className:t,testId:e,showAttribution:s,children:r})}export{n as P};

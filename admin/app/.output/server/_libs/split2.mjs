@@ -1,11 +1,11 @@
+import require$$0 from "stream";
 import require$$1 from "string_decoder";
-import require$$5 from "stream";
 var split2;
 var hasRequiredSplit2;
 function requireSplit2() {
   if (hasRequiredSplit2) return split2;
   hasRequiredSplit2 = 1;
-  const { Transform } = require$$5;
+  const { Transform } = require$$0;
   const { StringDecoder } = require$$1;
   const kLast = /* @__PURE__ */ Symbol("last");
   const kDecoder = /* @__PURE__ */ Symbol("decoder");

@@ -1,5 +1,12 @@
 import { c as createRandomStringGenerator } from "./better-auth__utils.mjs";
 import { s as srcExports } from "./@opentelemetry/semantic-conventions+[...].mjs";
+function defineErrorCodes(codes) {
+  return Object.fromEntries(Object.entries(codes).map(([key, value]) => [key, {
+    code: key,
+    message: value,
+    toString: () => key
+  }]));
+}
 var BetterAuthError = class extends Error {
   constructor(message, options) {
     super(message, options);
@@ -1723,8 +1730,38 @@ function formatMethod(method) {
 function formatAction(action) {
   return `${TTY_COLORS.dim}(${action})${TTY_COLORS.reset}`;
 }
+const DANGEROUS_URL_SCHEMES = [
+  "javascript:",
+  "data:",
+  "vbscript:"
+];
+function isSafeUrlScheme(value) {
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return true;
+  }
+  return !DANGEROUS_URL_SCHEMES.includes(parsed.protocol);
+}
+function capitalizeFirstLetter(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+const WORD_PATTERN = new RegExp("[\\p{Ll}\\d]+|\\p{Lu}+(?!\\p{Ll})|\\p{Lu}[\\p{Ll}\\d]+|\\p{Lo}+", "gu");
+const APOSTROPHE_PATTERN = /['\u2019]/g;
+function splitWords(input) {
+  return input.replace(APOSTROPHE_PATTERN, "").match(WORD_PATTERN) ?? [];
+}
+function toKebabCase(input) {
+  return splitWords(input).map((word) => word.toLowerCase()).join("-");
+}
 export {
   BetterAuthError as B,
+  capitalizeFirstLetter as a,
   createAdapterFactory as c,
-  logger as l
+  defineErrorCodes as d,
+  env as e,
+  isSafeUrlScheme as i,
+  logger as l,
+  toKebabCase as t
 };

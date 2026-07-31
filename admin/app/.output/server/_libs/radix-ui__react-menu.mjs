@@ -1,4 +1,4 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
 import { c as composeEventHandlers } from "./radix-ui__primitive.mjs";
 import { c as createCollection } from "./radix-ui__react-collection.mjs";
 import { u as useComposedRefs } from "./radix-ui__react-compose-refs.mjs";
@@ -16,6 +16,7 @@ import { c as createSlot } from "./radix-ui__react-slot.mjs";
 import { u as useCallbackRef } from "./@radix-ui/react-use-callback-ref+[...].mjs";
 import { h as hideOthers } from "./aria-hidden.mjs";
 import { R as ReactRemoveScroll } from "./react-remove-scroll.mjs";
+import { jsx } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var SELECTION_KEYS = ["Enter", " "];
@@ -36,11 +37,11 @@ var [MenuRootProvider, useMenuRootContext] = createMenuContext(MENU_NAME);
 var Menu = /* @__PURE__ */ __name((props) => {
   const { __scopeMenu, open = false, children, dir, onOpenChange, modal = true } = props;
   const popperScope = usePopperScope(__scopeMenu);
-  const [content, setContent] = reactExports.useState(null);
-  const isUsingKeyboardRef = reactExports.useRef(false);
+  const [content, setContent] = React.useState(null);
+  const isUsingKeyboardRef = React.useRef(false);
   const handleOpenChange = useCallbackRef(onOpenChange);
   const direction = useDirection(dir);
-  reactExports.useEffect(() => {
+  React.useEffect(() => {
     const handleKeyDown = /* @__PURE__ */ __name(() => {
       isUsingKeyboardRef.current = true;
       document.addEventListener("pointerdown", handlePointer, { capture: true, once: true });
@@ -54,7 +55,7 @@ var Menu = /* @__PURE__ */ __name((props) => {
       document.removeEventListener("pointermove", handlePointer, { capture: true });
     };
   }, []);
-  reactExports.useEffect(() => {
+  React.useEffect(() => {
     if (!open) {
       return;
     }
@@ -62,7 +63,7 @@ var Menu = /* @__PURE__ */ __name((props) => {
     window.addEventListener("blur", handleBlur);
     return () => window.removeEventListener("blur", handleBlur);
   }, [open, handleOpenChange]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2, { ...popperScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Root2, { ...popperScope, children: /* @__PURE__ */ jsx(
     MenuProvider,
     {
       scope: __scopeMenu,
@@ -70,11 +71,11 @@ var Menu = /* @__PURE__ */ __name((props) => {
       onOpenChange: handleOpenChange,
       content,
       onContentChange: setContent,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(
         MenuRootProvider,
         {
           scope: __scopeMenu,
-          onClose: reactExports.useCallback(() => handleOpenChange(false), [handleOpenChange]),
+          onClose: React.useCallback(() => handleOpenChange(false), [handleOpenChange]),
           isUsingKeyboardRef,
           dir: direction,
           modal,
@@ -84,11 +85,11 @@ var Menu = /* @__PURE__ */ __name((props) => {
     }
   ) });
 }, "Menu");
-var MenuAnchor = /* @__PURE__ */ reactExports.forwardRef(
+var MenuAnchor = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function MenuAnchor2(props, forwardedRef) {
     const { __scopeMenu, ...anchorProps } = props;
     const popperScope = usePopperScope(__scopeMenu);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Anchor, { ...popperScope, ...anchorProps, ref: forwardedRef });
+    return /* @__PURE__ */ jsx(Anchor, { ...popperScope, ...anchorProps, ref: forwardedRef });
   }, "MenuAnchor")
 );
 var PORTAL_NAME = "MenuPortal";
@@ -98,30 +99,30 @@ var [PortalProvider, usePortalContext] = createMenuContext(PORTAL_NAME, {
 var MenuPortal = /* @__PURE__ */ __name((props) => {
   const { __scopeMenu, forceMount, children, container } = props;
   const context = useMenuContext(PORTAL_NAME, __scopeMenu);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(PortalProvider, { scope: __scopeMenu, forceMount, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Portal$1, { asChild: true, container, children }) }) });
+  return /* @__PURE__ */ jsx(PortalProvider, { scope: __scopeMenu, forceMount, children: /* @__PURE__ */ jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsx(Portal$1, { asChild: true, container, children }) }) });
 }, "MenuPortal");
 var CONTENT_NAME = "MenuContent";
 var [MenuContentProvider, useMenuContentContext] = createMenuContext(CONTENT_NAME);
-var MenuContent = /* @__PURE__ */ reactExports.forwardRef(
+var MenuContent = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function MenuContent2(props, forwardedRef) {
     const portalContext = usePortalContext(CONTENT_NAME, props.__scopeMenu);
     const { forceMount = portalContext.forceMount, ...contentProps } = props;
     const context = useMenuContext(CONTENT_NAME, props.__scopeMenu);
     const rootContext = useMenuRootContext(CONTENT_NAME, props.__scopeMenu);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Collection.Provider, { scope: props.__scopeMenu, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Collection.Slot, { scope: props.__scopeMenu, children: rootContext.modal ? /* @__PURE__ */ jsxRuntimeExports.jsx(MenuRootContentModal, { ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsxRuntimeExports.jsx(MenuRootContentNonModal, { ...contentProps, ref: forwardedRef }) }) }) });
+    return /* @__PURE__ */ jsx(Collection.Provider, { scope: props.__scopeMenu, children: /* @__PURE__ */ jsx(Presence, { present: forceMount || context.open, children: /* @__PURE__ */ jsx(Collection.Slot, { scope: props.__scopeMenu, children: rootContext.modal ? /* @__PURE__ */ jsx(MenuRootContentModal, { ...contentProps, ref: forwardedRef }) : /* @__PURE__ */ jsx(MenuRootContentNonModal, { ...contentProps, ref: forwardedRef }) }) }) });
   }, "MenuContent")
 );
-var MenuRootContentModal = /* @__PURE__ */ reactExports.forwardRef(
+var MenuRootContentModal = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function MenuRootContentModal2(props, forwardedRef) {
     const context = useMenuContext(CONTENT_NAME, props.__scopeMenu);
-    const ref = reactExports.useRef(null);
+    const ref = React.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
-    reactExports.useEffect(() => {
+    React.useEffect(() => {
       const content = ref.current;
       if (content) return hideOthers(content);
     }, []);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       MenuContentImpl,
       {
         ...props,
@@ -139,9 +140,9 @@ var MenuRootContentModal = /* @__PURE__ */ reactExports.forwardRef(
     );
   }, "MenuRootContentModal")
 );
-var MenuRootContentNonModal = /* @__PURE__ */ reactExports.forwardRef(/* @__PURE__ */ __name(function MenuRootContentNonModal2(props, forwardedRef) {
+var MenuRootContentNonModal = /* @__PURE__ */ React.forwardRef(/* @__PURE__ */ __name(function MenuRootContentNonModal2(props, forwardedRef) {
   const context = useMenuContext(CONTENT_NAME, props.__scopeMenu);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     MenuContentImpl,
     {
       ...props,
@@ -154,7 +155,7 @@ var MenuRootContentNonModal = /* @__PURE__ */ reactExports.forwardRef(/* @__PURE
   );
 }, "MenuRootContentNonModal"));
 var Slot = createSlot("MenuContent.ScrollLock");
-var MenuContentImpl = /* @__PURE__ */ reactExports.forwardRef(
+var MenuContentImpl = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function MenuContentImpl2(props, forwardedRef) {
     const {
@@ -178,16 +179,16 @@ var MenuContentImpl = /* @__PURE__ */ reactExports.forwardRef(
     const popperScope = usePopperScope(__scopeMenu);
     const rovingFocusGroupScope = useRovingFocusGroupScope(__scopeMenu);
     const getItems = useCollection(__scopeMenu);
-    const [currentItemId, setCurrentItemId] = reactExports.useState(null);
-    const contentRef = reactExports.useRef(null);
+    const [currentItemId, setCurrentItemId] = React.useState(null);
+    const contentRef = React.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, contentRef, context.onContentChange);
-    const timerRef = reactExports.useRef(0);
-    const searchRef = reactExports.useRef("");
-    const pointerGraceTimerRef = reactExports.useRef(0);
-    const pointerGraceIntentRef = reactExports.useRef(null);
-    const pointerDirRef = reactExports.useRef("right");
-    const lastPointerXRef = reactExports.useRef(0);
-    const ScrollLockWrapper = disableOutsideScroll ? ReactRemoveScroll : reactExports.Fragment;
+    const timerRef = React.useRef(0);
+    const searchRef = React.useRef("");
+    const pointerGraceTimerRef = React.useRef(0);
+    const pointerGraceIntentRef = React.useRef(null);
+    const pointerDirRef = React.useRef("right");
+    const lastPointerXRef = React.useRef(0);
+    const ScrollLockWrapper = disableOutsideScroll ? ReactRemoveScroll : React.Fragment;
     const scrollLockWrapperProps = disableOutsideScroll ? { as: Slot, allowPinchZoom: true } : void 0;
     const handleTypeaheadSearch = /* @__PURE__ */ __name((key) => {
       const search = searchRef.current + key;
@@ -206,26 +207,26 @@ var MenuContentImpl = /* @__PURE__ */ reactExports.forwardRef(
         setTimeout(() => newItem.focus());
       }
     }, "handleTypeaheadSearch");
-    reactExports.useEffect(() => {
+    React.useEffect(() => {
       return () => window.clearTimeout(timerRef.current);
     }, []);
     useFocusGuards();
-    const isPointerMovingToSubmenu = reactExports.useCallback((event) => {
+    const isPointerMovingToSubmenu = React.useCallback((event) => {
       const isMovingTowards = pointerDirRef.current === pointerGraceIntentRef.current?.side;
       return isMovingTowards && isPointerInGraceArea(event, pointerGraceIntentRef.current?.area);
     }, []);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       MenuContentProvider,
       {
         scope: __scopeMenu,
         searchRef,
-        onItemEnter: reactExports.useCallback(
+        onItemEnter: React.useCallback(
           (event) => {
             if (isPointerMovingToSubmenu(event)) event.preventDefault();
           },
           [isPointerMovingToSubmenu]
         ),
-        onItemLeave: reactExports.useCallback(
+        onItemLeave: React.useCallback(
           (event) => {
             if (isPointerMovingToSubmenu(event)) return;
             contentRef.current?.focus();
@@ -233,17 +234,17 @@ var MenuContentImpl = /* @__PURE__ */ reactExports.forwardRef(
           },
           [isPointerMovingToSubmenu]
         ),
-        onTriggerLeave: reactExports.useCallback(
+        onTriggerLeave: React.useCallback(
           (event) => {
             if (isPointerMovingToSubmenu(event)) event.preventDefault();
           },
           [isPointerMovingToSubmenu]
         ),
         pointerGraceTimerRef,
-        onPointerGraceIntentChange: reactExports.useCallback((intent) => {
+        onPointerGraceIntentChange: React.useCallback((intent) => {
           pointerGraceIntentRef.current = intent;
         }, []),
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(ScrollLockWrapper, { ...scrollLockWrapperProps, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(ScrollLockWrapper, { ...scrollLockWrapperProps, children: /* @__PURE__ */ jsx(
           FocusScope,
           {
             asChild: true,
@@ -253,7 +254,7 @@ var MenuContentImpl = /* @__PURE__ */ reactExports.forwardRef(
               contentRef.current?.focus({ preventScroll: true });
             }),
             onUnmountAutoFocus: onCloseAutoFocus,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: /* @__PURE__ */ jsx(
               DismissableLayer,
               {
                 asChild: true,
@@ -263,7 +264,7 @@ var MenuContentImpl = /* @__PURE__ */ reactExports.forwardRef(
                 onFocusOutside,
                 onInteractOutside,
                 onDismiss,
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                children: /* @__PURE__ */ jsx(
                   Root,
                   {
                     asChild: true,
@@ -277,7 +278,7 @@ var MenuContentImpl = /* @__PURE__ */ reactExports.forwardRef(
                       if (!rootContext.isUsingKeyboardRef.current) event.preventDefault();
                     }),
                     preventScrollOnEntryFocus: true,
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    children: /* @__PURE__ */ jsx(
                       Content,
                       {
                         role: "menu",
@@ -339,15 +340,15 @@ var MenuContentImpl = /* @__PURE__ */ reactExports.forwardRef(
 );
 var ITEM_NAME = "MenuItem";
 var ITEM_SELECT = "menu.itemSelect";
-var MenuItem = /* @__PURE__ */ reactExports.forwardRef(
+var MenuItem = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function MenuItem2(props, forwardedRef) {
     const { disabled = false, onSelect, ...itemProps } = props;
-    const ref = reactExports.useRef(null);
+    const ref = React.useRef(null);
     const rootContext = useMenuRootContext(ITEM_NAME, props.__scopeMenu);
     const contentContext = useMenuContentContext(ITEM_NAME, props.__scopeMenu);
     const composedRefs = useComposedRefs(forwardedRef, ref);
-    const isPointerDownRef = reactExports.useRef(false);
+    const isPointerDownRef = React.useRef(false);
     const handleSelect = /* @__PURE__ */ __name(() => {
       const menuItem = ref.current;
       if (!disabled && menuItem) {
@@ -361,7 +362,7 @@ var MenuItem = /* @__PURE__ */ reactExports.forwardRef(
         }
       }
     }, "handleSelect");
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       MenuItemImpl,
       {
         ...itemProps,
@@ -392,28 +393,28 @@ var MenuItem = /* @__PURE__ */ reactExports.forwardRef(
     );
   }, "MenuItem")
 );
-var MenuItemImpl = /* @__PURE__ */ reactExports.forwardRef(
+var MenuItemImpl = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function MenuItemImpl2(props, forwardedRef) {
     const { __scopeMenu, disabled = false, textValue, ...itemProps } = props;
     const contentContext = useMenuContentContext(ITEM_NAME, __scopeMenu);
     const rovingFocusGroupScope = useRovingFocusGroupScope(__scopeMenu);
-    const ref = reactExports.useRef(null);
+    const ref = React.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, ref);
-    const [isFocused, setIsFocused] = reactExports.useState(false);
-    const [textContent, setTextContent] = reactExports.useState("");
-    reactExports.useEffect(() => {
+    const [isFocused, setIsFocused] = React.useState(false);
+    const [textContent, setTextContent] = React.useState("");
+    React.useEffect(() => {
       const menuItem = ref.current;
       if (menuItem) {
         setTextContent((menuItem.textContent ?? "").trim());
       }
     }, [itemProps.children]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       Collection.ItemSlot,
       {
         scope: __scopeMenu,
         disabled,
         textValue: textValue ?? textContent,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Item, { asChild: true, ...rovingFocusGroupScope, focusable: !disabled, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(Item, { asChild: true, ...rovingFocusGroupScope, focusable: !disabled, children: /* @__PURE__ */ jsx(
           Primitive.div,
           {
             role: "menuitem",

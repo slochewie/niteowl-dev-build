@@ -1,4 +1,4 @@
-import { r as reactExports } from "./react.mjs";
+import { forwardRef, createElement, Component } from "react";
 import { P as PropTypes } from "./prop-types.mjs";
 import { h as hoistStatics } from "./hoist-non-react-statics.mjs";
 function _extends() {
@@ -183,12 +183,12 @@ function makeAsyncScript(getScriptURL, options) {
           childProps[globalName] = typeof window[globalName] !== "undefined" ? window[globalName] : void 0;
         }
         childProps.ref = forwardedRef;
-        return reactExports.createElement(WrappedComponent, childProps);
+        return createElement(WrappedComponent, childProps);
       };
       return AsyncScriptLoader2;
-    })(reactExports.Component);
-    var ForwardedComponent = reactExports.forwardRef(function(props, ref) {
-      return reactExports.createElement(AsyncScriptLoader, _extends({}, props, {
+    })(Component);
+    var ForwardedComponent = forwardRef(function(props, ref) {
+      return createElement(AsyncScriptLoader, _extends({}, props, {
         forwardedRef: ref
       }));
     });

@@ -1,12 +1,12 @@
-import require$$0$1 from "events";
+import require$$0$2 from "events";
 import require$$1$1 from "util/types";
-import require$$0 from "dns";
-import require$$0$2 from "net";
-import require$$1$3 from "tls";
-import { c as commonjsGlobal, b as getAugmentedNamespace, g as getDefaultExportFromCjs } from "./react.mjs";
+import require$$0 from "crypto";
+import require$$0$1 from "dns";
+import require$$0$3 from "net";
+import require$$1$2 from "tls";
+import { c as commonjsGlobal, g as getAugmentedNamespace, a as getDefaultExportFromCjs } from "./react.mjs";
 import { r as requirePgTypes } from "./pg-types.mjs";
-import require$$0$3 from "util";
-import require$$1$2 from "crypto";
+import require$$0$4 from "util";
 import { r as requirePgConnectionString } from "./pg-connection-string.mjs";
 import { r as requireDist } from "./pg-protocol.mjs";
 import { r as requireEmpty } from "./pg-cloudflare.mjs";
@@ -237,7 +237,7 @@ var hasRequiredUtils;
 function requireUtils() {
   if (hasRequiredUtils) return utils;
   hasRequiredUtils = 1;
-  const nodeCrypto = require$$1$2;
+  const nodeCrypto = require$$0;
   utils = {
     postgresMd5PasswordHash,
     randomBytes,
@@ -623,7 +623,7 @@ var hasRequiredConnectionParameters;
 function requireConnectionParameters() {
   if (hasRequiredConnectionParameters) return connectionParameters;
   hasRequiredConnectionParameters = 1;
-  const dns = require$$0;
+  const dns = require$$0$1;
   const defaults2 = requireDefaults();
   const parse = requirePgConnectionString().parse;
   const val = function(key, config, envVar) {
@@ -865,7 +865,7 @@ var hasRequiredQuery$1;
 function requireQuery$1() {
   if (hasRequiredQuery$1) return query$1;
   hasRequiredQuery$1 = 1;
-  const { EventEmitter } = require$$0$1;
+  const { EventEmitter } = require$$0$2;
   const Result = requireResult();
   const utils2 = requireUtils$1();
   class Query extends EventEmitter {
@@ -1080,11 +1080,11 @@ function requireStream() {
   };
   function getNodejsStreamFuncs() {
     function getStream2(ssl) {
-      const net = require$$0$2;
+      const net = require$$0$3;
       return new net.Socket();
     }
     function getSecureStream2(options) {
-      const tls = require$$1$3;
+      const tls = require$$1$2;
       return tls.connect(options);
     }
     return {
@@ -1131,7 +1131,7 @@ var hasRequiredConnection;
 function requireConnection() {
   if (hasRequiredConnection) return connection;
   hasRequiredConnection = 1;
-  const EventEmitter = require$$0$1.EventEmitter;
+  const EventEmitter = require$$0$2.EventEmitter;
   const { parse, serialize } = requireDist();
   const stream2 = requireStream();
   const { getStream } = stream2;
@@ -1218,7 +1218,7 @@ function requireConnection() {
       if (self.sslNegotiation === "direct") {
         options.ALPNProtocols = ["postgresql"];
       }
-      const net = require$$0$2;
+      const net = require$$0$3;
       if (net.isIP && net.isIP(host) === 0) {
         options.servername = host;
       }
@@ -1328,9 +1328,9 @@ var hasRequiredClient$1;
 function requireClient$1() {
   if (hasRequiredClient$1) return client$1;
   hasRequiredClient$1 = 1;
-  const EventEmitter = require$$0$1.EventEmitter;
+  const EventEmitter = require$$0$2.EventEmitter;
   const utils2 = requireUtils$1();
-  const nodeUtils = require$$0$3;
+  const nodeUtils = require$$0$4;
   const sasl2 = requireSasl();
   const TypeOverrides = requireTypeOverrides();
   const ConnectionParameters = requireConnectionParameters();
@@ -1978,8 +1978,8 @@ var hasRequiredQuery;
 function requireQuery() {
   if (hasRequiredQuery) return query.exports;
   hasRequiredQuery = 1;
-  const EventEmitter = require$$0$1.EventEmitter;
-  const util = require$$0$3;
+  const EventEmitter = require$$0$2.EventEmitter;
+  const util = require$$0$4;
   const utils2 = requireUtils$1();
   const NativeQuery = query.exports = function(config, values, callback) {
     EventEmitter.call(this);
@@ -2118,7 +2118,7 @@ var hasRequiredClient;
 function requireClient() {
   if (hasRequiredClient) return client.exports;
   hasRequiredClient = 1;
-  const nodeUtils = require$$0$3;
+  const nodeUtils = require$$0$4;
   var Native;
   try {
     Native = require$$1;
@@ -2126,8 +2126,8 @@ function requireClient() {
     throw e;
   }
   const TypeOverrides = requireTypeOverrides();
-  const EventEmitter = require$$0$1.EventEmitter;
-  const util = require$$0$3;
+  const EventEmitter = require$$0$2.EventEmitter;
+  const util = require$$0$4;
   const ConnectionParameters = requireConnectionParameters();
   const NativeQuery = requireQuery();
   const queryQueueLengthDeprecationNotice = nodeUtils.deprecate(

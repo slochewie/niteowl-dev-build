@@ -1,5 +1,5 @@
-import { r as reactExports } from "../react.mjs";
-var useLayoutEffect2 = globalThis?.document ? reactExports.useLayoutEffect : () => {
+import * as React from "react";
+var useLayoutEffect2 = globalThis?.document ? React.useLayoutEffect : () => {
 };
 export {
   useLayoutEffect2 as u

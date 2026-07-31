@@ -1,10 +1,11 @@
 import { c as computePosition, o as offset$1, s as shift$1, f as flip$1, a as size$1, h as hide$1, b as arrow$2, l as limitShift$1 } from "./floating-ui__dom.mjs";
-import { r as reactExports } from "./react.mjs";
-import { r as reactDomExports } from "./react-dom.mjs";
+import * as React from "react";
+import { useLayoutEffect } from "react";
+import * as ReactDOM from "react-dom";
 var isClient = typeof document !== "undefined";
 var noop = function noop2() {
 };
-var index = isClient ? reactExports.useLayoutEffect : noop;
+var index = isClient ? useLayoutEffect : noop;
 function deepEqual(a, b) {
   if (a === b) {
     return true;
@@ -64,7 +65,7 @@ function roundByDPR(element, value) {
   return Math.round(value * dpr) / dpr;
 }
 function useLatestRef(value) {
-  const ref = reactExports.useRef(value);
+  const ref = React.useRef(value);
   index(() => {
     ref.current = value;
   });
@@ -87,7 +88,7 @@ function useFloating(options) {
     whileElementsMounted,
     open
   } = options;
-  const [data, setData] = reactExports.useState({
+  const [data, setData] = React.useState({
     x: 0,
     y: 0,
     strategy,
@@ -95,19 +96,19 @@ function useFloating(options) {
     middlewareData: {},
     isPositioned: false
   });
-  const [latestMiddleware, setLatestMiddleware] = reactExports.useState(middleware);
+  const [latestMiddleware, setLatestMiddleware] = React.useState(middleware);
   if (!deepEqual(latestMiddleware, middleware)) {
     setLatestMiddleware(middleware);
   }
-  const [_reference, _setReference] = reactExports.useState(null);
-  const [_floating, _setFloating] = reactExports.useState(null);
-  const setReference = reactExports.useCallback((node) => {
+  const [_reference, _setReference] = React.useState(null);
+  const [_floating, _setFloating] = React.useState(null);
+  const setReference = React.useCallback((node) => {
     if (node !== referenceRef.current) {
       referenceRef.current = node;
       _setReference(node);
     }
   }, []);
-  const setFloating = reactExports.useCallback((node) => {
+  const setFloating = React.useCallback((node) => {
     if (node !== floatingRef.current) {
       floatingRef.current = node;
       _setFloating(node);
@@ -115,14 +116,14 @@ function useFloating(options) {
   }, []);
   const referenceEl = externalReference || _reference;
   const floatingEl = externalFloating || _floating;
-  const referenceRef = reactExports.useRef(null);
-  const floatingRef = reactExports.useRef(null);
-  const dataRef = reactExports.useRef(data);
+  const referenceRef = React.useRef(null);
+  const floatingRef = React.useRef(null);
+  const dataRef = React.useRef(data);
   const hasWhileElementsMounted = whileElementsMounted != null;
   const whileElementsMountedRef = useLatestRef(whileElementsMounted);
   const platformRef = useLatestRef(platform);
   const openRef = useLatestRef(open);
-  const update = reactExports.useCallback(() => {
+  const update = React.useCallback(() => {
     if (!referenceRef.current || !floatingRef.current) {
       return;
     }
@@ -145,7 +146,7 @@ function useFloating(options) {
       };
       if (isMountedRef.current && !deepEqual(dataRef.current, fullData)) {
         dataRef.current = fullData;
-        reactDomExports.flushSync(() => {
+        ReactDOM.flushSync(() => {
           setData(fullData);
         });
       }
@@ -160,7 +161,7 @@ function useFloating(options) {
       }));
     }
   }, [open]);
-  const isMountedRef = reactExports.useRef(false);
+  const isMountedRef = React.useRef(false);
   index(() => {
     isMountedRef.current = true;
     return () => {
@@ -177,17 +178,17 @@ function useFloating(options) {
       update();
     }
   }, [referenceEl, floatingEl, update, whileElementsMountedRef, hasWhileElementsMounted]);
-  const refs = reactExports.useMemo(() => ({
+  const refs = React.useMemo(() => ({
     reference: referenceRef,
     floating: floatingRef,
     setReference,
     setFloating
   }), [setReference, setFloating]);
-  const elements = reactExports.useMemo(() => ({
+  const elements = React.useMemo(() => ({
     reference: referenceEl,
     floating: floatingEl
   }), [referenceEl, floatingEl]);
-  const floatingStyles = reactExports.useMemo(() => {
+  const floatingStyles = React.useMemo(() => {
     const initialStyles = {
       position: strategy,
       left: 0,
@@ -213,7 +214,7 @@ function useFloating(options) {
       top: y
     };
   }, [strategy, transform, elements.floating, data.x, data.y]);
-  return reactExports.useMemo(() => ({
+  return React.useMemo(() => ({
     ...data,
     update,
     refs,

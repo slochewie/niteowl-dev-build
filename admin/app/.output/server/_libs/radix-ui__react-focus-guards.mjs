@@ -1,4 +1,4 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var count = 0;
@@ -9,7 +9,7 @@ function FocusGuards(props) {
 }
 __name(FocusGuards, "FocusGuards");
 function useFocusGuards() {
-  reactExports.useEffect(() => {
+  React.useEffect(() => {
     if (!guards) {
       guards = { start: createFocusGuard(), end: createFocusGuard() };
     }

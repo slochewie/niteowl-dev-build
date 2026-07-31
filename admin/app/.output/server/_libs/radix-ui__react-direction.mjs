@@ -1,9 +1,10 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
+import "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var DirectionContext = reactExports.createContext(void 0);
+var DirectionContext = React.createContext(void 0);
 function useDirection(localDir) {
-  const globalDir = reactExports.useContext(DirectionContext);
+  const globalDir = React.useContext(DirectionContext);
   return localDir || globalDir || "ltr";
 }
 __name(useDirection, "useDirection");

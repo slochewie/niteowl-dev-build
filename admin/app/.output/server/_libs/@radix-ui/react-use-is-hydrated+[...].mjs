@@ -1,10 +1,10 @@
-import { d as React2, r as reactExports } from "../react.mjs";
+import * as React from "react";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var _isHydrated = false;
 function useIsHydrated() {
-  const [isHydrated, setIsHydrated] = reactExports.useState(_isHydrated);
-  reactExports.useEffect(() => {
+  const [isHydrated, setIsHydrated] = React.useState(_isHydrated);
+  React.useEffect(() => {
     if (!_isHydrated) {
       _isHydrated = true;
       setIsHydrated(true);
@@ -13,7 +13,7 @@ function useIsHydrated() {
   return isHydrated;
 }
 __name(useIsHydrated, "useIsHydrated");
-var useReactSyncExternalStore = React2[" useSyncExternalStore ".trim().toString()];
+var useReactSyncExternalStore = React[" useSyncExternalStore ".trim().toString()];
 function subscribe() {
   return () => {
   };

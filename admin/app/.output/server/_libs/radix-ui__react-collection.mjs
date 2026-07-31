@@ -6,10 +6,11 @@ var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read fr
 var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var _keys, _a;
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
 import { c as createContextScope } from "./radix-ui__react-context.mjs";
 import { u as useComposedRefs } from "./radix-ui__react-compose-refs.mjs";
 import { c as createSlot } from "./radix-ui__react-slot.mjs";
+import { jsx } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 // @__NO_SIDE_EFFECTS__
@@ -22,42 +23,42 @@ function createCollection(name) {
   );
   const CollectionProvider = /* @__PURE__ */ __name((props) => {
     const { scope, children } = props;
-    const ref = reactExports.useRef(null);
-    const itemMap = reactExports.useRef(/* @__PURE__ */ new Map()).current;
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionProviderImpl, { scope, itemMap, collectionRef: ref, children });
+    const ref = React.useRef(null);
+    const itemMap = React.useRef(/* @__PURE__ */ new Map()).current;
+    return /* @__PURE__ */ jsx(CollectionProviderImpl, { scope, itemMap, collectionRef: ref, children });
   }, "CollectionProvider");
   CollectionProvider.displayName = PROVIDER_NAME;
   const COLLECTION_SLOT_NAME = name + "CollectionSlot";
   const CollectionSlotImpl = createSlot(COLLECTION_SLOT_NAME);
-  const CollectionSlot = reactExports.forwardRef(
+  const CollectionSlot = React.forwardRef(
     (props, forwardedRef) => {
       const { scope, children } = props;
       const context = useCollectionContext(COLLECTION_SLOT_NAME, scope);
       const composedRefs = useComposedRefs(forwardedRef, context.collectionRef);
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionSlotImpl, { ref: composedRefs, children });
+      return /* @__PURE__ */ jsx(CollectionSlotImpl, { ref: composedRefs, children });
     }
   );
   CollectionSlot.displayName = COLLECTION_SLOT_NAME;
   const ITEM_SLOT_NAME = name + "CollectionItemSlot";
   const ITEM_DATA_ATTR = "data-radix-collection-item";
   const CollectionItemSlotImpl = createSlot(ITEM_SLOT_NAME);
-  const CollectionItemSlot = reactExports.forwardRef(
+  const CollectionItemSlot = React.forwardRef(
     (props, forwardedRef) => {
       const { scope, children, ...itemData } = props;
-      const ref = reactExports.useRef(null);
+      const ref = React.useRef(null);
       const composedRefs = useComposedRefs(forwardedRef, ref);
       const context = useCollectionContext(ITEM_SLOT_NAME, scope);
-      reactExports.useEffect(() => {
+      React.useEffect(() => {
         context.itemMap.set(ref, { ref, ...itemData });
         return () => void context.itemMap.delete(ref);
       });
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionItemSlotImpl, { ...{ [ITEM_DATA_ATTR]: "" }, ref: composedRefs, children });
+      return /* @__PURE__ */ jsx(CollectionItemSlotImpl, { ...{ [ITEM_DATA_ATTR]: "" }, ref: composedRefs, children });
     }
   );
   CollectionItemSlot.displayName = ITEM_SLOT_NAME;
   function useCollection(scope) {
     const context = useCollectionContext(name + "CollectionConsumer", scope);
-    const getItems = reactExports.useCallback(() => {
+    const getItems = React.useCallback(() => {
       const collectionNode = context.collectionRef.current;
       if (!collectionNode) return [];
       const orderedNodes = Array.from(collectionNode.querySelectorAll(`[${ITEM_DATA_ATTR}]`));
@@ -398,23 +399,23 @@ function createCollection2(name) {
     }
   );
   const CollectionProvider = /* @__PURE__ */ __name(({ state, ...props }) => {
-    return state ? /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionProviderImpl, { ...props, state }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionInit, { ...props });
+    return state ? /* @__PURE__ */ jsx(CollectionProviderImpl, { ...props, state }) : /* @__PURE__ */ jsx(CollectionInit, { ...props });
   }, "CollectionProvider");
   CollectionProvider.displayName = PROVIDER_NAME;
   const CollectionInit = /* @__PURE__ */ __name((props) => {
     const state = useInitCollection();
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionProviderImpl, { ...props, state });
+    return /* @__PURE__ */ jsx(CollectionProviderImpl, { ...props, state });
   }, "CollectionInit");
   CollectionInit.displayName = PROVIDER_NAME + "Init";
   const CollectionProviderImpl = /* @__PURE__ */ __name((props) => {
     const { scope, children, state } = props;
-    const ref = reactExports.useRef(null);
-    const [collectionElement, setCollectionElement] = reactExports.useState(
+    const ref = React.useRef(null);
+    const [collectionElement, setCollectionElement] = React.useState(
       null
     );
     const composeRefs = useComposedRefs(ref, setCollectionElement);
     const [itemMap, setItemMap] = state;
-    reactExports.useEffect(() => {
+    React.useEffect(() => {
       if (!collectionElement) return;
       const observer = getChildListObserver(() => {
       });
@@ -426,7 +427,7 @@ function createCollection2(name) {
         observer.disconnect();
       };
     }, [collectionElement]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       CollectionContextProvider,
       {
         scope,
@@ -442,32 +443,32 @@ function createCollection2(name) {
   CollectionProviderImpl.displayName = PROVIDER_NAME + "Impl";
   const COLLECTION_SLOT_NAME = name + "CollectionSlot";
   const CollectionSlotImpl = createSlot(COLLECTION_SLOT_NAME);
-  const CollectionSlot = reactExports.forwardRef(
+  const CollectionSlot = React.forwardRef(
     (props, forwardedRef) => {
       const { scope, children } = props;
       const context = useCollectionContext(COLLECTION_SLOT_NAME, scope);
       const composedRefs = useComposedRefs(forwardedRef, context.collectionRef);
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionSlotImpl, { ref: composedRefs, children });
+      return /* @__PURE__ */ jsx(CollectionSlotImpl, { ref: composedRefs, children });
     }
   );
   CollectionSlot.displayName = COLLECTION_SLOT_NAME;
   const ITEM_SLOT_NAME = name + "CollectionItemSlot";
   const ITEM_DATA_ATTR = "data-radix-collection-item";
   const CollectionItemSlotImpl = createSlot(ITEM_SLOT_NAME);
-  const CollectionItemSlot = reactExports.forwardRef(
+  const CollectionItemSlot = React.forwardRef(
     (props, forwardedRef) => {
       const { scope, children, ...itemData } = props;
-      const ref = reactExports.useRef(null);
-      const [element, setElement] = reactExports.useState(null);
+      const ref = React.useRef(null);
+      const [element, setElement] = React.useState(null);
       const composedRefs = useComposedRefs(forwardedRef, ref, setElement);
       const context = useCollectionContext(ITEM_SLOT_NAME, scope);
       const { setItemMap } = context;
-      const itemDataRef = reactExports.useRef(itemData);
+      const itemDataRef = React.useRef(itemData);
       if (!shallowEqual(itemDataRef.current, itemData)) {
         itemDataRef.current = itemData;
       }
       const memoizedItemData = itemDataRef.current;
-      reactExports.useEffect(() => {
+      React.useEffect(() => {
         const itemData2 = memoizedItemData;
         setItemMap((map) => {
           if (!element) {
@@ -489,12 +490,12 @@ function createCollection2(name) {
           });
         };
       }, [element, memoizedItemData, setItemMap]);
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(CollectionItemSlotImpl, { ...{ [ITEM_DATA_ATTR]: "" }, ref: composedRefs, children });
+      return /* @__PURE__ */ jsx(CollectionItemSlotImpl, { ...{ [ITEM_DATA_ATTR]: "" }, ref: composedRefs, children });
     }
   );
   CollectionItemSlot.displayName = ITEM_SLOT_NAME;
   function useInitCollection() {
-    return reactExports.useState(new OrderedDict());
+    return React.useState(new OrderedDict());
   }
   __name(useInitCollection, "useInitCollection");
   function useCollection(scope) {

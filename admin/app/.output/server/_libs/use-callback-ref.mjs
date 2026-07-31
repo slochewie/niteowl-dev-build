@@ -1,4 +1,5 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
+import { useState } from "react";
 function assignRef(ref, value) {
   if (typeof ref === "function") {
     ref(value);
@@ -8,7 +9,7 @@ function assignRef(ref, value) {
   return ref;
 }
 function useCallbackRef(initialValue, callback) {
-  var ref = reactExports.useState(function() {
+  var ref = useState(function() {
     return {
       // value
       value: initialValue,
@@ -32,7 +33,7 @@ function useCallbackRef(initialValue, callback) {
   ref.callback = callback;
   return ref.facade;
 }
-var useIsomorphicLayoutEffect = typeof window !== "undefined" ? reactExports.useLayoutEffect : reactExports.useEffect;
+var useIsomorphicLayoutEffect = typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
 var currentValues = /* @__PURE__ */ new WeakMap();
 function useMergeRefs(refs, defaultValue) {
   var callbackRef = useCallbackRef(null, function(newValue) {

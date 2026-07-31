@@ -1,10 +1,11 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
 import { P as Primitive } from "./radix-ui__react-primitive.mjs";
+import { jsx } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var Label = /* @__PURE__ */ reactExports.forwardRef(
+var Label = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function Label2(props, forwardedRef) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       Primitive.label,
       {
         ...props,

@@ -1,9 +1,9 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 function usePrevious(value) {
-  const ref = reactExports.useRef({ value, previous: value });
-  return reactExports.useMemo(() => {
+  const ref = React.useRef({ value, previous: value });
+  return React.useMemo(() => {
     if (ref.current.value !== value) {
       ref.current.previous = ref.current.value;
       ref.current.value = value;

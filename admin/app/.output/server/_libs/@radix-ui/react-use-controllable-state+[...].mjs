@@ -1,9 +1,9 @@
-import { r as reactExports, d as React2 } from "../react.mjs";
+import * as React from "react";
 import { u as useLayoutEffect2 } from "./react-use-layout-effect+[...].mjs";
 import { u as useEffectEvent } from "./react-use-effect-event+[...].mjs";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var useInsertionEffect = React2[" useInsertionEffect ".trim().toString()] || useLayoutEffect2;
+var useInsertionEffect = React[" useInsertionEffect ".trim().toString()] || useLayoutEffect2;
 function useControllableState({
   prop,
   defaultProp,
@@ -17,7 +17,7 @@ function useControllableState({
   });
   const isControlled = prop !== void 0;
   const value = isControlled ? prop : uncontrolledProp;
-  const setValue = reactExports.useCallback(
+  const setValue = React.useCallback(
     (nextValue) => {
       if (isControlled) {
         const value2 = isFunction(nextValue) ? nextValue(prop) : nextValue;
@@ -37,13 +37,13 @@ function useUncontrolledState({
   defaultProp,
   onChange
 }) {
-  const [value, setValue] = reactExports.useState(defaultProp);
-  const prevValueRef = reactExports.useRef(value);
-  const onChangeRef = reactExports.useRef(onChange);
+  const [value, setValue] = React.useState(defaultProp);
+  const prevValueRef = React.useRef(value);
+  const onChangeRef = React.useRef(onChange);
   useInsertionEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
-  reactExports.useEffect(() => {
+  React.useEffect(() => {
     if (prevValueRef.current !== value) {
       onChangeRef.current?.(value);
       prevValueRef.current = value;
@@ -65,7 +65,7 @@ function useControllableStateReducer(reducer, userArgs, initialArg, init) {
   if (init) {
     args.push(init);
   }
-  const [internalState, dispatch] = reactExports.useReducer(
+  const [internalState, dispatch] = React.useReducer(
     (state2, action) => {
       if (action.type === SYNC_STATE) {
         return { ...state2, state: action.state };
@@ -79,8 +79,8 @@ function useControllableStateReducer(reducer, userArgs, initialArg, init) {
     ...args
   );
   const uncontrolledState = internalState.state;
-  const prevValueRef = reactExports.useRef(uncontrolledState);
-  reactExports.useEffect(() => {
+  const prevValueRef = React.useRef(uncontrolledState);
+  React.useEffect(() => {
     if (prevValueRef.current !== uncontrolledState) {
       prevValueRef.current = uncontrolledState;
       if (!isControlled) {
@@ -88,14 +88,14 @@ function useControllableStateReducer(reducer, userArgs, initialArg, init) {
       }
     }
   }, [uncontrolledState, prevValueRef, isControlled]);
-  const state = reactExports.useMemo(() => {
+  const state = React.useMemo(() => {
     const isControlled2 = controlledState !== void 0;
     if (isControlled2) {
       return { ...internalState, state: controlledState };
     }
     return internalState;
   }, [internalState, controlledState]);
-  reactExports.useEffect(() => {
+  React.useEffect(() => {
     if (isControlled && !Object.is(controlledState, internalState.state)) {
       dispatch({ type: SYNC_STATE, state: controlledState });
     }

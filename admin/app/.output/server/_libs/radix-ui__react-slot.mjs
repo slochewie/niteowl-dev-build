@@ -1,10 +1,10 @@
-import { r as reactExports, d as React2 } from "./react.mjs";
+import * as React from "react";
 import { u as useComposedRefs } from "./radix-ui__react-compose-refs.mjs";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 // @__NO_SIDE_EFFECTS__
 function createSlot(ownerName) {
-  const Slot2 = reactExports.forwardRef((props, forwardedRef) => {
+  const Slot2 = React.forwardRef((props, forwardedRef) => {
     let { children, ...slotProps } = props;
     let slottableElement = null;
     let hasSlottable = false;
@@ -12,7 +12,7 @@ function createSlot(ownerName) {
     if (isLazyComponent(children) && typeof use === "function") {
       children = use(children._payload);
     }
-    reactExports.Children.forEach(children, (maybeSlottable) => {
+    React.Children.forEach(children, (maybeSlottable) => {
       if (isSlottable(maybeSlottable)) {
         hasSlottable = true;
         const slottable = maybeSlottable;
@@ -27,13 +27,13 @@ function createSlot(ownerName) {
       }
     });
     if (slottableElement) {
-      slottableElement = reactExports.cloneElement(slottableElement, void 0, newChildren);
+      slottableElement = React.cloneElement(slottableElement, void 0, newChildren);
     } else if (
       // A `Slottable` was found but it didn't resolve to a single element (e.g.
       // it wrapped multiple elements, text, or a render-prop `child` that
       // wasn't an element). Don't fall back to treating the `Slottable` wrapper
       // itself as the slot target — throw a descriptive error below instead.
-      !hasSlottable && reactExports.Children.count(children) === 1 && reactExports.isValidElement(children)
+      !hasSlottable && React.Children.count(children) === 1 && React.isValidElement(children)
     ) {
       slottableElement = children;
     }
@@ -48,10 +48,10 @@ function createSlot(ownerName) {
       return children;
     }
     const mergedProps = mergeProps(slotProps, slottableElement.props ?? {});
-    if (slottableElement.type !== reactExports.Fragment) {
+    if (slottableElement.type !== React.Fragment) {
       mergedProps.ref = forwardedRef ? composedRef : slottableElementRef;
     }
-    return reactExports.cloneElement(slottableElement, mergedProps);
+    return React.cloneElement(slottableElement, mergedProps);
   });
   Slot2.displayName = `${ownerName}.Slot`;
   return Slot2;
@@ -70,10 +70,10 @@ __name(createSlottable, "createSlottable");
 var getSlottableElementFromSlottable = /* @__PURE__ */ __name((slottable, child) => {
   if ("child" in slottable.props) {
     const child2 = slottable.props.child;
-    if (!reactExports.isValidElement(child2)) return null;
-    return reactExports.cloneElement(child2, void 0, slottable.props.children(child2.props.children));
+    if (!React.isValidElement(child2)) return null;
+    return React.cloneElement(child2, void 0, slottable.props.children(child2.props.children));
   }
-  return reactExports.isValidElement(child) ? child : null;
+  return React.isValidElement(child) ? child : null;
 }, "getSlottableElementFromSlottable");
 function mergeProps(slotProps, childProps) {
   const overrideProps = { ...childProps };
@@ -115,7 +115,7 @@ function getElementRef(element) {
 }
 __name(getElementRef, "getElementRef");
 function isSlottable(child) {
-  return reactExports.isValidElement(child) && typeof child.type === "function" && "__radixId" in child.type && child.type.__radixId === SLOTTABLE_IDENTIFIER;
+  return React.isValidElement(child) && typeof child.type === "function" && "__radixId" in child.type && child.type.__radixId === SLOTTABLE_IDENTIFIER;
 }
 __name(isSlottable, "isSlottable");
 var REACT_LAZY_TYPE = /* @__PURE__ */ Symbol.for("react.lazy");
@@ -133,7 +133,7 @@ var createSlotError = /* @__PURE__ */ __name((ownerName) => {
 var createSlottableError = /* @__PURE__ */ __name((ownerName) => {
   return `${ownerName} failed to slot onto its \`Slottable\`. Expected \`Slottable\` to receive a single React element child.`;
 }, "createSlottableError");
-var use = React2[" use ".trim().toString()];
+var use = React[" use ".trim().toString()];
 export {
   Slot as S,
   createSlottable as a,

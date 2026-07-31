@@ -1,4 +1,4 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
 var Bt = Object.defineProperty, At = Object.defineProperties;
 var kt = Object.getOwnPropertyDescriptors;
 var Y = Object.getOwnPropertySymbols;
@@ -19,20 +19,20 @@ function ht(r) {
   return [s, e, u];
 }
 function _t(r) {
-  let s = reactExports.useRef();
-  return reactExports.useEffect(() => {
+  let s = React.useRef();
+  return React.useEffect(() => {
     s.current = r;
   }), s.current;
 }
 var Ot = 18, wt = 40, Gt = `${wt}px`, xt = ["[data-lastpass-icon-root]", "com-1password-button", "[data-dashlanecreated]", '[style$="2147483647 !important;"]'].join(",");
 function Tt({ containerRef: r, inputRef: s, pushPasswordManagerStrategy: e, isFocused: u }) {
-  let [P, D] = reactExports.useState(false), [G, H] = reactExports.useState(false), [F, W] = reactExports.useState(false), Z = reactExports.useMemo(() => e === "none" ? false : (e === "increase-width" || e === "experimental-no-flickering") && P && G, [P, G, e]), T = reactExports.useCallback(() => {
+  let [P, D] = React.useState(false), [G, H] = React.useState(false), [F, W] = React.useState(false), Z = React.useMemo(() => e === "none" ? false : (e === "increase-width" || e === "experimental-no-flickering") && P && G, [P, G, e]), T = React.useCallback(() => {
     let f = r.current, h = s.current;
     if (!f || !h || F || e === "none") return;
     let a = f, B = a.getBoundingClientRect().left + a.offsetWidth, A = a.getBoundingClientRect().top + a.offsetHeight / 2, z = B - Ot, q = A;
     document.querySelectorAll(xt).length === 0 && document.elementFromPoint(z, q) === f || (D(true), W(true));
   }, [r, s, F, e]);
-  return reactExports.useEffect(() => {
+  return React.useEffect(() => {
     let f = r.current;
     if (!f || e === "none") return;
     function h() {
@@ -44,7 +44,7 @@ function Tt({ containerRef: r, inputRef: s, pushPasswordManagerStrategy: e, isFo
     return () => {
       clearInterval(a);
     };
-  }, [r, e]), reactExports.useEffect(() => {
+  }, [r, e]), React.useEffect(() => {
     let f = u || document.activeElement === s.current;
     if (e === "none" || !f) return;
     let h = setTimeout(T, 0), a = setTimeout(T, 2e3), B = setTimeout(T, 5e3), A = setTimeout(() => {
@@ -55,13 +55,13 @@ function Tt({ containerRef: r, inputRef: s, pushPasswordManagerStrategy: e, isFo
     };
   }, [s, u, e, T]), { hasPWMBadge: P, willPushPWMBadge: Z, PWM_BADGE_SPACE_WIDTH: Gt };
 }
-var jt = reactExports.createContext({}), Lt = reactExports.forwardRef((A, B) => {
+var jt = React.createContext({}), Lt = React.forwardRef((A, B) => {
   var z = A, { value: r, onChange: s, maxLength: e, textAlign: u = "left", pattern: P, placeholder: D, inputMode: G = "numeric", onComplete: H, pushPasswordManagerStrategy: F = "increase-width", pasteTransformer: W, containerClassName: Z, noScriptCSSFallback: T = Nt, render: f, children: h } = z, a = Pt(z, ["value", "onChange", "maxLength", "textAlign", "pattern", "placeholder", "inputMode", "onComplete", "pushPasswordManagerStrategy", "pasteTransformer", "containerClassName", "noScriptCSSFallback", "render", "children"]);
   var X, lt, ut, dt, ft;
-  let [q, nt] = reactExports.useState(typeof a.defaultValue == "string" ? a.defaultValue : ""), i = r != null ? r : q, I = _t(i), x = reactExports.useCallback((t) => {
+  let [q, nt] = React.useState(typeof a.defaultValue == "string" ? a.defaultValue : ""), i = r != null ? r : q, I = _t(i), x = React.useCallback((t) => {
     s == null || s(t), nt(t);
-  }, [s]), m = reactExports.useMemo(() => P ? typeof P == "string" ? new RegExp(P) : P : null, [P]), l = reactExports.useRef(null), K = reactExports.useRef(null), J = reactExports.useRef({ value: i, onChange: x, isIOS: typeof window != "undefined" && ((lt = (X = window == null ? void 0 : window.CSS) == null ? void 0 : X.supports) == null ? void 0 : lt.call(X, "-webkit-touch-callout", "none")) }), V = reactExports.useRef({ prev: [(ut = l.current) == null ? void 0 : ut.selectionStart, (dt = l.current) == null ? void 0 : dt.selectionEnd, (ft = l.current) == null ? void 0 : ft.selectionDirection] });
-  reactExports.useImperativeHandle(B, () => l.current, []), reactExports.useEffect(() => {
+  }, [s]), m = React.useMemo(() => P ? typeof P == "string" ? new RegExp(P) : P : null, [P]), l = React.useRef(null), K = React.useRef(null), J = React.useRef({ value: i, onChange: x, isIOS: typeof window != "undefined" && ((lt = (X = window == null ? void 0 : window.CSS) == null ? void 0 : X.supports) == null ? void 0 : lt.call(X, "-webkit-touch-callout", "none")) }), V = React.useRef({ prev: [(ut = l.current) == null ? void 0 : ut.selectionStart, (dt = l.current) == null ? void 0 : dt.selectionEnd, (ft = l.current) == null ? void 0 : ft.selectionDirection] });
+  React.useImperativeHandle(B, () => l.current, []), React.useEffect(() => {
     let t = l.current, o = K.current;
     if (!t || !o) return;
     J.current.value !== t.value && J.current.onChange(t.value), V.current.prev = [t.selectionStart, t.selectionEnd, t.selectionDirection];
@@ -108,32 +108,32 @@ var jt = reactExports.createContext({}), Lt = reactExports.forwardRef((A, B) => 
       document.removeEventListener("selectionchange", d, { capture: true }), p.disconnect();
     };
   }, []);
-  let [ot, rt] = reactExports.useState(false), [j, Q] = reactExports.useState(false), [M, L] = reactExports.useState(null), [k, N] = reactExports.useState(null);
-  reactExports.useEffect(() => {
+  let [ot, rt] = React.useState(false), [j, Q] = React.useState(false), [M, L] = React.useState(null), [k, N] = React.useState(null);
+  React.useEffect(() => {
     ht(() => {
       var R, p, c, b;
       (R = l.current) == null || R.dispatchEvent(new Event("input"));
       let t = (p = l.current) == null ? void 0 : p.selectionStart, o = (c = l.current) == null ? void 0 : c.selectionEnd, d = (b = l.current) == null ? void 0 : b.selectionDirection;
       t !== null && o !== null && (L(t), N(o), V.current.prev = [t, o, d]);
     });
-  }, [i, j]), reactExports.useEffect(() => {
+  }, [i, j]), React.useEffect(() => {
     I !== void 0 && i !== I && I.length < e && i.length === e && (H == null || H(i));
   }, [e, H, I, i]);
-  let O = Tt({ containerRef: K, inputRef: l, pushPasswordManagerStrategy: F, isFocused: j }), st = reactExports.useCallback((t) => {
+  let O = Tt({ containerRef: K, inputRef: l, pushPasswordManagerStrategy: F, isFocused: j }), st = React.useCallback((t) => {
     let o = t.currentTarget.value.slice(0, e);
     if (o.length > 0 && m && !m.test(o)) {
       t.preventDefault();
       return;
     }
     typeof I == "string" && o.length < I.length && document.dispatchEvent(new Event("selectionchange")), x(o);
-  }, [e, x, I, m]), at = reactExports.useCallback(() => {
+  }, [e, x, I, m]), at = React.useCallback(() => {
     var t;
     if (l.current) {
       let o = Math.min(l.current.value.length, e - 1), d = l.current.value.length;
       (t = l.current) == null || t.setSelectionRange(o, d), L(o), N(d);
     }
     Q(true);
-  }, [e]), ct = reactExports.useCallback((t) => {
+  }, [e]), ct = React.useCallback((t) => {
     var g, E;
     let o = l.current;
     if (!W && (!J.current.isIOS || !t.clipboardData || !o)) return;
@@ -144,7 +144,7 @@ var jt = reactExports.createContext({}), Lt = reactExports.forwardRef((A, B) => 
     o.value = v, x(v);
     let C = Math.min(v.length, e - 1), _ = v.length;
     o.setSelectionRange(C, _), L(C), N(_);
-  }, [e, x, m, i]), It = reactExports.useMemo(() => ({ position: "relative", cursor: a.disabled ? "default" : "text", userSelect: "none", WebkitUserSelect: "none", pointerEvents: "none" }), [a.disabled]), it = reactExports.useMemo(() => ({ position: "absolute", inset: 0, width: O.willPushPWMBadge ? `calc(100% + ${O.PWM_BADGE_SPACE_WIDTH})` : "100%", clipPath: O.willPushPWMBadge ? `inset(0 ${O.PWM_BADGE_SPACE_WIDTH} 0 0)` : void 0, height: "100%", display: "flex", textAlign: u, opacity: "1", color: "transparent", pointerEvents: "all", background: "transparent", caretColor: "transparent", border: "0 solid transparent", outline: "0 solid transparent", boxShadow: "none", lineHeight: "1", letterSpacing: "-.5em", fontSize: "var(--root-height)", fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }), [O.PWM_BADGE_SPACE_WIDTH, O.willPushPWMBadge, u]), Mt = reactExports.useMemo(() => reactExports.createElement("input", bt(St({ autoComplete: a.autoComplete || "one-time-code" }, a), { "data-input-otp": true, "data-input-otp-placeholder-shown": i.length === 0 || void 0, "data-input-otp-mss": M, "data-input-otp-mse": k, inputMode: G, pattern: m == null ? void 0 : m.source, "aria-placeholder": D, style: it, maxLength: e, value: i, ref: l, onPaste: (t) => {
+  }, [e, x, m, i]), It = React.useMemo(() => ({ position: "relative", cursor: a.disabled ? "default" : "text", userSelect: "none", WebkitUserSelect: "none", pointerEvents: "none" }), [a.disabled]), it = React.useMemo(() => ({ position: "absolute", inset: 0, width: O.willPushPWMBadge ? `calc(100% + ${O.PWM_BADGE_SPACE_WIDTH})` : "100%", clipPath: O.willPushPWMBadge ? `inset(0 ${O.PWM_BADGE_SPACE_WIDTH} 0 0)` : void 0, height: "100%", display: "flex", textAlign: u, opacity: "1", color: "transparent", pointerEvents: "all", background: "transparent", caretColor: "transparent", border: "0 solid transparent", outline: "0 solid transparent", boxShadow: "none", lineHeight: "1", letterSpacing: "-.5em", fontSize: "var(--root-height)", fontFamily: "monospace", fontVariantNumeric: "tabular-nums" }), [O.PWM_BADGE_SPACE_WIDTH, O.willPushPWMBadge, u]), Mt = React.useMemo(() => React.createElement("input", bt(St({ autoComplete: a.autoComplete || "one-time-code" }, a), { "data-input-otp": true, "data-input-otp-placeholder-shown": i.length === 0 || void 0, "data-input-otp-mss": M, "data-input-otp-mse": k, inputMode: G, pattern: m == null ? void 0 : m.source, "aria-placeholder": D, style: it, maxLength: e, value: i, ref: l, onPaste: (t) => {
     var o;
     ct(t), (o = a.onPaste) == null || o.call(a, t);
   }, onChange: st, onMouseOver: (t) => {
@@ -159,12 +159,12 @@ var jt = reactExports.createContext({}), Lt = reactExports.forwardRef((A, B) => 
   }, onBlur: (t) => {
     var o;
     Q(false), (o = a.onBlur) == null || o.call(a, t);
-  } })), [st, at, ct, G, it, e, k, M, a, m == null ? void 0 : m.source, i]), tt = reactExports.useMemo(() => ({ slots: Array.from({ length: e }).map((t, o) => {
+  } })), [st, at, ct, G, it, e, k, M, a, m == null ? void 0 : m.source, i]), tt = React.useMemo(() => ({ slots: Array.from({ length: e }).map((t, o) => {
     var c;
     let d = j && M !== null && k !== null && (M === k && o === M || o >= M && o < k), R = i[o] !== void 0 ? i[o] : null, p = i[0] !== void 0 ? null : (c = D == null ? void 0 : D[o]) != null ? c : null;
     return { char: R, placeholderChar: p, isActive: d, hasFakeCaret: d && R === null };
-  }), isFocused: j, isHovering: !a.disabled && ot }), [j, ot, e, k, M, a.disabled, i]), Ct = reactExports.useMemo(() => f ? f(tt) : reactExports.createElement(jt.Provider, { value: tt }, h), [h, tt, f]);
-  return reactExports.createElement(reactExports.Fragment, null, T !== null && reactExports.createElement("noscript", null, reactExports.createElement("style", null, T)), reactExports.createElement("div", { ref: K, "data-input-otp-container": true, style: It, className: Z }, Ct, reactExports.createElement("div", { style: { position: "absolute", inset: 0, pointerEvents: "none" } }, Mt)));
+  }), isFocused: j, isHovering: !a.disabled && ot }), [j, ot, e, k, M, a.disabled, i]), Ct = React.useMemo(() => f ? f(tt) : React.createElement(jt.Provider, { value: tt }, h), [h, tt, f]);
+  return React.createElement(React.Fragment, null, T !== null && React.createElement("noscript", null, React.createElement("style", null, T)), React.createElement("div", { ref: K, "data-input-otp-container": true, style: It, className: Z }, Ct, React.createElement("div", { style: { position: "absolute", inset: 0, pointerEvents: "none" } }, Mt)));
 });
 Lt.displayName = "Input";
 function $(r, s) {

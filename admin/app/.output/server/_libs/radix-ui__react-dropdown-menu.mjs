@@ -1,4 +1,4 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
 import { c as composeEventHandlers } from "./radix-ui__primitive.mjs";
 import { u as useComposedRefs } from "./radix-ui__react-compose-refs.mjs";
 import { c as createContextScope } from "./radix-ui__react-context.mjs";
@@ -6,6 +6,7 @@ import { u as useControllableState } from "./@radix-ui/react-use-controllable-st
 import { P as Primitive } from "./radix-ui__react-primitive.mjs";
 import { c as createMenuScope, R as Root3, A as Anchor2, P as Portal, C as Content2$1, I as Item2$1 } from "./radix-ui__react-menu.mjs";
 import { u as useId } from "./radix-ui__react-id.mjs";
+import { jsx } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var DROPDOWN_MENU_NAME = "DropdownMenu";
@@ -26,14 +27,14 @@ var DropdownMenu = /* @__PURE__ */ __name((props) => {
     modal = true
   } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
-  const triggerRef = reactExports.useRef(null);
+  const triggerRef = React.useRef(null);
   const [open, setOpen] = useControllableState({
     prop: openProp,
     defaultProp: defaultOpen ?? false,
     onChange: onOpenChange,
     caller: DROPDOWN_MENU_NAME
   });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     DropdownMenuProvider,
     {
       scope: __scopeDropdownMenu,
@@ -42,21 +43,21 @@ var DropdownMenu = /* @__PURE__ */ __name((props) => {
       contentId: useId(),
       open,
       onOpenChange: setOpen,
-      onOpenToggle: reactExports.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
+      onOpenToggle: React.useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen]),
       modal,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root3, { ...menuScope, open, onOpenChange: setOpen, dir, modal, children })
+      children: /* @__PURE__ */ jsx(Root3, { ...menuScope, open, onOpenChange: setOpen, dir, modal, children })
     }
   );
 }, "DropdownMenu");
 var TRIGGER_NAME = "DropdownMenuTrigger";
-var DropdownMenuTrigger = /* @__PURE__ */ reactExports.forwardRef(
+var DropdownMenuTrigger = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function DropdownMenuTrigger2(props, forwardedRef) {
     const { __scopeDropdownMenu, disabled = false, ...triggerProps } = props;
     const context = useDropdownMenuContext(TRIGGER_NAME, __scopeDropdownMenu);
     const menuScope = useMenuScope(__scopeDropdownMenu);
     const composedRefs = useComposedRefs(forwardedRef, context.triggerRef);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Anchor2, { asChild: true, ...menuScope, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(Anchor2, { asChild: true, ...menuScope, children: /* @__PURE__ */ jsx(
       Primitive.button,
       {
         type: "button",
@@ -88,17 +89,17 @@ var DropdownMenuTrigger = /* @__PURE__ */ reactExports.forwardRef(
 var DropdownMenuPortal = /* @__PURE__ */ __name((props) => {
   const { __scopeDropdownMenu, ...portalProps } = props;
   const menuScope = useMenuScope(__scopeDropdownMenu);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { ...menuScope, ...portalProps });
+  return /* @__PURE__ */ jsx(Portal, { ...menuScope, ...portalProps });
 }, "DropdownMenuPortal");
 var CONTENT_NAME = "DropdownMenuContent";
-var DropdownMenuContent = /* @__PURE__ */ reactExports.forwardRef(
+var DropdownMenuContent = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function DropdownMenuContent2(props, forwardedRef) {
     const { __scopeDropdownMenu, ...contentProps } = props;
     const context = useDropdownMenuContext(CONTENT_NAME, __scopeDropdownMenu);
     const menuScope = useMenuScope(__scopeDropdownMenu);
-    const hasInteractedOutsideRef = reactExports.useRef(false);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    const hasInteractedOutsideRef = React.useRef(false);
+    return /* @__PURE__ */ jsx(
       Content2$1,
       {
         id: context.contentId,
@@ -132,12 +133,12 @@ var DropdownMenuContent = /* @__PURE__ */ reactExports.forwardRef(
     );
   }, "DropdownMenuContent")
 );
-var DropdownMenuItem = /* @__PURE__ */ reactExports.forwardRef(
+var DropdownMenuItem = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function DropdownMenuItem2(props, forwardedRef) {
     const { __scopeDropdownMenu, ...itemProps } = props;
     const menuScope = useMenuScope(__scopeDropdownMenu);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Item2$1, { ...menuScope, ...itemProps, ref: forwardedRef });
+    return /* @__PURE__ */ jsx(Item2$1, { ...menuScope, ...itemProps, ref: forwardedRef });
   }, "DropdownMenuItem")
 );
 var Root2 = DropdownMenu;

@@ -6,6 +6,7 @@
 @import "@btst/stack/plugins/ui-builder/css";
 @import "@btst/stack/plugins/kanban/css";
 @import "@btst/stack/plugins/comments/css";
+@import "@btst/stack/plugins/media/css";
 @import "@btst/better-auth-ui/css";
 @import "@btst/stack/plugins/route-docs/css";
 @import "shadcn/tailwind.css";

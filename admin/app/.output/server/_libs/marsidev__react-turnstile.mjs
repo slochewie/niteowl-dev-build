@@ -1,5 +1,6 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
-var c = reactExports.forwardRef(({ as: e = `div`, ...t }, n) => jsxRuntimeExports.jsx(e, { ...t, ref: n }));
+import { forwardRef, useCallback, useState, useRef, useEffect, useMemo, useImperativeHandle } from "react";
+import { jsx } from "react/jsx-runtime";
+var c = forwardRef(({ as: e = `div`, ...t }, n) => jsx(e, { ...t, ref: n }));
 const l = `https://challenges.cloudflare.com/turnstile/v0/api.js`, u = `cf-turnstile-script`, f = `onloadTurnstileCallback`, p = (e) => !!document.getElementById(e), m = ({ render: e = `explicit`, onLoadCallbackName: t = f, scriptOptions: { nonce: n = ``, defer: r = true, async: i = true, id: a = ``, appendTo: o, onError: s, crossOrigin: c2 = `` } = {} }) => {
   let u2 = a || `cf-turnstile-script`;
   if (p(u2)) return;
@@ -10,8 +11,8 @@ function g(e) {
   if (e !== `invisible`) return e;
 }
 function _(e = u) {
-  let [t, r] = reactExports.useState(false);
-  return reactExports.useEffect(() => {
+  let [t, r] = useState(false);
+  return useEffect(() => {
     let t2 = () => {
       p(e) && r(true);
     }, n = new MutationObserver(t2);
@@ -25,24 +26,24 @@ const b = new Promise((e, t) => {
   y = { resolve: e, reject: t }, v === `ready` && e(void 0);
 }), x = (e = f) => (v === `unloaded` && (v = `loading`, window[e] = () => {
   y.resolve(), v = `ready`, delete window[e];
-}), b), S = reactExports.forwardRef((e, l2) => {
-  let { scriptOptions: u2, options: d = {}, siteKey: f2, onWidgetLoad: p2, onSuccess: y2, onExpire: b2, onError: S2, onBeforeInteractive: C, onAfterInteractive: w, onUnsupported: T, onTimeout: E, onLoadScript: D, id: O, style: k, as: A = `div`, injectScript: j = true, rerenderOnCallbackChange: M = false, ...N } = e, P = d.size, F = reactExports.useCallback(() => {
+}), b), S = forwardRef((e, l2) => {
+  let { scriptOptions: u2, options: d = {}, siteKey: f2, onWidgetLoad: p2, onSuccess: y2, onExpire: b2, onError: S2, onBeforeInteractive: C, onAfterInteractive: w, onUnsupported: T, onTimeout: E, onLoadScript: D, id: O, style: k, as: A = `div`, injectScript: j = true, rerenderOnCallbackChange: M = false, ...N } = e, P = d.size, F = useCallback(() => {
     if (P === void 0) return {};
     if (d.execution === `execute`) return h.invisible;
     let e2 = h[P];
     return d.appearance === `interaction-only` ? { ...e2, height: `auto` } : e2;
-  }, [d.execution, P, d.appearance]), [I, L] = reactExports.useState(F()), R = reactExports.useRef(null), [z, B] = reactExports.useState(false), V = reactExports.useRef(void 0), H = reactExports.useRef(false), U = O || `cf-turnstile`, W = reactExports.useRef({ onSuccess: y2, onError: S2, onExpire: b2, onBeforeInteractive: C, onAfterInteractive: w, onUnsupported: T, onTimeout: E });
-  reactExports.useEffect(() => {
+  }, [d.execution, P, d.appearance]), [I, L] = useState(F()), R = useRef(null), [z, B] = useState(false), V = useRef(void 0), H = useRef(false), U = O || `cf-turnstile`, W = useRef({ onSuccess: y2, onError: S2, onExpire: b2, onBeforeInteractive: C, onAfterInteractive: w, onUnsupported: T, onTimeout: E });
+  useEffect(() => {
     M || (W.current = { onSuccess: y2, onError: S2, onExpire: b2, onBeforeInteractive: C, onAfterInteractive: w, onUnsupported: T, onTimeout: E });
   });
-  let G = u2?.id || `cf-turnstile-script`, K = _(G), q = u2?.onLoadCallbackName || `onloadTurnstileCallback`, J = d.appearance || `always`, Y = reactExports.useMemo(() => ({ sitekey: f2, action: d.action, cData: d.cData, theme: d.theme || `auto`, language: d.language || `auto`, tabindex: d.tabIndex, "response-field": d.responseField, "response-field-name": d.responseFieldName, size: g(P), retry: d.retry || `auto`, "retry-interval": d.retryInterval || 8e3, "refresh-expired": d.refreshExpired || `auto`, "refresh-timeout": d.refreshTimeout || `auto`, execution: d.execution || `render`, appearance: d.appearance || `always`, "feedback-enabled": d.feedbackEnabled ?? true, callback: (e2) => {
+  let G = u2?.id || `cf-turnstile-script`, K = _(G), q = u2?.onLoadCallbackName || `onloadTurnstileCallback`, J = d.appearance || `always`, Y = useMemo(() => ({ sitekey: f2, action: d.action, cData: d.cData, theme: d.theme || `auto`, language: d.language || `auto`, tabindex: d.tabIndex, "response-field": d.responseField, "response-field-name": d.responseFieldName, size: g(P), retry: d.retry || `auto`, "retry-interval": d.retryInterval || 8e3, "refresh-expired": d.refreshExpired || `auto`, "refresh-timeout": d.refreshTimeout || `auto`, execution: d.execution || `render`, appearance: d.appearance || `always`, "feedback-enabled": d.feedbackEnabled ?? true, callback: (e2) => {
     H.current = true, M ? y2?.(e2) : W.current.onSuccess?.(e2);
-  }, "error-callback": M ? S2 : (...e2) => W.current.onError?.(...e2), "expired-callback": M ? b2 : (...e2) => W.current.onExpire?.(...e2), "before-interactive-callback": M ? C : (...e2) => W.current.onBeforeInteractive?.(...e2), "after-interactive-callback": M ? w : (...e2) => W.current.onAfterInteractive?.(...e2), "unsupported-callback": M ? T : (...e2) => W.current.onUnsupported?.(...e2), "timeout-callback": M ? E : (...e2) => W.current.onTimeout?.(...e2) }), [d.action, d.appearance, d.cData, d.execution, d.language, d.refreshExpired, d.responseField, d.responseFieldName, d.retry, d.retryInterval, d.tabIndex, d.theme, d.feedbackEnabled, d.refreshTimeout, f2, P, M, M ? y2 : null, M ? S2 : null, M ? b2 : null, M ? C : null, M ? w : null, M ? T : null, M ? E : null]), X = reactExports.useCallback(() => typeof window < `u` && !!window.turnstile, []);
-  return reactExports.useEffect(function() {
+  }, "error-callback": M ? S2 : (...e2) => W.current.onError?.(...e2), "expired-callback": M ? b2 : (...e2) => W.current.onExpire?.(...e2), "before-interactive-callback": M ? C : (...e2) => W.current.onBeforeInteractive?.(...e2), "after-interactive-callback": M ? w : (...e2) => W.current.onAfterInteractive?.(...e2), "unsupported-callback": M ? T : (...e2) => W.current.onUnsupported?.(...e2), "timeout-callback": M ? E : (...e2) => W.current.onTimeout?.(...e2) }), [d.action, d.appearance, d.cData, d.execution, d.language, d.refreshExpired, d.responseField, d.responseFieldName, d.retry, d.retryInterval, d.tabIndex, d.theme, d.feedbackEnabled, d.refreshTimeout, f2, P, M, M ? y2 : null, M ? S2 : null, M ? b2 : null, M ? C : null, M ? w : null, M ? T : null, M ? E : null]), X = useCallback(() => typeof window < `u` && !!window.turnstile, []);
+  return useEffect(function() {
     j && !z && (x(q), m({ onLoadCallbackName: q, scriptOptions: { ...u2, id: G } }));
-  }, [j, z, u2, G, q]), reactExports.useEffect(function() {
+  }, [j, z, u2, G, q]), useEffect(function() {
     v !== `ready` && x(q).then(() => B(true)).catch(console.error);
-  }, [q]), reactExports.useEffect(function() {
+  }, [q]), useEffect(function() {
     if (!R.current || !z) return;
     let e2 = false;
     return (async () => {
@@ -50,7 +51,7 @@ const b = new Promise((e, t) => {
     })(), () => {
       e2 = true, V.current && (window.turnstile.remove(V.current), H.current = false);
     };
-  }, [U, z, Y]), reactExports.useImperativeHandle(l2, () => {
+  }, [U, z, Y]), useImperativeHandle(l2, () => {
     let { turnstile: e2 } = window;
     return { getResponse() {
       if (!e2?.getResponse || !V.current || !X()) {
@@ -110,7 +111,7 @@ const b = new Promise((e, t) => {
     }, isExpired() {
       return !e2?.isExpired || !V.current || !X() ? (console.warn(`Turnstile has not been loaded`), false) : e2.isExpired(V.current);
     } };
-  }, [V, d.execution, P, Y, R, X, z, p2, F]), reactExports.useEffect(() => {
+  }, [V, d.execution, P, Y, R, X, z, p2, F]), useEffect(() => {
     if (z || !K) return;
     if (window.turnstile) {
       B(true);
@@ -122,11 +123,11 @@ const b = new Promise((e, t) => {
     return () => {
       clearInterval(e2);
     };
-  }, [z, K]), reactExports.useEffect(() => {
+  }, [z, K]), useEffect(() => {
     L(F());
-  }, [d.execution, P, J]), reactExports.useEffect(() => {
+  }, [d.execution, P, J]), useEffect(() => {
     !K || typeof D != `function` || D();
-  }, [K]), jsxRuntimeExports.jsx(c, { ref: R, as: A, id: U, style: { ...I, ...k }, ...N });
+  }, [K]), jsx(c, { ref: R, as: A, id: U, style: { ...I, ...k }, ...N });
 });
 S.displayName = `Turnstile`;
 export {

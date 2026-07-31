@@ -11,7 +11,7 @@ import { openApiBackendPlugin } from "@btst/stack/plugins/open-api/api"
 import { z } from "zod"
 // TODO: wire your Drizzle DB instance (drizzleDb)
 //const drizzleDb = {} as never
-import { drizzleDb } from "@/lib/db"
+import { drizzleDb } from "./db"
 
 export const myStack = stack({
 	basePath: "/api/data",
@@ -34,7 +34,14 @@ export const myStack = stack({
 		media: mediaBackendPlugin({ storageAdapter: undefined as any }),
 		openApi: openApiBackendPlugin(),
 	},
-	adapter: (db) => createDrizzleAdapter(drizzleDb, db, {}),
+        adapter: (db) =>
+          createDrizzleAdapter(
+            drizzleDb,
+            db,
+            {
+              provider: "pg",
+            },
+          )({}),
 })
 
 export const { handler, dbSchema } = myStack

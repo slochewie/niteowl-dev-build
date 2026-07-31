@@ -1,4 +1,4 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
 import { P as PropTypes } from "./prop-types.mjs";
 import { m as makeAsyncScript } from "./react-async-script.mjs";
 var _excluded = ["sitekey", "onChange", "theme", "type", "tabindex", "onExpired", "onErrored", "size", "stoken", "grecaptcha", "badge", "hl", "isolated"];
@@ -185,12 +185,12 @@ var ReCAPTCHA = /* @__PURE__ */ (function(_React$Component) {
     _this$props.hl;
     _this$props.isolated;
     var childProps = _objectWithoutPropertiesLoose(_this$props, _excluded);
-    return /* @__PURE__ */ reactExports.createElement("div", _extends({}, childProps, {
+    return /* @__PURE__ */ React.createElement("div", _extends({}, childProps, {
       ref: this.handleRecaptchaRef
     }));
   };
   return ReCAPTCHA2;
-})(reactExports.Component);
+})(React.Component);
 ReCAPTCHA.displayName = "ReCAPTCHA";
 ReCAPTCHA.propTypes = {
   sitekey: PropTypes.string.isRequired,

@@ -1,4 +1,4 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
 import { g as getNonce } from "./get-nonce.mjs";
 function makeStyleTag() {
   if (!document)
@@ -47,7 +47,7 @@ var stylesheetSingleton = function() {
 var styleHookSingleton = function() {
   var sheet = stylesheetSingleton();
   return function(styles, isDynamic) {
-    reactExports.useEffect(function() {
+    React.useEffect(function() {
       sheet.add(styles);
       return function() {
         sheet.remove();

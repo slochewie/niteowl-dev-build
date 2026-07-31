@@ -1,1 +1,1 @@
-import "./react.mjs";
+import "react";

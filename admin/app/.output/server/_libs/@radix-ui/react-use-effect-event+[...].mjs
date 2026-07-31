@@ -1,14 +1,14 @@
 import { u as useLayoutEffect2 } from "./react-use-layout-effect+[...].mjs";
-import { r as reactExports, d as React2 } from "../react.mjs";
+import * as React from "react";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
-var useReactEffectEvent = React2[" useEffectEvent ".trim().toString()];
-var useReactInsertionEffect = React2[" useInsertionEffect ".trim().toString()];
+var useReactEffectEvent = React[" useEffectEvent ".trim().toString()];
+var useReactInsertionEffect = React[" useInsertionEffect ".trim().toString()];
 function useEffectEvent(callback) {
   if (typeof useReactEffectEvent === "function") {
     return useReactEffectEvent(callback);
   }
-  const ref = reactExports.useRef(() => {
+  const ref = React.useRef(() => {
     throw new Error("Cannot call an event handler while rendering.");
   });
   if (typeof useReactInsertionEffect === "function") {
@@ -20,7 +20,7 @@ function useEffectEvent(callback) {
       ref.current = callback;
     });
   }
-  return reactExports.useMemo(() => ((...args) => ref.current?.(...args)), []);
+  return React.useMemo(() => ((...args) => ref.current?.(...args)), []);
 }
 __name(useEffectEvent, "useEffectEvent");
 export {

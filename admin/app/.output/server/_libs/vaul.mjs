@@ -1,5 +1,6 @@
 import { g as DialogTrigger, c as DialogTitle, D as Dialog, a as DialogContent, e as DialogPortal, f as DialogOverlay } from "./radix-ui__react-dialog.mjs";
-import { R as React, r as reactExports } from "./react.mjs";
+import * as React from "react";
+import React__default, { useMemo, useLayoutEffect, useEffect } from "react";
 function __insertCSS(code) {
   if (typeof document == "undefined") return;
   let head = document.head || document.getElementsByTagName("head")[0];
@@ -8,7 +9,7 @@ function __insertCSS(code) {
   head.appendChild(style);
   style.styleSheet ? style.styleSheet.cssText = code : style.appendChild(document.createTextNode(code));
 }
-const DrawerContext = React.createContext({
+const DrawerContext = React__default.createContext({
   drawerRef: {
     current: null
   },
@@ -57,7 +58,7 @@ const DrawerContext = React.createContext({
   autoFocus: false
 });
 const useDrawerContext = () => {
-  const context = React.useContext(DrawerContext);
+  const context = React__default.useContext(DrawerContext);
   if (!context) {
     throw new Error("useDrawerContext must be used within a Drawer.Root");
   }
@@ -89,7 +90,7 @@ function testPlatform(re) {
   return typeof window !== "undefined" && window.navigator != null ? re.test(window.navigator.platform) : void 0;
 }
 const KEYBOARD_BUFFER = 24;
-const useIsomorphicLayoutEffect = typeof window !== "undefined" ? reactExports.useLayoutEffect : reactExports.useEffect;
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 function chain$1(...callbacks) {
   return (...args) => {
     for (let callback of callbacks) {
@@ -271,7 +272,7 @@ function composeRefs(...refs) {
   return (node) => refs.forEach((ref) => setRef(ref, node));
 }
 function useComposedRefs(...refs) {
-  return reactExports.useCallback(composeRefs(...refs), refs);
+  return React.useCallback(composeRefs(...refs), refs);
 }
 const cache = /* @__PURE__ */ new WeakMap();
 function set(el, styles, ignoreCache = false) {
@@ -364,18 +365,18 @@ const NESTED_DISPLACEMENT = 16;
 const WINDOW_TOP_OFFSET = 26;
 const DRAG_CLASS = "vaul-dragging";
 function useCallbackRef(callback) {
-  const callbackRef = React.useRef(callback);
-  React.useEffect(() => {
+  const callbackRef = React__default.useRef(callback);
+  React__default.useEffect(() => {
     callbackRef.current = callback;
   });
-  return React.useMemo(() => (...args) => callbackRef.current == null ? void 0 : callbackRef.current.call(callbackRef, ...args), []);
+  return React__default.useMemo(() => (...args) => callbackRef.current == null ? void 0 : callbackRef.current.call(callbackRef, ...args), []);
 }
 function useUncontrolledState({ defaultProp, onChange }) {
-  const uncontrolledState = React.useState(defaultProp);
+  const uncontrolledState = React__default.useState(defaultProp);
   const [value] = uncontrolledState;
-  const prevValueRef = React.useRef(value);
+  const prevValueRef = React__default.useRef(value);
   const handleChange = useCallbackRef(onChange);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (prevValueRef.current !== value) {
       handleChange(value);
       prevValueRef.current = value;
@@ -396,7 +397,7 @@ function useControllableState({ prop, defaultProp, onChange = () => {
   const isControlled = prop !== void 0;
   const value = isControlled ? prop : uncontrolledProp;
   const handleChange = useCallbackRef(onChange);
-  const setValue = React.useCallback((nextValue) => {
+  const setValue = React__default.useCallback((nextValue) => {
     if (isControlled) {
       const setter = nextValue;
       const value2 = typeof nextValue === "function" ? setter(prop) : nextValue;
@@ -421,11 +422,11 @@ function useSnapPoints({ activeSnapPointProp, setActiveSnapPointProp, snapPoints
     defaultProp: snapPoints == null ? void 0 : snapPoints[0],
     onChange: setActiveSnapPointProp
   });
-  const [windowDimensions, setWindowDimensions] = React.useState(typeof window !== "undefined" ? {
+  const [windowDimensions, setWindowDimensions] = React__default.useState(typeof window !== "undefined" ? {
     innerWidth: window.innerWidth,
     innerHeight: window.innerHeight
   } : void 0);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     function onResize() {
       setWindowDimensions({
         innerWidth: window.innerWidth,
@@ -435,11 +436,11 @@ function useSnapPoints({ activeSnapPointProp, setActiveSnapPointProp, snapPoints
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-  const isLastSnapPoint = React.useMemo(() => activeSnapPoint === (snapPoints == null ? void 0 : snapPoints[snapPoints.length - 1]) || null, [
+  const isLastSnapPoint = React__default.useMemo(() => activeSnapPoint === (snapPoints == null ? void 0 : snapPoints[snapPoints.length - 1]) || null, [
     snapPoints,
     activeSnapPoint
   ]);
-  const activeSnapPointIndex = React.useMemo(() => {
+  const activeSnapPointIndex = React__default.useMemo(() => {
     var _snapPoints_findIndex;
     return (_snapPoints_findIndex = snapPoints == null ? void 0 : snapPoints.findIndex((snapPoint) => snapPoint === activeSnapPoint)) != null ? _snapPoints_findIndex : null;
   }, [
@@ -447,7 +448,7 @@ function useSnapPoints({ activeSnapPointProp, setActiveSnapPointProp, snapPoints
     activeSnapPoint
   ]);
   const shouldFade = snapPoints && snapPoints.length > 0 && (fadeFromIndex || fadeFromIndex === 0) && !Number.isNaN(fadeFromIndex) && snapPoints[fadeFromIndex] === activeSnapPoint || !snapPoints;
-  const snapPointsOffset = React.useMemo(() => {
+  const snapPointsOffset = React__default.useMemo(() => {
     const containerSize = container ? {
       width: container.getBoundingClientRect().width,
       height: container.getBoundingClientRect().height
@@ -483,11 +484,11 @@ function useSnapPoints({ activeSnapPointProp, setActiveSnapPointProp, snapPoints
     windowDimensions,
     container
   ]);
-  const activeSnapPointOffset = React.useMemo(() => activeSnapPointIndex !== null ? snapPointsOffset == null ? void 0 : snapPointsOffset[activeSnapPointIndex] : null, [
+  const activeSnapPointOffset = React__default.useMemo(() => activeSnapPointIndex !== null ? snapPointsOffset == null ? void 0 : snapPointsOffset[activeSnapPointIndex] : null, [
     snapPointsOffset,
     activeSnapPointIndex
   ]);
-  const snapToPoint = React.useCallback((dimension) => {
+  const snapToPoint = React__default.useCallback((dimension) => {
     var _snapPointsOffset_findIndex;
     const newSnapPointIndex = (_snapPointsOffset_findIndex = snapPointsOffset == null ? void 0 : snapPointsOffset.findIndex((snapPointDim) => snapPointDim === dimension)) != null ? _snapPointsOffset_findIndex : null;
     onSnapPointChange(newSnapPointIndex);
@@ -515,7 +516,7 @@ function useSnapPoints({ activeSnapPointProp, setActiveSnapPointProp, snapPoints
     overlayRef,
     setActiveSnapPoint
   ]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (activeSnapPoint || activeSnapPointProp) {
       var _snapPoints_findIndex;
       const newIndex = (_snapPoints_findIndex = snapPoints == null ? void 0 : snapPoints.findIndex((snapPoint) => snapPoint === activeSnapPointProp || snapPoint === activeSnapPoint)) != null ? _snapPoints_findIndex : -1;
@@ -617,12 +618,12 @@ const noop = () => () => {
 };
 function useScaleBackground() {
   const { direction, isOpen, shouldScaleBackground, setBackgroundColorOnScale, noBodyStyles } = useDrawerContext();
-  const timeoutIdRef = React.useRef(null);
-  const initialBackgroundColor = reactExports.useMemo(() => document.body.style.backgroundColor, []);
+  const timeoutIdRef = React__default.useRef(null);
+  const initialBackgroundColor = useMemo(() => document.body.style.backgroundColor, []);
   function getScale() {
     return (window.innerWidth - WINDOW_TOP_OFFSET) / window.innerWidth;
   }
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (isOpen && shouldScaleBackground) {
       if (timeoutIdRef.current) clearTimeout(timeoutIdRef.current);
       const wrapper = document.querySelector("[data-vaul-drawer-wrapper]") || document.querySelector("[vaul-drawer-wrapper]");
@@ -663,9 +664,9 @@ function useScaleBackground() {
 }
 let previousBodyPosition = null;
 function usePositionFixed({ isOpen, modal, nested, hasBeenOpened, preventScrollRestoration, noBodyStyles }) {
-  const [activeUrl, setActiveUrl] = React.useState(() => typeof window !== "undefined" ? window.location.href : "");
-  const scrollPos = React.useRef(0);
-  const setPositionFixed = React.useCallback(() => {
+  const [activeUrl, setActiveUrl] = React__default.useState(() => typeof window !== "undefined" ? window.location.href : "");
+  const scrollPos = React__default.useRef(0);
+  const setPositionFixed = React__default.useCallback(() => {
     if (!isSafari()) return;
     if (previousBodyPosition === null && isOpen && !noBodyStyles) {
       previousBodyPosition = {
@@ -693,7 +694,7 @@ function usePositionFixed({ isOpen, modal, nested, hasBeenOpened, preventScrollR
   }, [
     isOpen
   ]);
-  const restorePositionSetting = React.useCallback(() => {
+  const restorePositionSetting = React__default.useCallback(() => {
     if (!isSafari()) return;
     if (previousBodyPosition !== null && !noBodyStyles) {
       const y = -parseInt(document.body.style.top, 10);
@@ -711,7 +712,7 @@ function usePositionFixed({ isOpen, modal, nested, hasBeenOpened, preventScrollR
   }, [
     activeUrl
   ]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     function onScroll() {
       scrollPos.current = window.scrollY;
     }
@@ -721,7 +722,7 @@ function usePositionFixed({ isOpen, modal, nested, hasBeenOpened, preventScrollR
       window.removeEventListener("scroll", onScroll);
     };
   }, []);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (!modal) return;
     return () => {
       if (typeof document === "undefined") return;
@@ -733,7 +734,7 @@ function usePositionFixed({ isOpen, modal, nested, hasBeenOpened, preventScrollR
     modal,
     restorePositionSetting
   ]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (nested || !hasBeenOpened) return;
     if (isOpen) {
       const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
@@ -784,25 +785,25 @@ function Root({ open: openProp, onOpenChange, children, onDrag: onDragProp, onRe
       }
     }
   });
-  const [hasBeenOpened, setHasBeenOpened] = React.useState(false);
-  const [isDragging, setIsDragging] = React.useState(false);
-  const [justReleased, setJustReleased] = React.useState(false);
-  const overlayRef = React.useRef(null);
-  const openTime = React.useRef(null);
-  const dragStartTime = React.useRef(null);
-  const dragEndTime = React.useRef(null);
-  const lastTimeDragPrevented = React.useRef(null);
-  const isAllowedToDrag = React.useRef(false);
-  const nestedOpenChangeTimer = React.useRef(null);
-  const pointerStart = React.useRef(0);
-  const keyboardIsOpen = React.useRef(false);
-  const shouldAnimate = React.useRef(!defaultOpen);
-  const previousDiffFromInitial = React.useRef(0);
-  const drawerRef = React.useRef(null);
-  const drawerHeightRef = React.useRef(((_drawerRef_current = drawerRef.current) == null ? void 0 : _drawerRef_current.getBoundingClientRect().height) || 0);
-  const drawerWidthRef = React.useRef(((_drawerRef_current1 = drawerRef.current) == null ? void 0 : _drawerRef_current1.getBoundingClientRect().width) || 0);
-  const initialDrawerHeight = React.useRef(0);
-  const onSnapPointChange = React.useCallback((activeSnapPointIndex2) => {
+  const [hasBeenOpened, setHasBeenOpened] = React__default.useState(false);
+  const [isDragging, setIsDragging] = React__default.useState(false);
+  const [justReleased, setJustReleased] = React__default.useState(false);
+  const overlayRef = React__default.useRef(null);
+  const openTime = React__default.useRef(null);
+  const dragStartTime = React__default.useRef(null);
+  const dragEndTime = React__default.useRef(null);
+  const lastTimeDragPrevented = React__default.useRef(null);
+  const isAllowedToDrag = React__default.useRef(false);
+  const nestedOpenChangeTimer = React__default.useRef(null);
+  const pointerStart = React__default.useRef(0);
+  const keyboardIsOpen = React__default.useRef(false);
+  const shouldAnimate = React__default.useRef(!defaultOpen);
+  const previousDiffFromInitial = React__default.useRef(0);
+  const drawerRef = React__default.useRef(null);
+  const drawerHeightRef = React__default.useRef(((_drawerRef_current = drawerRef.current) == null ? void 0 : _drawerRef_current.getBoundingClientRect().height) || 0);
+  const drawerWidthRef = React__default.useRef(((_drawerRef_current1 = drawerRef.current) == null ? void 0 : _drawerRef_current1.getBoundingClientRect().width) || 0);
+  const initialDrawerHeight = React__default.useRef(0);
+  const onSnapPointChange = React__default.useCallback((activeSnapPointIndex2) => {
     if (snapPoints && activeSnapPointIndex2 === snapPointsOffset.length - 1) openTime.current = /* @__PURE__ */ new Date();
   }, []);
   const { activeSnapPoint, activeSnapPointIndex, setActiveSnapPoint, onRelease: onReleaseSnapPoints, snapPointsOffset, onDrag: onDragSnapPoints, shouldFade, getPercentageDragged: getSnapPointsPercentageDragged } = useSnapPoints({
@@ -964,12 +965,12 @@ function Root({ open: openProp, onOpenChange, children, onDrag: onDragProp, onRe
       }
     }
   }
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     window.requestAnimationFrame(() => {
       shouldAnimate.current = true;
     });
   }, []);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     var _window_visualViewport;
     function onVisualViewportChange() {
       if (!drawerRef.current || !repositionInputs) return;
@@ -1124,7 +1125,7 @@ function Root({ open: openProp, onOpenChange, children, onDrag: onDragProp, onRe
     onReleaseProp == null ? void 0 : onReleaseProp(event, true);
     resetDrawer();
   }
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (isOpen) {
       set(document.documentElement, {
         scrollBehavior: "auto"
@@ -1178,7 +1179,7 @@ function Root({ open: openProp, onOpenChange, children, onDrag: onDragProp, onRe
       });
     }
   }
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (!modal) {
       window.requestAnimationFrame(() => {
         document.body.style.pointerEvents = "auto";
@@ -1187,7 +1188,7 @@ function Root({ open: openProp, onOpenChange, children, onDrag: onDragProp, onRe
   }, [
     modal
   ]);
-  return /* @__PURE__ */ React.createElement(Dialog, {
+  return /* @__PURE__ */ React__default.createElement(Dialog, {
     defaultOpen,
     onOpenChange: (open) => {
       if (!dismissible && !open) return;
@@ -1199,7 +1200,7 @@ function Root({ open: openProp, onOpenChange, children, onDrag: onDragProp, onRe
       setIsOpen(open);
     },
     open: isOpen
-  }, /* @__PURE__ */ React.createElement(DrawerContext.Provider, {
+  }, /* @__PURE__ */ React__default.createElement(DrawerContext.Provider, {
     value: {
       activeSnapPoint,
       snapPoints,
@@ -1233,17 +1234,17 @@ function Root({ open: openProp, onOpenChange, children, onDrag: onDragProp, onRe
     }
   }, children));
 }
-const Overlay = /* @__PURE__ */ React.forwardRef(function({ ...rest }, ref) {
+const Overlay = /* @__PURE__ */ React__default.forwardRef(function({ ...rest }, ref) {
   const { overlayRef, snapPoints, onRelease, shouldFade, isOpen, modal, shouldAnimate } = useDrawerContext();
   const composedRef = useComposedRefs(ref, overlayRef);
   const hasSnapPoints = snapPoints && snapPoints.length > 0;
   if (!modal) {
     return null;
   }
-  const onMouseUp = React.useCallback((event) => onRelease(event), [
+  const onMouseUp = React__default.useCallback((event) => onRelease(event), [
     onRelease
   ]);
-  return /* @__PURE__ */ React.createElement(DialogOverlay, {
+  return /* @__PURE__ */ React__default.createElement(DialogOverlay, {
     onMouseUp,
     ref: composedRef,
     "data-vaul-overlay": "",
@@ -1254,13 +1255,13 @@ const Overlay = /* @__PURE__ */ React.forwardRef(function({ ...rest }, ref) {
   });
 });
 Overlay.displayName = "Drawer.Overlay";
-const Content = /* @__PURE__ */ React.forwardRef(function({ onPointerDownOutside, style, onOpenAutoFocus, ...rest }, ref) {
+const Content = /* @__PURE__ */ React__default.forwardRef(function({ onPointerDownOutside, style, onOpenAutoFocus, ...rest }, ref) {
   const { drawerRef, onPress, onRelease, onDrag, keyboardIsOpen, snapPointsOffset, activeSnapPointIndex, modal, isOpen, direction, snapPoints, container, handleOnly, shouldAnimate, autoFocus } = useDrawerContext();
-  const [delayedSnapPoints, setDelayedSnapPoints] = React.useState(false);
+  const [delayedSnapPoints, setDelayedSnapPoints] = React__default.useState(false);
   const composedRef = useComposedRefs(ref, drawerRef);
-  const pointerStartRef = React.useRef(null);
-  const lastKnownPointerEventRef = React.useRef(null);
-  const wasBeyondThePointRef = React.useRef(false);
+  const pointerStartRef = React__default.useRef(null);
+  const lastKnownPointerEventRef = React__default.useRef(null);
+  const wasBeyondThePointRef = React__default.useRef(false);
   const hasSnapPoints = snapPoints && snapPoints.length > 0;
   useScaleBackground();
   const isDeltaInDirection = (delta, direction2, threshold = 0) => {
@@ -1286,7 +1287,7 @@ const Content = /* @__PURE__ */ React.forwardRef(function({ onPointerDownOutside
     wasBeyondThePointRef.current = true;
     return true;
   };
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (hasSnapPoints) {
       window.requestAnimationFrame(() => {
         setDelayedSnapPoints(true);
@@ -1298,7 +1299,7 @@ const Content = /* @__PURE__ */ React.forwardRef(function({ onPointerDownOutside
     wasBeyondThePointRef.current = false;
     onRelease(event);
   }
-  return /* @__PURE__ */ React.createElement(DialogContent, {
+  return /* @__PURE__ */ React__default.createElement(DialogContent, {
     "data-vaul-drawer-direction": direction,
     "data-vaul-drawer": "",
     "data-vaul-delayed-snap-points": delayedSnapPoints ? "true" : "false",
@@ -1381,10 +1382,10 @@ const Content = /* @__PURE__ */ React.forwardRef(function({ onPointerDownOutside
 Content.displayName = "Drawer.Content";
 const LONG_HANDLE_PRESS_TIMEOUT = 250;
 const DOUBLE_TAP_TIMEOUT = 120;
-const Handle = /* @__PURE__ */ React.forwardRef(function({ preventCycle = false, children, ...rest }, ref) {
+const Handle = /* @__PURE__ */ React__default.forwardRef(function({ preventCycle = false, children, ...rest }, ref) {
   const { closeDrawer, isDragging, snapPoints, activeSnapPoint, setActiveSnapPoint, dismissible, handleOnly, isOpen, onPress, onDrag } = useDrawerContext();
-  const closeTimeoutIdRef = React.useRef(null);
-  const shouldCancelInteractionRef = React.useRef(false);
+  const closeTimeoutIdRef = React__default.useRef(null);
+  const shouldCancelInteractionRef = React__default.useRef(false);
   function handleStartCycle() {
     if (shouldCancelInteractionRef.current) {
       handleCancelInteraction();
@@ -1427,7 +1428,7 @@ const Handle = /* @__PURE__ */ React.forwardRef(function({ preventCycle = false,
     }
     shouldCancelInteractionRef.current = false;
   }
-  return /* @__PURE__ */ React.createElement("div", {
+  return /* @__PURE__ */ React__default.createElement("div", {
     onClick: handleStartCycle,
     onPointerCancel: handleCancelInteraction,
     onPointerDown: (e) => {
@@ -1443,7 +1444,7 @@ const Handle = /* @__PURE__ */ React.forwardRef(function({ preventCycle = false,
     "data-vaul-handle": "",
     "aria-hidden": "true",
     ...rest
-  }, /* @__PURE__ */ React.createElement("span", {
+  }, /* @__PURE__ */ React__default.createElement("span", {
     "data-vaul-handle-hitarea": "",
     "aria-hidden": "true"
   }, children));
@@ -1452,7 +1453,7 @@ Handle.displayName = "Drawer.Handle";
 function Portal(props) {
   const context = useDrawerContext();
   const { container = context.container, ...portalProps } = props;
-  return /* @__PURE__ */ React.createElement(DialogPortal, {
+  return /* @__PURE__ */ React__default.createElement(DialogPortal, {
     container,
     ...portalProps
   });

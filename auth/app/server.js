@@ -1,9 +1,17 @@
 import express from "express";
+import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
 
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
+
+app.use(
+  cors({
+    origin: "http://192.168.111.27:3030",
+    credentials: true,
+  }),
+);
 
 app.all("/api/auth/*splat", toNodeHandler(auth));
 

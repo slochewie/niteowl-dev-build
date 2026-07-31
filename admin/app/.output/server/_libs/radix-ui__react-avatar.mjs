@@ -1,8 +1,9 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
 import { c as createContextScope } from "./radix-ui__react-context.mjs";
 import { u as useCallbackRef } from "./@radix-ui/react-use-callback-ref+[...].mjs";
 import { u as useLayoutEffect2 } from "./@radix-ui/react-use-layout-effect+[...].mjs";
 import { P as Primitive } from "./radix-ui__react-primitive.mjs";
+import { jsx } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var AVATAR_NAME = "Avatar";
@@ -12,13 +13,13 @@ var STATIC_IMAGE_COUNT_STATE = [
   () => void 0
 ];
 var [AvatarProvider, useAvatarContext] = createAvatarContext(AVATAR_NAME);
-var Avatar = /* @__PURE__ */ reactExports.forwardRef(
+var Avatar = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function Avatar2(props, forwardedRef) {
     const { __scopeAvatar, ...avatarProps } = props;
-    const [imageLoadingStatus, setImageLoadingStatus] = reactExports.useState("idle");
+    const [imageLoadingStatus, setImageLoadingStatus] = React.useState("idle");
     const [imageCount, setImageCount] = useImageCount();
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       AvatarProvider,
       {
         scope: __scopeAvatar,
@@ -26,13 +27,13 @@ var Avatar = /* @__PURE__ */ reactExports.forwardRef(
         setImageLoadingStatus,
         imageCount,
         setImageCount,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.span, { ...avatarProps, ref: forwardedRef })
+        children: /* @__PURE__ */ jsx(Primitive.span, { ...avatarProps, ref: forwardedRef })
       }
     );
   }, "Avatar")
 );
 var IMAGE_NAME = "AvatarImage";
-var AvatarImage = /* @__PURE__ */ reactExports.forwardRef(
+var AvatarImage = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function AvatarImage2(props, forwardedRef) {
     const { __scopeAvatar, src, onLoadingStatusChange, ...imageProps } = props;
     const context = useAvatarContext(IMAGE_NAME, __scopeAvatar);
@@ -46,7 +47,7 @@ var AvatarImage = /* @__PURE__ */ reactExports.forwardRef(
     const handleLoadingStatusChange = useCallbackRef((status) => {
       onLoadingStatusChange?.(status);
     });
-    const loadingStatusRef = reactExports.useRef(imageLoadingStatus);
+    const loadingStatusRef = React.useRef(imageLoadingStatus);
     useLayoutEffect2(() => {
       const previousLoadingStatus = loadingStatusRef.current;
       loadingStatusRef.current = imageLoadingStatus;
@@ -54,22 +55,22 @@ var AvatarImage = /* @__PURE__ */ reactExports.forwardRef(
         handleLoadingStatusChange(imageLoadingStatus);
       }
     }, [imageLoadingStatus, handleLoadingStatusChange]);
-    return imageLoadingStatus === "loaded" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.img, { ...imageProps, ref: forwardedRef, src }) : null;
+    return imageLoadingStatus === "loaded" ? /* @__PURE__ */ jsx(Primitive.img, { ...imageProps, ref: forwardedRef, src }) : null;
   }, "AvatarImage")
 );
 var FALLBACK_NAME = "AvatarFallback";
-var AvatarFallback = /* @__PURE__ */ reactExports.forwardRef(
+var AvatarFallback = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function AvatarFallback2(props, forwardedRef) {
     const { __scopeAvatar, delayMs, ...fallbackProps } = props;
     const context = useAvatarContext(FALLBACK_NAME, __scopeAvatar);
-    const [canRender, setCanRender] = reactExports.useState(delayMs === void 0);
-    reactExports.useEffect(() => {
+    const [canRender, setCanRender] = React.useState(delayMs === void 0);
+    React.useEffect(() => {
       if (delayMs !== void 0) {
         const timerId = window.setTimeout(() => setCanRender(true), delayMs);
         return () => window.clearTimeout(timerId);
       }
     }, [delayMs]);
-    return canRender && context.imageLoadingStatus !== "loaded" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.span, { ...fallbackProps, ref: forwardedRef }) : null;
+    return canRender && context.imageLoadingStatus !== "loaded" ? /* @__PURE__ */ jsx(Primitive.span, { ...fallbackProps, ref: forwardedRef }) : null;
   }, "AvatarFallback")
 );
 function useImageLoadingStatus(src, {

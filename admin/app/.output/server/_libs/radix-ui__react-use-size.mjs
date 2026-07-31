@@ -1,9 +1,9 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
 import { u as useLayoutEffect2 } from "./@radix-ui/react-use-layout-effect+[...].mjs";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 function useSize(element) {
-  const [size, setSize] = reactExports.useState(void 0);
+  const [size, setSize] = React.useState(void 0);
   useLayoutEffect2(() => {
     if (element) {
       setSize({ width: element.offsetWidth, height: element.offsetHeight });

@@ -1,4 +1,4 @@
-import { R as React } from "./react.mjs";
+import React__default from "react";
 var isCheckBoxInput = (element) => element.type === "checkbox";
 var isFileInput = (element) => element.type === "file";
 var isDateObject = (value) => value instanceof Date;
@@ -97,9 +97,9 @@ var set = (object, path, value) => {
     object = object[key];
   }
 };
-const HookFormControlContext = React.createContext(null);
+const HookFormControlContext = React__default.createContext(null);
 HookFormControlContext.displayName = "HookFormControlContext";
-const useFormControlContext = () => React.useContext(HookFormControlContext);
+const useFormControlContext = () => React__default.useContext(HookFormControlContext);
 var getProxyFormState = (formState, control, localProxyFormState, isRoot = true) => {
   const result = {};
   for (const key in formState) {
@@ -116,15 +116,15 @@ var getProxyFormState = (formState, control, localProxyFormState, isRoot = true)
   }
   return result;
 };
-const useIsomorphicLayoutEffect = isWeb ? React.useLayoutEffect : React.useEffect;
+const useIsomorphicLayoutEffect = isWeb ? React__default.useLayoutEffect : React__default.useEffect;
 function useFormState(props) {
   const formControl = useFormControlContext();
   const { control = formControl, disabled, name, exact } = props || {};
-  const [formState, updateFormState] = React.useState(() => ({
+  const [formState, updateFormState] = React__default.useState(() => ({
     ...control._formState,
     defaultValues: control._defaultValues
   }));
-  const _localProxyFormState = React.useRef({
+  const _localProxyFormState = React__default.useRef({
     isDirty: false,
     isLoading: false,
     dirtyFields: false,
@@ -146,10 +146,10 @@ function useFormState(props) {
       });
     }
   }), [name, disabled, exact]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     _localProxyFormState.current.isValid && control._setValid(true);
   }, [control]);
-  return React.useMemo(() => getProxyFormState(formState, control, _localProxyFormState.current, false), [formState, control]);
+  return React__default.useMemo(() => getProxyFormState(formState, control, _localProxyFormState.current, false), [formState, control]);
 }
 var isString = (value) => typeof value === "string";
 var generateWatchOutput = (names, _names, formValues, isGlobal, defaultValue) => {
@@ -214,21 +214,21 @@ function deepEqual(object1, object2, visited = /* @__PURE__ */ new WeakMap()) {
 function useWatch(props) {
   const formControl = useFormControlContext();
   const { control = formControl, name, defaultValue, disabled, exact, compute } = props || {};
-  const _defaultValue = React.useRef(defaultValue);
-  const _compute = React.useRef(compute);
-  const _computeFormValues = React.useRef(void 0);
-  const _prevControl = React.useRef(control);
-  const _prevName = React.useRef(name);
+  const _defaultValue = React__default.useRef(defaultValue);
+  const _compute = React__default.useRef(compute);
+  const _computeFormValues = React__default.useRef(void 0);
+  const _prevControl = React__default.useRef(control);
+  const _prevName = React__default.useRef(name);
   _compute.current = compute;
-  const [value, updateValue] = React.useState(() => {
+  const [value, updateValue] = React__default.useState(() => {
     const defaultValue2 = control._getWatch(name, _defaultValue.current);
     return _compute.current ? _compute.current(defaultValue2) : defaultValue2;
   });
-  const getCurrentOutput = React.useCallback((values) => {
+  const getCurrentOutput = React__default.useCallback((values) => {
     const formValues = generateWatchOutput(name, control._names, values || control._formValues, false, _defaultValue.current);
     return _compute.current ? _compute.current(formValues) : formValues;
   }, [control._formValues, control._names, name]);
-  const refreshValue = React.useCallback((values) => {
+  const refreshValue = React__default.useCallback((values) => {
     if (!disabled) {
       const formValues = generateWatchOutput(name, control._names, values || control._formValues, false, _defaultValue.current);
       if (_compute.current) {
@@ -259,10 +259,10 @@ function useWatch(props) {
       }
     });
   }, [control, exact, name, refreshValue]);
-  React.useEffect(() => control._removeUnmounted());
+  React__default.useEffect(() => control._removeUnmounted());
   const controlChanged = _prevControl.current !== control;
   const prevName = _prevName.current;
-  const computedOutput = React.useMemo(() => {
+  const computedOutput = React__default.useMemo(() => {
     if (disabled) {
       return null;
     }
@@ -276,7 +276,7 @@ function useController(props) {
   const formControl = useFormControlContext();
   const { name, disabled, control = formControl, shouldUnregister, defaultValue, exact = true } = props;
   const isArrayField = isNameInFieldArray(control._names.array, name);
-  const defaultValueMemo = React.useMemo(() => get(control._formValues, name, get(control._defaultValues, name, defaultValue)), [control, name, defaultValue]);
+  const defaultValueMemo = React__default.useMemo(() => get(control._formValues, name, get(control._defaultValues, name, defaultValue)), [control, name, defaultValue]);
   const value = useWatch({
     control,
     name,
@@ -288,15 +288,15 @@ function useController(props) {
     name,
     exact
   });
-  const _props = React.useRef(props);
-  const _proxyRef = React.useRef(null);
-  const _registerProps = React.useRef(control.register(name, {
+  const _props = React__default.useRef(props);
+  const _proxyRef = React__default.useRef(null);
+  const _registerProps = React__default.useRef(control.register(name, {
     ...props.rules,
     value,
     ...isBoolean(props.disabled) ? { disabled: props.disabled } : {}
   }));
   _props.current = props;
-  const fieldState = React.useMemo(() => Object.defineProperties({}, {
+  const fieldState = React__default.useMemo(() => Object.defineProperties({}, {
     invalid: {
       enumerable: true,
       get: () => !!get(formState.errors, name)
@@ -318,7 +318,7 @@ function useController(props) {
       get: () => get(formState.errors, name)
     }
   }), [formState, name]);
-  const onChange = React.useCallback((event) => {
+  const onChange = React__default.useCallback((event) => {
     const value2 = getEventValue(event);
     if (!get(control._fields, name)) {
       _registerProps.current = control.register(name, {
@@ -334,14 +334,14 @@ function useController(props) {
       type: EVENTS.CHANGE
     });
   }, [name, control]);
-  const onBlur = React.useCallback(() => _registerProps.current.onBlur({
+  const onBlur = React__default.useCallback(() => _registerProps.current.onBlur({
     target: {
       value: get(control._formValues, name),
       name
     },
     type: EVENTS.BLUR
   }), [name, control._formValues]);
-  const ref = React.useCallback((elm) => {
+  const ref = React__default.useCallback((elm) => {
     if (elm) {
       _proxyRef.current = {
         focus: () => isFunction(elm.focus) && elm.focus(),
@@ -355,7 +355,7 @@ function useController(props) {
       field2._f.ref = _proxyRef.current;
     }
   }, [control._fields, name]);
-  const field = React.useMemo(() => ({
+  const field = React__default.useMemo(() => ({
     name,
     value,
     ...isBoolean(disabled) || formState.disabled ? { disabled: formState.disabled || disabled } : {},
@@ -363,7 +363,7 @@ function useController(props) {
     onBlur,
     ref
   }), [name, disabled, formState.disabled, onChange, onBlur, ref, value]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     const _shouldUnregisterField = control._options.shouldUnregister || shouldUnregister;
     _registerProps.current = control.register(name, {
       ..._props.current.rules,
@@ -394,13 +394,13 @@ function useController(props) {
       (isArrayField ? _shouldUnregisterField && !control._state.action : _shouldUnregisterField) ? control.unregister(name) : updateMounted(name, false);
     };
   }, [name, control, isArrayField, shouldUnregister]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     control._setDisabledField({
       disabled,
       name
     });
   }, [disabled, name, control]);
-  return React.useMemo(() => ({
+  return React__default.useMemo(() => ({
     field,
     formState,
     fieldState
@@ -724,11 +724,11 @@ const flatten = (obj) => {
   }
   return output;
 };
-const HookFormContext = React.createContext(null);
+const HookFormContext = React__default.createContext(null);
 HookFormContext.displayName = "HookFormContext";
-const useFormContext = () => React.useContext(HookFormContext);
+const useFormContext = () => React__default.useContext(HookFormContext);
 const FormProvider = ({ children, watch, getValues, getFieldState, setError, clearErrors, setValue, setValues, trigger, formState, resetField, reset, resetDefaultValues, handleSubmit, unregister, control, register, setFocus, subscribe }) => {
-  const memoizedValue = React.useMemo(() => ({
+  const memoizedValue = React__default.useMemo(() => ({
     watch,
     getValues,
     getFieldState,
@@ -767,10 +767,10 @@ const FormProvider = ({ children, watch, getValues, getFieldState, setError, cle
     unregister,
     watch
   ]);
-  return React.createElement(
+  return React__default.createElement(
     HookFormContext.Provider,
     { value: memoizedValue },
-    React.createElement(HookFormControlContext.Provider, { value: memoizedValue.control }, children)
+    React__default.createElement(HookFormControlContext.Provider, { value: memoizedValue.control }, children)
   );
 };
 var createSubject = () => {
@@ -2166,10 +2166,10 @@ function createFormControl(props = {}) {
   };
 }
 function useForm(props = {}) {
-  const _formControl = React.useRef(void 0);
-  const _values = React.useRef(void 0);
-  const _formControlProp = React.useRef(props.formControl);
-  const [formState, updateFormState] = React.useState(() => ({
+  const _formControl = React__default.useRef(void 0);
+  const _values = React__default.useRef(void 0);
+  const _formControlProp = React__default.useRef(props.formControl);
+  const [formState, updateFormState] = React__default.useState(() => ({
     ...cloneObject(DEFAULT_FORM_STATE),
     isLoading: isFunction(props.defaultValues),
     errors: props.errors || {},
@@ -2212,8 +2212,8 @@ function useForm(props = {}) {
     control._formState.isReady = true;
     return sub;
   }, [control]);
-  React.useEffect(() => control._disableForm(props.disabled), [control, props.disabled]);
-  React.useEffect(() => {
+  React__default.useEffect(() => control._disableForm(props.disabled), [control, props.disabled]);
+  React__default.useEffect(() => {
     if (props.mode) {
       control._options.mode = props.mode;
     }
@@ -2221,18 +2221,18 @@ function useForm(props = {}) {
       control._options.reValidateMode = props.reValidateMode;
     }
   }, [control, props.mode, props.reValidateMode]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (props.errors) {
       control._setErrors(props.errors);
       control._focusError();
     }
   }, [control, props.errors]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     props.shouldUnregister && control._subjects.state.next({
       values: control._getWatch()
     });
   }, [control, props.shouldUnregister]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (control._proxyFormState.isDirty) {
       const isDirty = control._getDirty();
       if (isDirty !== formState.isDirty) {
@@ -2242,7 +2242,7 @@ function useForm(props = {}) {
       }
     }
   }, [control, formState.isDirty]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     var _a;
     if (props.values && !deepEqual(props.values, _values.current)) {
       control._reset(props.values, {
@@ -2258,7 +2258,7 @@ function useForm(props = {}) {
       control._resetDefaultValues();
     }
   }, [control, props.values]);
-  React.useEffect(() => {
+  React__default.useEffect(() => {
     if (!control._state.mount) {
       control._setValid();
       control._state.mount = true;
@@ -2269,7 +2269,7 @@ function useForm(props = {}) {
     }
     control._removeUnmounted();
   });
-  _formControl.current.formState = React.useMemo(() => getProxyFormState(formState, control), [control, formState]);
+  _formControl.current.formState = React__default.useMemo(() => getProxyFormState(formState, control), [control, formState]);
   return _formControl.current;
 }
 export {

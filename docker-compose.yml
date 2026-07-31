@@ -107,6 +107,8 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${AUTH_URL}
       BETTER_AUTH_TRUSTED_ORIGINS: ${ADMIN_URL}
+      VITE_AUTH_BASE_URL: ${VITE_AUTH_BASE_URL}
+      AUTH_BASE_URL: ${AUTH_BASE_URL}
     depends_on:
       postgres:
         condition: service_healthy

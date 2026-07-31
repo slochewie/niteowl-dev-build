@@ -3,8 +3,9 @@ import { H as H3Event, t as toResponse } from "../_libs/h3-v2.mjs";
 import { y as resolveManifestAssetLink, u as resolveManifestCssLink, k as rootRouteId, z as getNormalizedURL, A as getOrigin, C as normalizeSsrResponse, D as attachRouterServerSsrUtils, E as defineHandlerCallback, F as createSerializationAdapter, G as createRawStreamRPCPlugin, i as invariant, g as isNotFound, m as isRedirect, H as isResolvedRedirect, I as replaceSsrResponse, J as mergeHeaders, K as executeRewriteInput, L as stripSsrResponseBody, M as defaultSerovalPlugins, N as makeSerovalPlugin, s as getScriptPreloadAttrs, O as getStylesheetHref, P as isSsrResponse } from "../_libs/tanstack__router-core.mjs";
 import { t as toCrossJSONStream, f as fromJSON, d as toCrossJSONAsync } from "../_libs/seroval.mjs";
 import { c as createMemoryHistory } from "../_libs/tanstack__history.mjs";
-import { j as jsxRuntimeExports } from "../_libs/react.mjs";
+import "react";
 import { r as renderRouterToStream, R as RouterProvider } from "../_libs/tanstack__react-router.mjs";
+import { jsx } from "react/jsx-runtime";
 import "../_libs/rou3.mjs";
 import "../_libs/srvx.mjs";
 import "node:http";
@@ -15,20 +16,17 @@ import "node:http2";
 import "../_libs/cookie-es.mjs";
 import "../_libs/seroval-plugins.mjs";
 import "node:stream/web";
-import "../_libs/react-dom.mjs";
-import "util";
-import "crypto";
-import "async_hooks";
-import "stream";
+import "react-dom";
+import "react-dom/server";
 import "../_libs/isbot.mjs";
 function StartServer(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(RouterProvider, { router: props.router });
+  return /* @__PURE__ */ jsx(RouterProvider, { router: props.router });
 }
 var defaultStreamHandler = defineHandlerCallback(({ request, router, responseHeaders }) => renderRouterToStream({
   request,
   router,
   responseHeaders,
-  children: /* @__PURE__ */ jsxRuntimeExports.jsx(StartServer, { router })
+  children: /* @__PURE__ */ jsx(StartServer, { router })
 }));
 var GLOBAL_EVENT_STORAGE_KEY = /* @__PURE__ */ Symbol.for("tanstack-start:event-storage");
 var globalObj$1 = globalThis;
@@ -85,7 +83,7 @@ function getResponse() {
 }
 var HEADERS = { TSS_SHELL: "X-TSS_SHELL" };
 async function getStartManifest(matchedRoutes) {
-  const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-CFWX9Umg.mjs");
+  const { tsrStartManifest } = await import("../_tanstack-start-manifest_v-BY3jzppE.mjs");
   const startManifest = tsrStartManifest();
   let routes = startManifest.routes;
   routes[rootRouteId];
@@ -1162,7 +1160,7 @@ var getBaseManifest = getProdBaseManifest;
 var createEarlyHintsForRequest = createEarlyHintsCollector;
 async function loadEntries() {
   const [routerEntry, startEntry, pluginAdapters] = await Promise.all([
-    import("./router-IZBe-lk7.mjs").then((n) => n.r),
+    import("./router-DN1OTUse.mjs").then((n) => n.r),
     import("./start-HYkvq4Ni.mjs"),
     import("./empty-plugin-adapters-BFgPZ6_d.mjs")
   ]);

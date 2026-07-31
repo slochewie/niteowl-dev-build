@@ -1,8 +1,9 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import { createContext, useContext, useId, useState, useRef, useEffect, useMemo } from "react";
+import { jsx } from "react/jsx-runtime";
 import { w as warning } from "./warning.mjs";
-const ReCaptchaContext = reactExports.createContext({});
+const ReCaptchaContext = createContext({});
 function useReCaptcha() {
-  return reactExports.useContext(ReCaptchaContext);
+  return useContext(ReCaptchaContext);
 }
 function loadScript({ async, appendTo, defer, id, nonce, src }) {
   const script = document.createElement("script");
@@ -167,11 +168,11 @@ function unregisterInstance(instanceId) {
 let didWarnAboutHiddenBadge = false;
 function ReCaptchaProvider({ container, children, language, reCaptchaKey, scriptProps, useEnterprise, useRecaptchaNet }) {
   var _a, _b, _c, _d, _e, _f, _g;
-  const id = reactExports.useId();
-  const [reCaptchaInstance, setReCaptchaInstance] = reactExports.useState(null);
-  const [clientId, setClientId] = reactExports.useState(null);
-  const clientIdMounted = reactExports.useRef(false);
-  reactExports.useEffect(() => {
+  const id = useId();
+  const [reCaptchaInstance, setReCaptchaInstance] = useState(null);
+  const [clientId, setClientId] = useState(null);
+  const clientIdMounted = useRef(false);
+  useEffect(() => {
     function onLoadCallback() {
       var _a2;
       const nextReCaptchaInstance = useEnterprise ? (_a2 = window.grecaptcha) === null || _a2 === void 0 ? void 0 : _a2.enterprise : window.grecaptcha;
@@ -218,7 +219,7 @@ function ReCaptchaProvider({ container, children, language, reCaptchaKey, script
     useEnterprise,
     useRecaptchaNet
   ]);
-  reactExports.useEffect(() => {
+  useEffect(() => {
     var _a2, _b2, _c2;
     if (!(container === null || container === void 0 ? void 0 : container.element) || !(reCaptchaInstance === null || reCaptchaInstance === void 0 ? void 0 : reCaptchaInstance.render)) {
       return;
@@ -267,7 +268,7 @@ function ReCaptchaProvider({ container, children, language, reCaptchaKey, script
   ]);
   const shouldUseClientId = Boolean(container === null || container === void 0 ? void 0 : container.element);
   const clientIdOrReCaptchaKey = shouldUseClientId ? clientId : reCaptchaKey;
-  const executeRecaptcha = reactExports.useMemo(() => clientIdOrReCaptchaKey !== null && (reCaptchaInstance === null || reCaptchaInstance === void 0 ? void 0 : reCaptchaInstance.execute) ? (action) => {
+  const executeRecaptcha = useMemo(() => clientIdOrReCaptchaKey !== null && (reCaptchaInstance === null || reCaptchaInstance === void 0 ? void 0 : reCaptchaInstance.execute) ? (action) => {
     if (clientIdOrReCaptchaKey === null || !(reCaptchaInstance === null || reCaptchaInstance === void 0 ? void 0 : reCaptchaInstance.execute)) {
       throw new Error("reCAPTCHA has not been loaded");
     }
@@ -277,7 +278,7 @@ function ReCaptchaProvider({ container, children, language, reCaptchaKey, script
     }
     return reCaptchaInstance.execute(clientIdOrReCaptchaKey, { action });
   } : void 0, [clientIdOrReCaptchaKey, reCaptchaInstance, shouldUseClientId]);
-  return jsxRuntimeExports.jsx(ReCaptchaContext.Provider, { value: {
+  return jsx(ReCaptchaContext.Provider, { value: {
     container: container === null || container === void 0 ? void 0 : container.element,
     executeRecaptcha,
     reCaptchaInstance

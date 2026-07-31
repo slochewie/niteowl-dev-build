@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build && rm -rf .output/server/node_modules/@btst/stack && mkdir -p .output/server/node_modules/@btst && cp -a node_modules/@btst/stack .output/server/node_modules/@btst/stack",
+    "build": "vite build && mkdir -p .output/server/node_modules/@btst/stack/dist && rm -rf .output/server/node_modules/@btst/stack/dist/node_modules && cp -a node_modules/@btst/stack/dist/node_modules .output/server/node_modules/@btst/stack/dist/node_modules",
     "start": "node .output/server/index.mjs"
   },
   "dependencies": {
@@ -45,12 +45,14 @@
   },
   "devDependencies": {
     "@btst/cli": "^2.2.2",
+    "@tailwindcss/vite": "^4.3.3",
     "@tanstack/router-cli": "^1.0.0",
     "@types/node": "^22",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-react": "^5.2.0",
+    "drizzle-kit": "^0.31.10",
     "nitro": "latest",
     "typescript": "^5",
     "vite": "^7.0.0",
@@ -58,8 +60,8 @@
   },
   "allowScripts": {
     "core-js@3.49.0": true,
-    "esbuild@0.28.1": true,
-    "better-sqlite3@12.11.1": true
+    "better-sqlite3@12.11.1": true,
+    "esbuild@0.25.12": true
   },
   "imports": {
     "#components/*": "./src/components/*.tsx",

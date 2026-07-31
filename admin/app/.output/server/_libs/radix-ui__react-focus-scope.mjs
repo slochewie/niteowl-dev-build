@@ -1,13 +1,14 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
 import { u as useComposedRefs } from "./radix-ui__react-compose-refs.mjs";
 import { P as Primitive } from "./radix-ui__react-primitive.mjs";
 import { u as useCallbackRef } from "./@radix-ui/react-use-callback-ref+[...].mjs";
+import { jsx } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var AUTOFOCUS_ON_MOUNT = "focusScope.autoFocusOnMount";
 var AUTOFOCUS_ON_UNMOUNT = "focusScope.autoFocusOnUnmount";
 var EVENT_OPTIONS = { bubbles: false, cancelable: true };
-var FocusScope = /* @__PURE__ */ reactExports.forwardRef(
+var FocusScope = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function FocusScope2(props, forwardedRef) {
     const {
       loop = false,
@@ -16,12 +17,12 @@ var FocusScope = /* @__PURE__ */ reactExports.forwardRef(
       onUnmountAutoFocus: onUnmountAutoFocusProp,
       ...scopeProps
     } = props;
-    const [container, setContainer] = reactExports.useState(null);
+    const [container, setContainer] = React.useState(null);
     const onMountAutoFocus = useCallbackRef(onMountAutoFocusProp);
     const onUnmountAutoFocus = useCallbackRef(onUnmountAutoFocusProp);
-    const lastFocusedElementRef = reactExports.useRef(null);
+    const lastFocusedElementRef = React.useRef(null);
     const composedRefs = useComposedRefs(forwardedRef, setContainer);
-    const focusScope = reactExports.useRef({
+    const focusScope = React.useRef({
       paused: false,
       pause() {
         this.paused = true;
@@ -30,7 +31,7 @@ var FocusScope = /* @__PURE__ */ reactExports.forwardRef(
         this.paused = false;
       }
     }).current;
-    reactExports.useEffect(() => {
+    React.useEffect(() => {
       if (trapped) {
         let handleFocusIn2 = function(event) {
           if (focusScope.paused || !container) return;
@@ -68,7 +69,7 @@ var FocusScope = /* @__PURE__ */ reactExports.forwardRef(
         };
       }
     }, [trapped, container, focusScope.paused]);
-    reactExports.useEffect(() => {
+    React.useEffect(() => {
       if (container) {
         focusScopesStack.add(focusScope);
         const previouslyFocusedElement = document.activeElement;
@@ -99,7 +100,7 @@ var FocusScope = /* @__PURE__ */ reactExports.forwardRef(
         };
       }
     }, [container, onMountAutoFocus, onUnmountAutoFocus, focusScope]);
-    const handleKeyDown = reactExports.useCallback(
+    const handleKeyDown = React.useCallback(
       (event) => {
         if (!loop && !trapped) return;
         if (focusScope.paused) return;
@@ -124,7 +125,7 @@ var FocusScope = /* @__PURE__ */ reactExports.forwardRef(
       },
       [loop, trapped, focusScope.paused]
     );
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Primitive.div, { tabIndex: -1, ...scopeProps, ref: composedRefs, onKeyDown: handleKeyDown });
+    return /* @__PURE__ */ jsx(Primitive.div, { tabIndex: -1, ...scopeProps, ref: composedRefs, onKeyDown: handleKeyDown });
   }, "FocusScope")
 );
 function focusFirst(candidates, { select = false } = {}) {

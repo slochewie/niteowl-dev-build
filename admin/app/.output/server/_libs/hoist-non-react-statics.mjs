@@ -1,4 +1,4 @@
-import { g as getDefaultExportFromCjs } from "./react.mjs";
+import { a as getDefaultExportFromCjs } from "./react.mjs";
 import { r as requireReactIs } from "./react-is.mjs";
 var hoistNonReactStatics_cjs;
 var hasRequiredHoistNonReactStatics_cjs;

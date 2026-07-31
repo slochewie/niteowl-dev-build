@@ -1,21 +1,24 @@
-import { r as reactExports, j as jsxRuntimeExports, R as React } from "./react.mjs";
+import * as React from "react";
+import React__default, { createElement } from "react";
+import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { i as invariant, a as isDangerousProtocol, e as exactPathTest, r as removeTrailingSlash, h as hasKeys, d as deepEqual, f as functionalUpdate, B as BaseRootRoute, b as BaseRoute, c as isModuleNotFoundError, g as isNotFound, j as getScrollRestorationScriptForRouter, k as rootRouteId, l as isServer, m as isRedirect, n as createNonReactiveReadonlyStore, o as createNonReactiveMutableStore, R as RouterCore, p as escapeHtml, q as getAssetCrossOrigin, s as getScriptPreloadAttrs, t as appendUniqueUserTags, u as resolveManifestCssLink, v as transformReadableStreamWithRouter, w as createSsrStreamResponse, x as transformPipeableStreamWithRouter } from "./tanstack__router-core.mjs";
-import { R as ReactDOMServer } from "./react-dom.mjs";
+import "react-dom";
+import ReactDOMServer from "react-dom/server";
 import { PassThrough } from "node:stream";
 import { i as isbot } from "./isbot.mjs";
-var reactUse = reactExports.use;
+var reactUse = React["use"];
 function useForwardedRef(ref) {
-  const innerRef = reactExports.useRef(null);
-  reactExports.useImperativeHandle(ref, () => innerRef.current, []);
+  const innerRef = React.useRef(null);
+  React.useImperativeHandle(ref, () => innerRef.current, []);
   return innerRef;
 }
 function CatchBoundary(props) {
   const errorComponent = props.errorComponent ?? ErrorComponent;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(CatchBoundaryImpl, {
+  return /* @__PURE__ */ jsx(CatchBoundaryImpl, {
     getResetKey: props.getResetKey,
     onCatch: props.onCatch,
     children: ({ error, reset }) => {
-      if (error) return reactExports.createElement(errorComponent, {
+      if (error) return React.createElement(errorComponent, {
         error,
         reset
       });
@@ -23,7 +26,7 @@ function CatchBoundary(props) {
     }
   });
 }
-var CatchBoundaryImpl = class extends reactExports.Component {
+var CatchBoundaryImpl = class extends React.Component {
   constructor(..._args) {
     super(..._args);
     this.state = { error: null };
@@ -55,23 +58,23 @@ var CatchBoundaryImpl = class extends reactExports.Component {
   }
 };
 function ErrorComponent({ error }) {
-  const [show, setShow] = reactExports.useState(false);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", {
+  const [show, setShow] = React.useState(false);
+  return /* @__PURE__ */ jsxs("div", {
     style: {
       padding: ".5rem",
       maxWidth: "100%"
     },
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", {
+      /* @__PURE__ */ jsxs("div", {
         style: {
           display: "flex",
           alignItems: "center",
           gap: ".5rem"
         },
-        children: [/* @__PURE__ */ jsxRuntimeExports.jsx("strong", {
+        children: [/* @__PURE__ */ jsx("strong", {
           style: { fontSize: "1rem" },
           children: "Something went wrong!"
-        }), /* @__PURE__ */ jsxRuntimeExports.jsx("button", {
+        }), /* @__PURE__ */ jsx("button", {
           style: {
             appearance: "none",
             fontSize: ".6em",
@@ -84,8 +87,8 @@ function ErrorComponent({ error }) {
           children: show ? "Hide Error" : "Show Error"
         })]
       }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: ".25rem" } }),
-      show ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsx("pre", {
+      /* @__PURE__ */ jsx("div", { style: { height: ".25rem" } }),
+      show ? /* @__PURE__ */ jsx("div", { children: /* @__PURE__ */ jsx("pre", {
         style: {
           fontSize: ".7em",
           border: "1px solid red",
@@ -94,31 +97,31 @@ function ErrorComponent({ error }) {
           color: "red",
           overflow: "auto"
         },
-        children: error.message ? /* @__PURE__ */ jsxRuntimeExports.jsx("code", { children: error.message }) : null
+        children: error.message ? /* @__PURE__ */ jsx("code", { children: error.message }) : null
       }) }) : null
     ]
   });
 }
 function ClientOnly({ children, fallback = null }) {
-  return useHydrated() ? /* @__PURE__ */ jsxRuntimeExports.jsx(React.Fragment, { children }) : /* @__PURE__ */ jsxRuntimeExports.jsx(React.Fragment, { children: fallback });
+  return useHydrated() ? /* @__PURE__ */ jsx(React__default.Fragment, { children }) : /* @__PURE__ */ jsx(React__default.Fragment, { children: fallback });
 }
 function useHydrated() {
-  return React.useSyncExternalStore(subscribe, () => true, () => false);
+  return React__default.useSyncExternalStore(subscribe, () => true, () => false);
 }
 function subscribe() {
   return () => {
   };
 }
-var routerContext = reactExports.createContext(null);
+var routerContext = React.createContext(null);
 function useRouter(opts) {
-  const value = reactExports.useContext(routerContext);
+  const value = React.useContext(routerContext);
   return value;
 }
-var matchContext = reactExports.createContext(void 0);
-var dummyMatchContext = reactExports.createContext(void 0);
+var matchContext = React.createContext(void 0);
+var dummyMatchContext = React.createContext(void 0);
 function useMatch(opts) {
   const router = useRouter();
-  const nearestMatchId = reactExports.useContext(opts.from ? dummyMatchContext : matchContext);
+  const nearestMatchId = React.useContext(opts.from ? dummyMatchContext : matchContext);
   const matchStore = opts.from ? router.stores.getRouteMatchStore(opts.from) : router.stores.matchStores.get(nearestMatchId);
   {
     const match = matchStore?.get();
@@ -175,7 +178,7 @@ function useSearch(opts) {
 }
 function useNavigate(_defaultOpts) {
   const router = useRouter();
-  return reactExports.useCallback((options) => {
+  return React.useCallback((options) => {
     return router.navigate({
       ...options,
       from: options.from ?? _defaultOpts?.from
@@ -349,15 +352,15 @@ function isSafeInternal(to) {
   if (zero === 47) return to.charCodeAt(1) !== 47;
   return zero === 46;
 }
-var Link = reactExports.forwardRef((props, ref) => {
+var Link = React.forwardRef((props, ref) => {
   const { _asChild, ...rest } = props;
   const { type: _type, ...linkProps } = useLinkProps(rest, ref);
   const children = typeof rest.children === "function" ? rest.children({ isActive: linkProps["data-status"] === "active" }) : rest.children;
   if (!_asChild) {
     const { disabled: _, ...rest2 } = linkProps;
-    return reactExports.createElement("a", rest2, children);
+    return React.createElement("a", rest2, children);
   }
-  return reactExports.createElement(_asChild, linkProps, children);
+  return React.createElement(_asChild, linkProps, children);
 });
 var Route = class extends BaseRoute {
   /**
@@ -407,8 +410,8 @@ var Route = class extends BaseRoute {
     this.useNavigate = () => {
       return useNavigate({ from: this.fullPath });
     };
-    this.Link = React.forwardRef((props, ref) => {
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(Link, {
+    this.Link = React__default.forwardRef((props, ref) => {
+      return /* @__PURE__ */ jsx(Link, {
         ref,
         from: this.fullPath,
         ...props
@@ -472,8 +475,8 @@ var RootRoute = class extends BaseRootRoute {
     this.useNavigate = () => {
       return useNavigate({ from: this.fullPath });
     };
-    this.Link = React.forwardRef((props, ref) => {
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(Link, {
+    this.Link = React__default.forwardRef((props, ref) => {
+      return /* @__PURE__ */ jsx(Link, {
         ref,
         from: this.fullPath,
         ...props
@@ -530,7 +533,7 @@ function lazyRouteComponent(importer, exportName) {
     if (error) throw error;
     if (!comp) if (reactUse) reactUse(load());
     else throw load();
-    return reactExports.createElement(comp, props);
+    return React.createElement(comp, props);
   };
   lazyComp.preload = load;
   return lazyComp;
@@ -539,7 +542,7 @@ function CatchNotFound(props) {
   const router = useRouter();
   {
     const resetKey = `not-found-${router.stores.location.get().pathname}-${router.stores.status.get()}`;
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(CatchBoundary, {
+    return /* @__PURE__ */ jsx(CatchBoundary, {
       getResetKey: () => resetKey,
       onCatch: (error, errorInfo) => {
         if (isNotFound(error)) props.onCatch?.(error, errorInfo);
@@ -554,31 +557,31 @@ function CatchNotFound(props) {
   }
 }
 function DefaultGlobalNotFound() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: "Not Found" });
+  return /* @__PURE__ */ jsx("p", { children: "Not Found" });
 }
 function ScriptOnce({ children }) {
   const router = useRouter();
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("script", {
+  return /* @__PURE__ */ jsx("script", {
     nonce: router.options.ssr?.nonce,
     dangerouslySetInnerHTML: { __html: children + ";document.currentScript.remove()" }
   });
 }
 function SafeFragment(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: props.children });
+  return /* @__PURE__ */ jsx(Fragment, { children: props.children });
 }
 function renderRouteNotFound(router, route, data) {
   if (!route.options.notFoundComponent) {
-    if (router.options.defaultNotFoundComponent) return /* @__PURE__ */ jsxRuntimeExports.jsx(router.options.defaultNotFoundComponent, { ...data });
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(DefaultGlobalNotFound, {});
+    if (router.options.defaultNotFoundComponent) return /* @__PURE__ */ jsx(router.options.defaultNotFoundComponent, { ...data });
+    return /* @__PURE__ */ jsx(DefaultGlobalNotFound, {});
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(route.options.notFoundComponent, { ...data });
+  return /* @__PURE__ */ jsx(route.options.notFoundComponent, { ...data });
 }
 function ScrollRestoration() {
   const script = getScrollRestorationScriptForRouter(useRouter());
   if (!script) return null;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(ScriptOnce, { children: script });
+  return /* @__PURE__ */ jsx(ScriptOnce, { children: script });
 }
-var Match = reactExports.memo(function MatchImpl({ matchId }) {
+var Match = React.memo(function MatchImpl({ matchId }) {
   const router = useRouter();
   {
     const match2 = router.stores.matchStores.get(matchId)?.get();
@@ -587,7 +590,7 @@ var Match = reactExports.memo(function MatchImpl({ matchId }) {
     }
     const routeId = match2.routeId;
     const parentRouteId = router.routesById[routeId].parentRoute?.id;
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(MatchView, {
+    return /* @__PURE__ */ jsx(MatchView, {
       router,
       matchId,
       resetKey: router.stores.loadedAt.get(),
@@ -603,19 +606,19 @@ var Match = reactExports.memo(function MatchImpl({ matchId }) {
 function MatchView({ router, matchId, resetKey, matchState }) {
   const route = router.routesById[matchState.routeId];
   const PendingComponent = route.options.pendingComponent ?? router.options.defaultPendingComponent;
-  const pendingElement = PendingComponent ? /* @__PURE__ */ jsxRuntimeExports.jsx(PendingComponent, {}) : null;
+  const pendingElement = PendingComponent ? /* @__PURE__ */ jsx(PendingComponent, {}) : null;
   const routeErrorComponent = route.options.errorComponent ?? router.options.defaultErrorComponent;
   const routeOnCatch = route.options.onCatch ?? router.options.defaultOnCatch;
   const routeNotFoundComponent = route.isRoot ? route.options.notFoundComponent ?? router.options.notFoundRoute?.options.component : route.options.notFoundComponent;
   const resolvedNoSsr = matchState.ssr === false || matchState.ssr === "data-only";
-  const ResolvedSuspenseBoundary = (!route.isRoot || route.options.wrapInSuspense || resolvedNoSsr) && (route.options.wrapInSuspense ?? PendingComponent ?? (route.options.errorComponent?.preload || resolvedNoSsr)) ? reactExports.Suspense : SafeFragment;
+  const ResolvedSuspenseBoundary = (!route.isRoot || route.options.wrapInSuspense || resolvedNoSsr) && (route.options.wrapInSuspense ?? PendingComponent ?? (route.options.errorComponent?.preload || resolvedNoSsr)) ? React.Suspense : SafeFragment;
   const ResolvedCatchBoundary = routeErrorComponent ? CatchBoundary : SafeFragment;
   const ResolvedNotFoundBoundary = routeNotFoundComponent ? CatchNotFound : SafeFragment;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(route.isRoot ? route.options.shellComponent ?? SafeFragment : SafeFragment, { children: [/* @__PURE__ */ jsxRuntimeExports.jsx(matchContext.Provider, {
+  return /* @__PURE__ */ jsxs(route.isRoot ? route.options.shellComponent ?? SafeFragment : SafeFragment, { children: [/* @__PURE__ */ jsx(matchContext.Provider, {
     value: matchId,
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResolvedSuspenseBoundary, {
+    children: /* @__PURE__ */ jsx(ResolvedSuspenseBoundary, {
       fallback: pendingElement,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResolvedCatchBoundary, {
+      children: /* @__PURE__ */ jsx(ResolvedCatchBoundary, {
         getResetKey: () => resetKey,
         errorComponent: routeErrorComponent || ErrorComponent,
         onCatch: (error, errorInfo) => {
@@ -625,26 +628,26 @@ function MatchView({ router, matchId, resetKey, matchState }) {
           }
           routeOnCatch?.(error, errorInfo);
         },
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(ResolvedNotFoundBoundary, {
+        children: /* @__PURE__ */ jsx(ResolvedNotFoundBoundary, {
           fallback: (error) => {
             error.routeId ??= matchState.routeId;
             if (!routeNotFoundComponent || error.routeId && error.routeId !== matchState.routeId || !error.routeId && !route.isRoot) throw error;
-            return reactExports.createElement(routeNotFoundComponent, error);
+            return React.createElement(routeNotFoundComponent, error);
           },
-          children: resolvedNoSsr || matchState._displayPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(ClientOnly, {
+          children: resolvedNoSsr || matchState._displayPending ? /* @__PURE__ */ jsx(ClientOnly, {
             fallback: pendingElement,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(MatchInner, { matchId })
-          }) : /* @__PURE__ */ jsxRuntimeExports.jsx(MatchInner, { matchId })
+            children: /* @__PURE__ */ jsx(MatchInner, { matchId })
+          }) : /* @__PURE__ */ jsx(MatchInner, { matchId })
         })
       })
     })
-  }), matchState.parentRouteId === rootRouteId ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [/* @__PURE__ */ jsxRuntimeExports.jsx(OnRendered, {}), router.options.scrollRestoration && isServer ? /* @__PURE__ */ jsxRuntimeExports.jsx(ScrollRestoration, {}) : null] }) : null] });
+  }), matchState.parentRouteId === rootRouteId ? /* @__PURE__ */ jsxs(Fragment, { children: [/* @__PURE__ */ jsx(OnRendered, {}), router.options.scrollRestoration && isServer ? /* @__PURE__ */ jsx(ScrollRestoration, {}) : null] }) : null] });
 }
 function OnRendered() {
   useRouter();
   return null;
 }
-var MatchInner = reactExports.memo(function MatchInnerImpl({ matchId }) {
+var MatchInner = React.memo(function MatchInnerImpl({ matchId }) {
   const router = useRouter();
   const getMatchPromise = (match2, key2) => {
     return router.getMatch(match2.id)?._nonReactive[key2] ?? match2._nonReactive[key2];
@@ -664,7 +667,7 @@ var MatchInner = reactExports.memo(function MatchInnerImpl({ matchId }) {
     });
     const key2 = remountDeps ? JSON.stringify(remountDeps) : void 0;
     const Comp = route2.options.component ?? router.options.defaultComponent;
-    const out2 = Comp ? /* @__PURE__ */ jsxRuntimeExports.jsx(Comp, {}, key2) : /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {});
+    const out2 = Comp ? /* @__PURE__ */ jsx(Comp, {}, key2) : /* @__PURE__ */ jsx(Outlet, {});
     if (match2._displayPending) throw getMatchPromise(match2, "displayPendingPromise");
     if (match2._forcePending) throw getMatchPromise(match2, "minPendingPromise");
     if (match2.status === "pending") throw getMatchPromise(match2, "loadPromise");
@@ -680,7 +683,7 @@ var MatchInner = reactExports.memo(function MatchInnerImpl({ matchId }) {
       }
       throw getMatchPromise(match2, "loadPromise");
     }
-    if (match2.status === "error") return /* @__PURE__ */ jsxRuntimeExports.jsx((route2.options.errorComponent ?? router.options.defaultErrorComponent) || ErrorComponent, {
+    if (match2.status === "error") return /* @__PURE__ */ jsx((route2.options.errorComponent ?? router.options.defaultErrorComponent) || ErrorComponent, {
       error: match2.error,
       reset: void 0,
       info: { componentStack: "" }
@@ -688,9 +691,9 @@ var MatchInner = reactExports.memo(function MatchInnerImpl({ matchId }) {
     return out2;
   }
 });
-var Outlet = reactExports.memo(function OutletImpl() {
+var Outlet = React.memo(function OutletImpl() {
   const router = useRouter();
-  const matchId = reactExports.useContext(matchContext);
+  const matchId = React.useContext(matchContext);
   let routeId;
   let parentGlobalNotFound = false;
   let childMatchId;
@@ -703,7 +706,7 @@ var Outlet = reactExports.memo(function OutletImpl() {
     childMatchId = parentIndex >= 0 ? matches[parentIndex + 1]?.id : void 0;
   }
   const route = routeId ? router.routesById[routeId] : void 0;
-  const pendingElement = router.options.defaultPendingComponent ? /* @__PURE__ */ jsxRuntimeExports.jsx(router.options.defaultPendingComponent, {}) : null;
+  const pendingElement = router.options.defaultPendingComponent ? /* @__PURE__ */ jsx(router.options.defaultPendingComponent, {}) : null;
   if (parentGlobalNotFound) {
     if (!route) {
       invariant();
@@ -711,8 +714,8 @@ var Outlet = reactExports.memo(function OutletImpl() {
     return renderRouteNotFound(router, route, void 0);
   }
   if (!childMatchId) return null;
-  const nextMatch = /* @__PURE__ */ jsxRuntimeExports.jsx(Match, { matchId: childMatchId });
-  if (routeId === rootRouteId) return /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, {
+  const nextMatch = /* @__PURE__ */ jsx(Match, { matchId: childMatchId });
+  if (routeId === rootRouteId) return /* @__PURE__ */ jsx(React.Suspense, {
     fallback: pendingElement,
     children: nextMatch
   });
@@ -721,21 +724,21 @@ var Outlet = reactExports.memo(function OutletImpl() {
 function Matches() {
   const router = useRouter();
   const PendingComponent = router.routesById[rootRouteId].options.pendingComponent ?? router.options.defaultPendingComponent;
-  const pendingElement = PendingComponent ? /* @__PURE__ */ jsxRuntimeExports.jsx(PendingComponent, {}) : null;
-  const inner = /* @__PURE__ */ jsxRuntimeExports.jsxs(SafeFragment, {
+  const pendingElement = PendingComponent ? /* @__PURE__ */ jsx(PendingComponent, {}) : null;
+  const inner = /* @__PURE__ */ jsxs(SafeFragment, {
     fallback: pendingElement,
-    children: [false, /* @__PURE__ */ jsxRuntimeExports.jsx(MatchesInner, {})]
+    children: [false, /* @__PURE__ */ jsx(MatchesInner, {})]
   });
-  return router.options.InnerWrap ? /* @__PURE__ */ jsxRuntimeExports.jsx(router.options.InnerWrap, { children: inner }) : inner;
+  return router.options.InnerWrap ? /* @__PURE__ */ jsx(router.options.InnerWrap, { children: inner }) : inner;
 }
 function MatchesInner() {
   const router = useRouter();
   const matchId = router.stores.firstId.get();
   const resetKey = router.stores.loadedAt.get();
-  const matchComponent = matchId ? /* @__PURE__ */ jsxRuntimeExports.jsx(Match, { matchId }) : null;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(matchContext.Provider, {
+  const matchComponent = matchId ? /* @__PURE__ */ jsx(Match, { matchId }) : null;
+  return /* @__PURE__ */ jsx(matchContext.Provider, {
     value: matchId,
-    children: router.options.disableGlobalCatchBoundary ? matchComponent : /* @__PURE__ */ jsxRuntimeExports.jsx(CatchBoundary, {
+    children: router.options.disableGlobalCatchBoundary ? matchComponent : /* @__PURE__ */ jsx(CatchBoundary, {
       getResetKey: () => resetKey,
       errorComponent: ErrorComponent,
       onCatch: void 0,
@@ -767,18 +770,18 @@ function RouterContextProvider({ router, children, ...rest }) {
       ...rest.context
     }
   });
-  const provider = /* @__PURE__ */ jsxRuntimeExports.jsx(routerContext.Provider, {
+  const provider = /* @__PURE__ */ jsx(routerContext.Provider, {
     value: router,
     children
   });
-  if (router.options.Wrap) return /* @__PURE__ */ jsxRuntimeExports.jsx(router.options.Wrap, { children: provider });
+  if (router.options.Wrap) return /* @__PURE__ */ jsx(router.options.Wrap, { children: provider });
   return provider;
 }
 function RouterProvider({ router, ...rest }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(RouterContextProvider, {
+  return /* @__PURE__ */ jsx(RouterContextProvider, {
     router,
     ...rest,
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Matches, {})
+    children: /* @__PURE__ */ jsx(Matches, {})
   });
 }
 var noopScriptHandler = () => {
@@ -791,18 +794,18 @@ function Asset(asset) {
   const { attrs, children, nonce, preventScriptHoist } = asset;
   switch (asset.tag) {
     case "title":
-      return /* @__PURE__ */ jsxRuntimeExports.jsx("title", {
+      return /* @__PURE__ */ jsx("title", {
         ...attrs,
         suppressHydrationWarning: true,
         children
       });
     case "meta":
-      return /* @__PURE__ */ jsxRuntimeExports.jsx("meta", {
+      return /* @__PURE__ */ jsx("meta", {
         ...attrs,
         suppressHydrationWarning: true
       });
     case "link":
-      return /* @__PURE__ */ jsxRuntimeExports.jsx("link", {
+      return /* @__PURE__ */ jsx("link", {
         ...attrs,
         precedence: attrs?.precedence ?? (attrs?.rel === "stylesheet" ? "default" : void 0),
         nonce,
@@ -810,13 +813,13 @@ function Asset(asset) {
       });
     case "style":
       if (asset.inlineCss && false) ;
-      return /* @__PURE__ */ jsxRuntimeExports.jsx("style", {
+      return /* @__PURE__ */ jsx("style", {
         ...attrs,
         dangerouslySetInnerHTML: { __html: children },
         nonce
       });
     case "script":
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(Script, {
+      return /* @__PURE__ */ jsx(Script, {
         attrs,
         preventScriptHoist,
         children
@@ -829,7 +832,7 @@ function Script({ attrs, children, preventScriptHoist }) {
   useRouter();
   useHydrated();
   const dataScript = typeof attrs?.type === "string" && attrs.type !== "" && attrs.type !== "text/javascript" && attrs.type !== "module";
-  reactExports.useEffect(() => {
+  React.useEffect(() => {
     if (dataScript) return;
     if (attrs?.src) {
       const normSrc = (() => {
@@ -868,17 +871,17 @@ function Script({ attrs, children, preventScriptHoist }) {
   ]);
   {
     if (attrs?.src) {
-      if (!preventScriptHoist) return /* @__PURE__ */ jsxRuntimeExports.jsx("script", {
+      if (!preventScriptHoist) return /* @__PURE__ */ jsx("script", {
         ...attrs,
         suppressHydrationWarning: true
       });
-      return /* @__PURE__ */ jsxRuntimeExports.jsx("script", {
+      return /* @__PURE__ */ jsx("script", {
         ...attrs,
         onLoad: noopScriptHandler,
         suppressHydrationWarning: true
       });
     }
-    if (typeof children === "string") return /* @__PURE__ */ jsxRuntimeExports.jsx("script", {
+    if (typeof children === "string") return /* @__PURE__ */ jsx("script", {
       ...attrs,
       dangerouslySetInnerHTML: { __html: children },
       suppressHydrationWarning: true
@@ -1013,7 +1016,7 @@ var useTags = (assetCrossOrigin) => {
 function HeadContent(props) {
   const tags = useTags(props.assetCrossOrigin);
   const nonce = useRouter().options.ssr?.nonce;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: tags.map((tag) => /* @__PURE__ */ reactExports.createElement(Asset, {
+  return /* @__PURE__ */ jsx(Fragment, { children: tags.map((tag) => /* @__PURE__ */ createElement(Asset, {
     ...tag,
     key: `tsr-meta-${JSON.stringify(tag)}`,
     nonce
@@ -1062,7 +1065,7 @@ function renderScripts(router, scripts, assetScripts) {
     const serverBufferedScript = router.serverSsr.takeBufferedScripts();
     if (serverBufferedScript) allScripts.unshift(serverBufferedScript);
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: allScripts.map((asset, i) => /* @__PURE__ */ reactExports.createElement(Asset, {
+  return /* @__PURE__ */ jsx(Fragment, { children: allScripts.map((asset, i) => /* @__PURE__ */ createElement(Asset, {
     ...asset,
     key: `tsr-scripts-${asset.tag}-${i}`
   })) });

@@ -1,4 +1,5 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
+import { createContext } from "react";
 var he = Object.defineProperty, le = Object.defineProperties, ue = Object.getOwnPropertyDescriptors, j = Object.getOwnPropertySymbols, V = Object.prototype.hasOwnProperty, J = Object.prototype.propertyIsEnumerable, q = (t, e, n) => e in t ? he(t, e, { enumerable: true, configurable: true, writable: true, value: n }) : t[e] = n, g = (t, e) => {
   for (var n in e || (e = {})) V.call(e, n) && q(t, n, e[n]);
   if (j) for (var n of j(e)) J.call(e, n) && q(t, n, e[n]);
@@ -370,9 +371,9 @@ function M(t) {
 function T(t) {
   return t || document.head;
 }
-var O = class extends reactExports.Component {
+var O = class extends React.Component {
   constructor(e) {
-    super(e), this._hcaptcha = void 0, this.renderCaptcha = this.renderCaptcha.bind(this), this.resetCaptcha = this.resetCaptcha.bind(this), this.removeCaptcha = this.removeCaptcha.bind(this), this.isReady = this.isReady.bind(this), this._onReady = null, this.loadCaptcha = this.loadCaptcha.bind(this), this.handleOnLoad = this.handleOnLoad.bind(this), this.handleSubmit = this.handleSubmit.bind(this), this.handleExpire = this.handleExpire.bind(this), this.handleError = this.handleError.bind(this), this.handleOpen = this.handleOpen.bind(this), this.handleClose = this.handleClose.bind(this), this.handleChallengeExpired = this.handleChallengeExpired.bind(this), this.ref = reactExports.createRef(), this.apiScriptRequested = false, this.sentryHub = null, this.captchaId = "", this._pendingExecute = null, this.state = { isApiReady: false, isRemoved: false, elementId: e.id };
+    super(e), this._hcaptcha = void 0, this.renderCaptcha = this.renderCaptcha.bind(this), this.resetCaptcha = this.resetCaptcha.bind(this), this.removeCaptcha = this.removeCaptcha.bind(this), this.isReady = this.isReady.bind(this), this._onReady = null, this.loadCaptcha = this.loadCaptcha.bind(this), this.handleOnLoad = this.handleOnLoad.bind(this), this.handleSubmit = this.handleSubmit.bind(this), this.handleExpire = this.handleExpire.bind(this), this.handleError = this.handleError.bind(this), this.handleOpen = this.handleOpen.bind(this), this.handleClose = this.handleClose.bind(this), this.handleChallengeExpired = this.handleChallengeExpired.bind(this), this.ref = React.createRef(), this.apiScriptRequested = false, this.sentryHub = null, this.captchaId = "", this._pendingExecute = null, this.state = { isApiReady: false, isRemoved: false, elementId: e.id };
   }
   componentDidMount() {
     let e = T(this.props.scriptLocation), n = M(e);
@@ -515,10 +516,10 @@ var O = class extends reactExports.Component {
   }
   render() {
     let { elementId: e } = this.state;
-    return reactExports.createElement("div", { ref: this.ref, id: e });
+    return React.createElement("div", { ref: this.ref, id: e });
   }
 };
-reactExports.createContext();
+createContext();
 var re = O;
 export {
   re as r

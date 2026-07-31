@@ -1,5 +1,7 @@
 import { defineClientPlugin, createRoute } from "@btst/stack/plugins/client";
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
+import { lazy, useContext, useRef, useSyncExternalStore, useCallback, useState, useEffect, createContext, useMemo } from "react";
+import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { ComposedRoute } from "@btst/stack/client/components";
 import { usePluginOverrides } from "@btst/stack/context";
 import { D as Drawer$1 } from "./vaul.mjs";
@@ -104,7 +106,7 @@ var accountClientPlugin = (config) => definePlugin({
     accountSettings: createRoute(
       `/account/${accountViewPaths.SETTINGS}`,
       () => {
-        const AccountSettingsPage2 = reactExports.lazy(
+        const AccountSettingsPage2 = lazy(
           () => Promise.resolve().then(function() {
             return accountSettingsPageTQ7GKK73;
           }).then((m) => ({
@@ -125,7 +127,7 @@ var accountClientPlugin = (config) => definePlugin({
     accountSecurity: createRoute(
       `/account/${accountViewPaths.SECURITY}`,
       () => {
-        const AccountSecurityPage2 = reactExports.lazy(
+        const AccountSecurityPage2 = lazy(
           () => Promise.resolve().then(function() {
             return accountSecurityPageVXPA2HTK;
           }).then((m) => ({
@@ -146,7 +148,7 @@ var accountClientPlugin = (config) => definePlugin({
     accountApiKeys: createRoute(
       `/account/${accountViewPaths.API_KEYS}`,
       () => {
-        const AccountApiKeysPage2 = reactExports.lazy(
+        const AccountApiKeysPage2 = lazy(
           () => Promise.resolve().then(function() {
             return accountApiKeysPageML6QV7K4;
           }).then((m) => ({
@@ -167,7 +169,7 @@ var accountClientPlugin = (config) => definePlugin({
     accountOrganizations: createRoute(
       `/account/${accountViewPaths.ORGANIZATIONS}`,
       () => {
-        const AccountOrganizationsPage2 = reactExports.lazy(
+        const AccountOrganizationsPage2 = lazy(
           () => Promise.resolve().then(function() {
             return accountOrganizationsPageLO4AWXYO;
           }).then((m) => ({
@@ -188,7 +190,7 @@ var accountClientPlugin = (config) => definePlugin({
     accountTeams: createRoute(
       `/account/${accountViewPaths.TEAMS}`,
       () => {
-        const AccountTeamsPage2 = reactExports.lazy(
+        const AccountTeamsPage2 = lazy(
           () => Promise.resolve().then(function() {
             return accountTeamsPageYXHGA6DU;
           }).then((m) => ({
@@ -235,7 +237,7 @@ var authClientPlugin = (config) => definePlugin2({
   name: "auth",
   routes: () => ({
     signIn: createRoute(`/auth/${authViewPaths.SIGN_IN}`, () => {
-      const SignInPage2 = reactExports.lazy(
+      const SignInPage2 = lazy(
         () => Promise.resolve().then(function() {
           return signInPage5LRHUH6V;
         }).then(
@@ -255,7 +257,7 @@ var authClientPlugin = (config) => definePlugin2({
       };
     }),
     signUp: createRoute(`/auth/${authViewPaths.SIGN_UP}`, () => {
-      const SignUpPage2 = reactExports.lazy(
+      const SignUpPage2 = lazy(
         () => Promise.resolve().then(function() {
           return signUpPage5PRZNHPF;
         }).then(
@@ -277,7 +279,7 @@ var authClientPlugin = (config) => definePlugin2({
     forgotPassword: createRoute(
       `/auth/${authViewPaths.FORGOT_PASSWORD}`,
       () => {
-        const ForgotPasswordPage2 = reactExports.lazy(
+        const ForgotPasswordPage2 = lazy(
           () => Promise.resolve().then(function() {
             return forgotPasswordPageQW45562I;
           }).then((m) => ({
@@ -298,7 +300,7 @@ var authClientPlugin = (config) => definePlugin2({
     resetPassword: createRoute(
       `/auth/${authViewPaths.RESET_PASSWORD}`,
       () => {
-        const ResetPasswordPage2 = reactExports.lazy(
+        const ResetPasswordPage2 = lazy(
           () => Promise.resolve().then(function() {
             return resetPasswordPageLCLD4DOW;
           }).then((m) => ({
@@ -317,7 +319,7 @@ var authClientPlugin = (config) => definePlugin2({
       }
     ),
     magicLink: createRoute(`/auth/${authViewPaths.MAGIC_LINK}`, () => {
-      const MagicLinkPage2 = reactExports.lazy(
+      const MagicLinkPage2 = lazy(
         () => Promise.resolve().then(function() {
           return magicLinkPage5AKSRKRN;
         }).then(
@@ -337,7 +339,7 @@ var authClientPlugin = (config) => definePlugin2({
       };
     }),
     emailOtp: createRoute(`/auth/${authViewPaths.EMAIL_OTP}`, () => {
-      const EmailOtpPage2 = reactExports.lazy(
+      const EmailOtpPage2 = lazy(
         () => Promise.resolve().then(function() {
           return emailOtpPageC6PVS4I7;
         }).then(
@@ -357,7 +359,7 @@ var authClientPlugin = (config) => definePlugin2({
       };
     }),
     twoFactor: createRoute(`/auth/${authViewPaths.TWO_FACTOR}`, () => {
-      const TwoFactorPage2 = reactExports.lazy(
+      const TwoFactorPage2 = lazy(
         () => Promise.resolve().then(function() {
           return twoFactorPageG7UY27TG;
         }).then(
@@ -379,7 +381,7 @@ var authClientPlugin = (config) => definePlugin2({
     recoverAccount: createRoute(
       `/auth/${authViewPaths.RECOVER_ACCOUNT}`,
       () => {
-        const RecoverAccountPage2 = reactExports.lazy(
+        const RecoverAccountPage2 = lazy(
           () => Promise.resolve().then(function() {
             return recoverAccountPageYTEGVO7U;
           }).then((m) => ({
@@ -398,7 +400,7 @@ var authClientPlugin = (config) => definePlugin2({
       }
     ),
     callback: createRoute(`/auth/${authViewPaths.CALLBACK}`, () => {
-      const CallbackPage2 = reactExports.lazy(
+      const CallbackPage2 = lazy(
         () => Promise.resolve().then(function() {
           return callbackPageTF3J2VMN;
         }).then(
@@ -412,7 +414,7 @@ var authClientPlugin = (config) => definePlugin2({
       };
     }),
     signOut: createRoute(`/auth/${authViewPaths.SIGN_OUT}`, () => {
-      const SignOutPage2 = reactExports.lazy(
+      const SignOutPage2 = lazy(
         () => Promise.resolve().then(function() {
           return signOutPageYWHTKNFE;
         }).then(
@@ -428,7 +430,7 @@ var authClientPlugin = (config) => definePlugin2({
     acceptInvitation: createRoute(
       `/auth/${authViewPaths.ACCEPT_INVITATION}`,
       () => {
-        const AcceptInvitationPage2 = reactExports.lazy(
+        const AcceptInvitationPage2 = lazy(
           () => Promise.resolve().then(function() {
             return acceptInvitationPageGMSN3A3H;
           }).then((m) => ({
@@ -443,7 +445,7 @@ var authClientPlugin = (config) => definePlugin2({
     emailVerification: createRoute(
       `/auth/${authViewPaths.EMAIL_VERIFICATION}`,
       () => {
-        const EmailVerificationPage2 = reactExports.lazy(
+        const EmailVerificationPage2 = lazy(
           () => Promise.resolve().then(function() {
             return emailVerificationPageDSGCQ3FU;
           }).then((m) => ({
@@ -508,7 +510,7 @@ var organizationClientPlugin = (config) => definePlugin3({
     organizationSettings: createRoute(
       `/organization/${organizationViewPaths.SETTINGS}`,
       () => {
-        const OrganizationSettingsPage2 = reactExports.lazy(
+        const OrganizationSettingsPage2 = lazy(
           () => Promise.resolve().then(function() {
             return organizationSettingsPageDOCNYJET;
           }).then((m) => ({
@@ -529,7 +531,7 @@ var organizationClientPlugin = (config) => definePlugin3({
     organizationMembers: createRoute(
       `/organization/${organizationViewPaths.MEMBERS}`,
       () => {
-        const OrganizationMembersPage2 = reactExports.lazy(
+        const OrganizationMembersPage2 = lazy(
           () => Promise.resolve().then(function() {
             return organizationMembersPage2ZYAVV45;
           }).then((m) => ({
@@ -550,7 +552,7 @@ var organizationClientPlugin = (config) => definePlugin3({
     organizationApiKeys: createRoute(
       `/organization/${organizationViewPaths.API_KEYS}`,
       () => {
-        const OrganizationApiKeysPage2 = reactExports.lazy(
+        const OrganizationApiKeysPage2 = lazy(
           () => Promise.resolve().then(function() {
             return organizationApiKeysPage4MEQXR25;
           }).then((m) => ({
@@ -571,7 +573,7 @@ var organizationClientPlugin = (config) => definePlugin3({
     organizationTeams: createRoute(
       `/organization/${organizationViewPaths.TEAMS}`,
       () => {
-        const OrganizationTeamsPage2 = reactExports.lazy(
+        const OrganizationTeamsPage2 = lazy(
           () => Promise.resolve().then(function() {
             return organizationTeamsPageB3PZGE5L;
           }).then((m) => ({
@@ -658,7 +660,7 @@ function getPasswordSchema(passwordValidation, localization) {
   return schema;
 }
 function Card({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "card",
@@ -671,7 +673,7 @@ function Card({ className, ...props }) {
   );
 }
 function CardHeader({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "card-header",
@@ -684,7 +686,7 @@ function CardHeader({ className, ...props }) {
   );
 }
 function CardTitle({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "card-title",
@@ -694,7 +696,7 @@ function CardTitle({ className, ...props }) {
   );
 }
 function CardDescription({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "card-description",
@@ -704,7 +706,7 @@ function CardDescription({ className, ...props }) {
   );
 }
 function CardContent({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "card-content",
@@ -714,7 +716,7 @@ function CardContent({ className, ...props }) {
   );
 }
 function CardFooter({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "card-footer",
@@ -724,7 +726,7 @@ function CardFooter({ className, ...props }) {
   );
 }
 function Skeleton({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "skeleton",
@@ -766,7 +768,7 @@ function Button({
   ...props
 }) {
   const Comp = asChild ? Slot : "button";
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Comp,
     {
       "data-slot": "button",
@@ -776,24 +778,24 @@ function Button({
   );
 }
 function DefaultError({ error, reset }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "w-full max-w-md", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "Something went wrong!" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: error.message || "An unexpected error occurred" }),
-      error.digest && /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-muted-foreground text-xs", children: [
+  return /* @__PURE__ */ jsx("div", { className: "flex min-h-screen items-center justify-center p-4", children: /* @__PURE__ */ jsxs(Card, { className: "w-full max-w-md", children: [
+    /* @__PURE__ */ jsx(CardHeader, { children: /* @__PURE__ */ jsx(CardTitle, { children: "Something went wrong!" }) }),
+    /* @__PURE__ */ jsxs(CardContent, { className: "space-y-4", children: [
+      /* @__PURE__ */ jsx("p", { className: "text-muted-foreground text-sm", children: error.message || "An unexpected error occurred" }),
+      error.digest && /* @__PURE__ */ jsxs("p", { className: "text-muted-foreground text-xs", children: [
         "Error ID: ",
         error.digest
       ] }),
-      reset && /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { onClick: reset, className: "w-full", children: "Try again" })
+      reset && /* @__PURE__ */ jsx(Button, { onClick: reset, className: "w-full", children: "Try again" })
     ] })
   ] }) });
 }
 function NotFoundPage() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "w-full max-w-md", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: "404 - Page Not Found" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: "The page you're looking for doesn't exist." }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx("div", { className: "flex min-h-screen items-center justify-center p-4", children: /* @__PURE__ */ jsxs(Card, { className: "w-full max-w-md", children: [
+    /* @__PURE__ */ jsx(CardHeader, { children: /* @__PURE__ */ jsx(CardTitle, { children: "404 - Page Not Found" }) }),
+    /* @__PURE__ */ jsxs(CardContent, { className: "space-y-4", children: [
+      /* @__PURE__ */ jsx("p", { className: "text-muted-foreground text-sm", children: "The page you're looking for doesn't exist." }),
+      /* @__PURE__ */ jsx(
         Button,
         {
           onClick: () => {
@@ -807,16 +809,16 @@ function NotFoundPage() {
   ] }) });
 }
 function PageLoading() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-h-screen items-center justify-center p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "w-full max-w-md", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-6 w-48" }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: "space-y-4", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-4 w-full" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-4 w-3/4" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-10 w-full" })
+  return /* @__PURE__ */ jsx("div", { className: "flex min-h-screen items-center justify-center p-4", children: /* @__PURE__ */ jsxs(Card, { className: "w-full max-w-md", children: [
+    /* @__PURE__ */ jsx(CardHeader, { children: /* @__PURE__ */ jsx(Skeleton, { className: "h-6 w-48" }) }),
+    /* @__PURE__ */ jsxs(CardContent, { className: "space-y-4", children: [
+      /* @__PURE__ */ jsx(Skeleton, { className: "h-4 w-full" }),
+      /* @__PURE__ */ jsx(Skeleton, { className: "h-4 w-3/4" }),
+      /* @__PURE__ */ jsx(Skeleton, { className: "h-10 w-full" })
     ] })
   ] }) });
 }
-var AccountSettingsPageInternal$1 = reactExports.lazy(
+var AccountSettingsPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return accountSettingsPage_internalJCXCAIIM;
   }).then((m) => ({
@@ -825,7 +827,7 @@ var AccountSettingsPageInternal$1 = reactExports.lazy(
 );
 function AccountSettingsPage() {
   const { onRouteError } = usePluginOverrides("account");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/account/${accountViewPaths.SETTINGS}`,
@@ -848,7 +850,7 @@ const accountSettingsPageTQ7GKK73 = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   AccountSettingsPage
 });
-var AccountSecurityPageInternal$1 = reactExports.lazy(
+var AccountSecurityPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return accountSecurityPage_internalOLX2SDWX;
   }).then((m) => ({
@@ -857,7 +859,7 @@ var AccountSecurityPageInternal$1 = reactExports.lazy(
 );
 function AccountSecurityPage() {
   const { onRouteError } = usePluginOverrides("account");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/account/${accountViewPaths.SECURITY}`,
@@ -880,7 +882,7 @@ const accountSecurityPageVXPA2HTK = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   AccountSecurityPage
 });
-var AccountApiKeysPageInternal$1 = reactExports.lazy(
+var AccountApiKeysPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return accountApiKeysPage_internalYQO3GVRR;
   }).then((m) => ({
@@ -889,7 +891,7 @@ var AccountApiKeysPageInternal$1 = reactExports.lazy(
 );
 function AccountApiKeysPage() {
   const { onRouteError } = usePluginOverrides("account");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/account/${accountViewPaths.API_KEYS}`,
@@ -912,7 +914,7 @@ const accountApiKeysPageML6QV7K4 = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   AccountApiKeysPage
 });
-var AccountOrganizationsPageInternal$1 = reactExports.lazy(
+var AccountOrganizationsPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return accountOrganizationsPage_internalFMIBVMJQ;
   }).then((m) => ({
@@ -921,7 +923,7 @@ var AccountOrganizationsPageInternal$1 = reactExports.lazy(
 );
 function AccountOrganizationsPage() {
   const { onRouteError } = usePluginOverrides("account");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/account/${accountViewPaths.ORGANIZATIONS}`,
@@ -944,7 +946,7 @@ const accountOrganizationsPageLO4AWXYO = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   AccountOrganizationsPage
 });
-var AccountTeamsPageInternal$1 = reactExports.lazy(
+var AccountTeamsPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return accountTeamsPage_internalJE7SQLVP;
   }).then((m) => ({
@@ -953,7 +955,7 @@ var AccountTeamsPageInternal$1 = reactExports.lazy(
 );
 function AccountTeamsPage() {
   const { onRouteError } = usePluginOverrides("account");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/account/${accountViewPaths.TEAMS}`,
@@ -976,7 +978,7 @@ const accountTeamsPageYXHGA6DU = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   AccountTeamsPage
 });
-var SignInPageInternal$1 = reactExports.lazy(
+var SignInPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return signInPage_internalHHDVE5SC;
   }).then((m) => ({
@@ -985,7 +987,7 @@ var SignInPageInternal$1 = reactExports.lazy(
 );
 function SignInPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.SIGN_IN}`,
@@ -1008,7 +1010,7 @@ const signInPage5LRHUH6V = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   SignInPage
 });
-var SignUpPageInternal$1 = reactExports.lazy(
+var SignUpPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return signUpPage_internalRSSBE43R;
   }).then((m) => ({
@@ -1017,7 +1019,7 @@ var SignUpPageInternal$1 = reactExports.lazy(
 );
 function SignUpPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.SIGN_UP}`,
@@ -1040,7 +1042,7 @@ const signUpPage5PRZNHPF = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   SignUpPage
 });
-var ForgotPasswordPageInternal$1 = reactExports.lazy(
+var ForgotPasswordPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return forgotPasswordPage_internalETDVCAUC;
   }).then((m) => ({
@@ -1049,7 +1051,7 @@ var ForgotPasswordPageInternal$1 = reactExports.lazy(
 );
 function ForgotPasswordPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.FORGOT_PASSWORD}`,
@@ -1072,7 +1074,7 @@ const forgotPasswordPageQW45562I = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   ForgotPasswordPage
 });
-var ResetPasswordPageInternal$1 = reactExports.lazy(
+var ResetPasswordPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return resetPasswordPage_internalGOVT5BCU;
   }).then((m) => ({
@@ -1081,7 +1083,7 @@ var ResetPasswordPageInternal$1 = reactExports.lazy(
 );
 function ResetPasswordPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.RESET_PASSWORD}`,
@@ -1104,7 +1106,7 @@ const resetPasswordPageLCLD4DOW = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   ResetPasswordPage
 });
-var MagicLinkPageInternal$1 = reactExports.lazy(
+var MagicLinkPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return magicLinkPage_internalCIV4B5FS;
   }).then((m) => ({
@@ -1113,7 +1115,7 @@ var MagicLinkPageInternal$1 = reactExports.lazy(
 );
 function MagicLinkPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.MAGIC_LINK}`,
@@ -1136,7 +1138,7 @@ const magicLinkPage5AKSRKRN = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   MagicLinkPage
 });
-var EmailOtpPageInternal$1 = reactExports.lazy(
+var EmailOtpPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return emailOtpPage_internalFPZRJQUL;
   }).then((m) => ({
@@ -1145,7 +1147,7 @@ var EmailOtpPageInternal$1 = reactExports.lazy(
 );
 function EmailOtpPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.EMAIL_OTP}`,
@@ -1168,7 +1170,7 @@ const emailOtpPageC6PVS4I7 = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   EmailOtpPage
 });
-var TwoFactorPageInternal$1 = reactExports.lazy(
+var TwoFactorPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return twoFactorPage_internalSEG5Q42X;
   }).then((m) => ({
@@ -1177,7 +1179,7 @@ var TwoFactorPageInternal$1 = reactExports.lazy(
 );
 function TwoFactorPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.TWO_FACTOR}`,
@@ -1200,7 +1202,7 @@ const twoFactorPageG7UY27TG = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   TwoFactorPage
 });
-var RecoverAccountPageInternal$1 = reactExports.lazy(
+var RecoverAccountPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return recoverAccountPage_internalSZ6YMTCT;
   }).then((m) => ({
@@ -1209,7 +1211,7 @@ var RecoverAccountPageInternal$1 = reactExports.lazy(
 );
 function RecoverAccountPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.RECOVER_ACCOUNT}`,
@@ -1232,7 +1234,7 @@ const recoverAccountPageYTEGVO7U = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   RecoverAccountPage
 });
-var CallbackPageInternal$1 = reactExports.lazy(
+var CallbackPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return callbackPage_internalI5U7VSTZ;
   }).then((m) => ({
@@ -1241,7 +1243,7 @@ var CallbackPageInternal$1 = reactExports.lazy(
 );
 function CallbackPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.CALLBACK}`,
@@ -1264,7 +1266,7 @@ const callbackPageTF3J2VMN = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   CallbackPage
 });
-var SignOutPageInternal$1 = reactExports.lazy(
+var SignOutPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return signOutPage_internal4E5FNQKY;
   }).then((m) => ({
@@ -1273,7 +1275,7 @@ var SignOutPageInternal$1 = reactExports.lazy(
 );
 function SignOutPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.SIGN_OUT}`,
@@ -1296,7 +1298,7 @@ const signOutPageYWHTKNFE = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   SignOutPage
 });
-var AcceptInvitationPageInternal$1 = reactExports.lazy(
+var AcceptInvitationPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return acceptInvitationPage_internal5RS4QNQO;
   }).then((m) => ({
@@ -1305,7 +1307,7 @@ var AcceptInvitationPageInternal$1 = reactExports.lazy(
 );
 function AcceptInvitationPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.ACCEPT_INVITATION}`,
@@ -1328,7 +1330,7 @@ const acceptInvitationPageGMSN3A3H = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   AcceptInvitationPage
 });
-var EmailVerificationPageInternal$1 = reactExports.lazy(
+var EmailVerificationPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return emailVerificationPage_internalE7EMM4LT;
   }).then((m) => ({
@@ -1337,7 +1339,7 @@ var EmailVerificationPageInternal$1 = reactExports.lazy(
 );
 function EmailVerificationPage() {
   const { onRouteError } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/auth/${authViewPaths.EMAIL_VERIFICATION}`,
@@ -1360,7 +1362,7 @@ const emailVerificationPageDSGCQ3FU = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   EmailVerificationPage
 });
-var OrganizationSettingsPageInternal$1 = reactExports.lazy(
+var OrganizationSettingsPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return organizationSettingsPage_internalXJOITES4;
   }).then((m) => ({
@@ -1369,7 +1371,7 @@ var OrganizationSettingsPageInternal$1 = reactExports.lazy(
 );
 function OrganizationSettingsPage() {
   const { onRouteError } = usePluginOverrides("organization");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/organization/${organizationViewPaths.SETTINGS}`,
@@ -1392,7 +1394,7 @@ const organizationSettingsPageDOCNYJET = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   OrganizationSettingsPage
 });
-var OrganizationMembersPageInternal$1 = reactExports.lazy(
+var OrganizationMembersPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return organizationMembersPage_internalQ3Y3KR6W;
   }).then((m) => ({
@@ -1401,7 +1403,7 @@ var OrganizationMembersPageInternal$1 = reactExports.lazy(
 );
 function OrganizationMembersPage() {
   const { onRouteError } = usePluginOverrides("organization");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/organization/${organizationViewPaths.MEMBERS}`,
@@ -1424,7 +1426,7 @@ const organizationMembersPage2ZYAVV45 = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   OrganizationMembersPage
 });
-var OrganizationApiKeysPageInternal$1 = reactExports.lazy(
+var OrganizationApiKeysPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return organizationApiKeysPage_internalA7TOBTOI;
   }).then((m) => ({
@@ -1433,7 +1435,7 @@ var OrganizationApiKeysPageInternal$1 = reactExports.lazy(
 );
 function OrganizationApiKeysPage() {
   const { onRouteError } = usePluginOverrides("organization");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/organization/${organizationViewPaths.API_KEYS}`,
@@ -1456,7 +1458,7 @@ const organizationApiKeysPage4MEQXR25 = /* @__PURE__ */ Object.freeze({
   __proto__: null,
   OrganizationApiKeysPage
 });
-var OrganizationTeamsPageInternal$1 = reactExports.lazy(
+var OrganizationTeamsPageInternal$1 = lazy(
   () => Promise.resolve().then(function() {
     return organizationTeamsPage_internalAZY6L43Z;
   }).then((m) => ({
@@ -1465,7 +1467,7 @@ var OrganizationTeamsPageInternal$1 = reactExports.lazy(
 );
 function OrganizationTeamsPage() {
   const { onRouteError } = usePluginOverrides("organization");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     ComposedRoute,
     {
       path: `/organization/${organizationViewPaths.TEAMS}`,
@@ -2319,15 +2321,15 @@ function subscribe() {
   };
 }
 function useIsHydrated() {
-  return reactExports.useSyncExternalStore(
+  return useSyncExternalStore(
     subscribe,
     () => true,
     () => false
   );
 }
 function useLang() {
-  const [lang, setLang] = reactExports.useState();
-  reactExports.useEffect(() => {
+  const [lang, setLang] = useState();
+  useEffect(() => {
     const checkLang = () => {
       const currentLang = document.documentElement.getAttribute("lang");
       setLang(currentLang ?? void 0);
@@ -2348,8 +2350,8 @@ function useLang() {
   return { lang };
 }
 function useTheme() {
-  const [theme, setTheme] = reactExports.useState("light");
-  reactExports.useEffect(() => {
+  const [theme, setTheme] = useState("light");
+  useEffect(() => {
     const checkTheme = () => {
       var _a;
       const isDark = document.documentElement.classList.contains("dark") || ((_a = document.documentElement.getAttribute("style")) == null ? void 0 : _a.includes("color-scheme: dark"));
@@ -2372,16 +2374,16 @@ function useTheme() {
 }
 function RecaptchaV3({ children }) {
   const isHydrated = useIsHydrated();
-  const { captcha } = reactExports.useContext(AuthUIContext);
+  const { captcha } = useContext(AuthUIContext);
   if ((captcha == null ? void 0 : captcha.provider) !== "google-recaptcha-v3") return children;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     ReCaptchaProvider,
     {
       reCaptchaKey: captcha.siteKey,
       useEnterprise: captcha.enterprise,
       useRecaptchaNet: captcha.recaptchaNet,
       children: [
-        isHydrated && /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+        isHydrated && /* @__PURE__ */ jsx("style", { children: `
                     .grecaptcha-badge {
                         visibility: hidden;
                         border-radius: var(--radius) !important;
@@ -2395,7 +2397,7 @@ function RecaptchaV3({ children }) {
                         border-color: var(--input) !important;
                     }
                 ` }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(RecaptchaV3Style, {}),
+        /* @__PURE__ */ jsx(RecaptchaV3Style, {}),
         children
       ]
     }
@@ -2405,7 +2407,7 @@ function RecaptchaV3Style() {
   const { executeRecaptcha } = useReCaptcha();
   const { theme } = useTheme();
   const { lang } = useLang();
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (!executeRecaptcha) return;
     const updateRecaptcha = async () => {
       const iframe = document.querySelector(
@@ -2428,7 +2430,7 @@ function useCurrentOrganization({
   const {
     organization: organizationOptions,
     hooks: { useActiveOrganization, useListOrganizations }
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { pathMode, slug: contextSlug } = organizationOptions || {};
   let data;
   let isPending;
@@ -2456,7 +2458,7 @@ function useCurrentOrganization({
     isPending = organizationPending;
     isRefetching = organizationRefetching;
   }
-  return reactExports.useMemo(
+  return useMemo(
     () => ({
       data,
       isPending,
@@ -2472,7 +2474,7 @@ var OrganizationRefetcher = () => {
     organization: organizationOptions,
     navigate,
     redirectTo
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { slug, pathMode, personalPath } = organizationOptions || {};
   const { data: sessionData } = useSession();
   const {
@@ -2483,14 +2485,14 @@ var OrganizationRefetcher = () => {
   } = useCurrentOrganization();
   const { refetch: refetchListOrganizations } = useListOrganizations();
   const { data: organizations } = useListOrganizations();
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (!(sessionData == null ? void 0 : sessionData.user.id)) return;
     if (organization || organizations) {
       refetchOrganization == null ? void 0 : refetchOrganization();
       refetchListOrganizations == null ? void 0 : refetchListOrganizations();
     }
   }, [sessionData == null ? void 0 : sessionData.user.id]);
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (organizationRefetching || organizationPending) return;
     if (slug && pathMode === "slug" && !organization) {
       navigate(personalPath || redirectTo);
@@ -2507,7 +2509,7 @@ var OrganizationRefetcher = () => {
   ]);
   return null;
 };
-var AuthUIContext = reactExports.createContext(
+var AuthUIContext = createContext(
   {}
 );
 function useAuthData({
@@ -2522,29 +2524,29 @@ function useAuthData({
     toast: toast2,
     localization,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { data: sessionData, isPending: sessionPending } = useSession();
-  const queryFnRef = reactExports.useRef(queryFn);
+  const queryFnRef = useRef(queryFn);
   queryFnRef.current = queryFn;
   const stableCacheKey = cacheKey || queryFn.toString();
-  const cacheEntry = reactExports.useSyncExternalStore(
-    reactExports.useCallback(
+  const cacheEntry = useSyncExternalStore(
+    useCallback(
       (callback) => authDataCache.subscribe(stableCacheKey, callback),
       [stableCacheKey]
     ),
-    reactExports.useCallback(
+    useCallback(
       () => authDataCache.get(stableCacheKey),
       [stableCacheKey]
     ),
-    reactExports.useCallback(
+    useCallback(
       () => authDataCache.get(stableCacheKey),
       [stableCacheKey]
     )
   );
-  const initialized = reactExports.useRef(false);
-  const previousUserId = reactExports.useRef(void 0);
-  const [error, setError] = reactExports.useState(null);
-  const refetch = reactExports.useCallback(async () => {
+  const initialized = useRef(false);
+  const previousUserId = useRef(void 0);
+  const [error, setError] = useState(null);
+  const refetch = useCallback(async () => {
     const existingRequest = authDataCache.getInFlightRequest(stableCacheKey);
     if (existingRequest) {
       try {
@@ -2596,7 +2598,7 @@ function useAuthData({
       authDataCache.removeInFlightRequest(stableCacheKey);
     }
   }, [stableCacheKey, toast2, localization, localizeErrors, cacheEntry]);
-  reactExports.useEffect(() => {
+  useEffect(() => {
     var _a2;
     const currentUserId = (_a2 = sessionData == null ? void 0 : sessionData.user) == null ? void 0 : _a2.id;
     if (!sessionData) {
@@ -2636,7 +2638,7 @@ function useAuthData({
     refetch
   };
 }
-var DefaultLink = ({ href, className, children }) => /* @__PURE__ */ jsxRuntimeExports.jsx("a", { className, href, children });
+var DefaultLink = ({ href, className, children }) => /* @__PURE__ */ jsx("a", { className, href, children });
 var defaultNavigate = (href) => {
   window.location.href = href;
 };
@@ -2669,7 +2671,7 @@ function BetterAuthPluginProvider({
   const accountOverrides = usePluginOverrides("account", {});
   const organizationOverrides = usePluginOverrides("organization", {});
   const authClient = authOverrides.authClient;
-  const avatar = reactExports.useMemo(() => {
+  const avatar = useMemo(() => {
     if (!authOverrides.avatar) return;
     if (authOverrides.avatar === true) {
       return {
@@ -2685,7 +2687,7 @@ function BetterAuthPluginProvider({
       Image: authOverrides.avatar.Image
     };
   }, [authOverrides.avatar]);
-  const account = reactExports.useMemo(() => {
+  const account = useMemo(() => {
     const accountProp = accountOverrides == null ? void 0 : accountOverrides.account;
     if (!accountProp) return void 0;
     if (accountProp === true) {
@@ -2705,20 +2707,20 @@ function BetterAuthPluginProvider({
       viewPaths: { ...accountViewPaths, ...accountProp.viewPaths }
     };
   }, [accountOverrides == null ? void 0 : accountOverrides.account, accountOverrides == null ? void 0 : accountOverrides.basePath]);
-  const deleteUser = reactExports.useMemo(() => {
+  const deleteUser = useMemo(() => {
     if (!(accountOverrides == null ? void 0 : accountOverrides.deleteUser)) return;
     if (accountOverrides.deleteUser === true) {
       return {};
     }
     return accountOverrides.deleteUser;
   }, [accountOverrides == null ? void 0 : accountOverrides.deleteUser]);
-  const social = reactExports.useMemo(() => {
+  const social = useMemo(() => {
     return authOverrides.social;
   }, [authOverrides.social]);
-  const genericOAuth = reactExports.useMemo(() => {
+  const genericOAuth = useMemo(() => {
     return authOverrides.genericOAuth;
   }, [authOverrides.genericOAuth]);
-  const credentials = reactExports.useMemo(() => {
+  const credentials = useMemo(() => {
     var _a2, _b;
     if (authOverrides.credentials === false) return;
     if (authOverrides.credentials === true) {
@@ -2733,7 +2735,7 @@ function BetterAuthPluginProvider({
       usernameRequired: ((_b = authOverrides.credentials) == null ? void 0 : _b.usernameRequired) ?? true
     };
   }, [authOverrides.credentials]);
-  const signUp = reactExports.useMemo(() => {
+  const signUp = useMemo(() => {
     if (authOverrides.signUp === false) return;
     if (authOverrides.signUp === true || authOverrides.signUp === void 0) {
       return {
@@ -2744,7 +2746,7 @@ function BetterAuthPluginProvider({
       fields: authOverrides.signUp.fields || ["name"]
     };
   }, [authOverrides.signUp]);
-  const organization = reactExports.useMemo(() => {
+  const organization = useMemo(() => {
     const organizationProp = organizationOverrides == null ? void 0 : organizationOverrides.organization;
     if (!organizationProp) return void 0;
     if (organizationProp === true) {
@@ -2783,7 +2785,7 @@ function BetterAuthPluginProvider({
       }
     };
   }, [organizationOverrides == null ? void 0 : organizationOverrides.organization, organizationOverrides == null ? void 0 : organizationOverrides.basePath]);
-  const teams = reactExports.useMemo(() => {
+  const teams = useMemo(() => {
     var _a2, _b;
     const teamsProp = (organizationOverrides == null ? void 0 : organizationOverrides.teams) ?? (accountOverrides == null ? void 0 : accountOverrides.teams);
     if (!teamsProp || !organization) return;
@@ -2806,7 +2808,7 @@ function BetterAuthPluginProvider({
       }
     };
   }, [organizationOverrides == null ? void 0 : organizationOverrides.teams, accountOverrides == null ? void 0 : accountOverrides.teams, organization]);
-  const defaultMutators = reactExports.useMemo(() => {
+  const defaultMutators = useMemo(() => {
     return {
       deleteApiKey: (params) => authClient.apiKey.delete({
         ...params,
@@ -2847,7 +2849,7 @@ function BetterAuthPluginProvider({
       })
     };
   }, [authClient]);
-  const defaultHooks = reactExports.useMemo(() => {
+  const defaultHooks = useMemo(() => {
     return {
       useSession: authClient.useSession,
       useListAccounts: () => useAuthData({
@@ -2927,21 +2929,21 @@ function BetterAuthPluginProvider({
       })
     };
   }, [authClient]);
-  const viewPaths = reactExports.useMemo(() => {
+  const viewPaths = useMemo(() => {
     return { ...authViewPaths, ...authOverrides.viewPaths };
   }, [authOverrides.viewPaths]);
-  const localization = reactExports.useMemo(() => {
+  const localization = useMemo(() => {
     return { ...authLocalization, ...authOverrides.localization };
   }, [authOverrides.localization]);
-  const hooks = reactExports.useMemo(() => {
+  const hooks = useMemo(() => {
     return { ...defaultHooks, ...authOverrides.hooks };
   }, [defaultHooks, authOverrides.hooks]);
-  const mutators = reactExports.useMemo(() => {
+  const mutators = useMemo(() => {
     return { ...defaultMutators, ...authOverrides.mutators };
   }, [defaultMutators, authOverrides.mutators]);
   const baseURL = authOverrides.baseURL ? authOverrides.baseURL.endsWith("/") ? authOverrides.baseURL.slice(0, -1) : authOverrides.baseURL : "";
   const basePath = authOverrides.basePath ? authOverrides.basePath.endsWith("/") ? authOverrides.basePath.slice(0, -1) : authOverrides.basePath : "/auth";
-  const emailVerification = reactExports.useMemo(() => {
+  const emailVerification = useMemo(() => {
     const ev = authOverrides.emailVerification;
     if (!ev) return void 0;
     if (ev === true) return { otp: false };
@@ -2992,9 +2994,9 @@ function BetterAuthPluginProvider({
     optimistic: authOverrides.optimistic,
     onSessionChange: authOverrides.onSessionChange
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(AuthUIContext.Provider, { value: contextValue, children: [
-    sessionData && organization && /* @__PURE__ */ jsxRuntimeExports.jsx(OrganizationRefetcher, {}),
-    ((_a = authOverrides.captcha) == null ? void 0 : _a.provider) === "google-recaptcha-v3" ? /* @__PURE__ */ jsxRuntimeExports.jsx(RecaptchaV3, { children }) : children
+  return /* @__PURE__ */ jsxs(AuthUIContext.Provider, { value: contextValue, children: [
+    sessionData && organization && /* @__PURE__ */ jsx(OrganizationRefetcher, {}),
+    ((_a = authOverrides.captcha) == null ? void 0 : _a.provider) === "google-recaptcha-v3" ? /* @__PURE__ */ jsx(RecaptchaV3, { children }) : children
   ] });
 }
 function useAuthenticate(options) {
@@ -3004,10 +3006,10 @@ function useAuthenticate(options) {
     basePath,
     viewPaths,
     replace
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { data, isPending, error, refetch } = useSession();
   const sessionData = data;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (!enabled || isPending || sessionData) return;
     const searchParams = new URLSearchParams(window.location.search);
     const redirectTo = searchParams.get("redirectTo") || window.location.pathname + window.location.search;
@@ -3035,7 +3037,7 @@ function Avatar({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Avatar$1,
     {
       "data-slot": "avatar",
@@ -3051,7 +3053,7 @@ function AvatarImage({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     AvatarImage$1,
     {
       "data-slot": "avatar-image",
@@ -3064,7 +3066,7 @@ function AvatarFallback({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     AvatarFallback$1,
     {
       "data-slot": "avatar-fallback",
@@ -3085,15 +3087,15 @@ function OrganizationLogo({
   localization: propLocalization,
   ...props
 }) {
-  const { localization: contextLocalization, avatar } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  const { localization: contextLocalization, avatar } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...propLocalization }),
     [contextLocalization, propLocalization]
   );
   const name = organization == null ? void 0 : organization.name;
   const src = organization == null ? void 0 : organization.logo;
   if (isPending) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       Skeleton,
       {
         className: cn(
@@ -3106,7 +3108,7 @@ function OrganizationLogo({
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Avatar,
     {
       className: cn(
@@ -3117,14 +3119,14 @@ function OrganizationLogo({
       ),
       ...props,
       children: [
-        (avatar == null ? void 0 : avatar.Image) ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (avatar == null ? void 0 : avatar.Image) ? /* @__PURE__ */ jsx(
           avatar.Image,
           {
             alt: name || (localization == null ? void 0 : localization.ORGANIZATION),
             className: classNames == null ? void 0 : classNames.image,
             src: src || ""
           }
-        ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ) : /* @__PURE__ */ jsx(
           AvatarImage,
           {
             alt: name || (localization == null ? void 0 : localization.ORGANIZATION),
@@ -3132,12 +3134,12 @@ function OrganizationLogo({
             src: src || void 0
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           AvatarFallback,
           {
             className: cn("text-foreground", classNames == null ? void 0 : classNames.fallback),
             delayMs: src ? 600 : void 0,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: /* @__PURE__ */ jsx(
               Building,
               {
                 className: cn("size-[50%]", classNames == null ? void 0 : classNames.fallbackIcon)
@@ -3157,9 +3159,9 @@ function OrganizationCellView({
   organization,
   localization: propLocalization
 }) {
-  const { localization: contextLocalization } = reactExports.useContext(AuthUIContext);
+  const { localization: contextLocalization } = useContext(AuthUIContext);
   const localization = { ...contextLocalization, ...propLocalization };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -3168,7 +3170,7 @@ function OrganizationCellView({
         classNames == null ? void 0 : classNames.base
       ),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           OrganizationLogo,
           {
             className: cn(size !== "sm" && "my-0.5"),
@@ -3179,15 +3181,15 @@ function OrganizationCellView({
             size
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           "div",
           {
             className: cn(
               "flex flex-col truncate text-left leading-tight",
               classNames == null ? void 0 : classNames.content
             ),
-            children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: isPending ? /* @__PURE__ */ jsxs(Fragment, { children: [
+              /* @__PURE__ */ jsx(
                 Skeleton,
                 {
                   className: cn(
@@ -3198,7 +3200,7 @@ function OrganizationCellView({
                   )
                 }
               ),
-              size !== "sm" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              size !== "sm" && /* @__PURE__ */ jsx(
                 Skeleton,
                 {
                   className: cn(
@@ -3209,8 +3211,8 @@ function OrganizationCellView({
                   )
                 }
               )
-            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+              /* @__PURE__ */ jsx(
                 "span",
                 {
                   className: cn(
@@ -3221,7 +3223,7 @@ function OrganizationCellView({
                   children: (organization == null ? void 0 : organization.name) || (localization == null ? void 0 : localization.ORGANIZATION)
                 }
               ),
-              size !== "sm" && (organization == null ? void 0 : organization.slug) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              size !== "sm" && (organization == null ? void 0 : organization.slug) && /* @__PURE__ */ jsx(
                 "span",
                 {
                   className: cn(
@@ -3284,7 +3286,7 @@ function UserAvatar({
     localization: contextLocalization,
     gravatar,
     avatar
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const localization = { ...contextLocalization, ...propLocalization };
   const name = (user == null ? void 0 : user.displayName) || (user == null ? void 0 : user.name) || (user == null ? void 0 : user.fullName) || (user == null ? void 0 : user.firstName) || (user == null ? void 0 : user.displayUsername) || (user == null ? void 0 : user.username) || (user == null ? void 0 : user.email);
   const userImage = (user == null ? void 0 : user.image) || (user == null ? void 0 : user.avatar) || (user == null ? void 0 : user.avatarUrl);
@@ -3294,7 +3296,7 @@ function UserAvatar({
   ) : null;
   const src = gravatar ? gravatarUrl : userImage;
   if (isPending) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       Skeleton,
       {
         className: cn(
@@ -3307,7 +3309,7 @@ function UserAvatar({
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Avatar,
     {
       className: cn(
@@ -3318,14 +3320,14 @@ function UserAvatar({
       ),
       ...props,
       children: [
-        (avatar == null ? void 0 : avatar.Image) ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (avatar == null ? void 0 : avatar.Image) ? /* @__PURE__ */ jsx(
           avatar.Image,
           {
             alt: name || (localization == null ? void 0 : localization.USER),
             className: classNames == null ? void 0 : classNames.image,
             src: src || ""
           }
-        ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ) : /* @__PURE__ */ jsx(
           AvatarImage,
           {
             alt: name || (localization == null ? void 0 : localization.USER),
@@ -3333,7 +3335,7 @@ function UserAvatar({
             src: src || void 0
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           AvatarFallback,
           {
             className: cn(
@@ -3341,7 +3343,7 @@ function UserAvatar({
               classNames == null ? void 0 : classNames.fallback
             ),
             delayMs: src ? 600 : void 0,
-            children: firstTwoCharacters(name) || /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: firstTwoCharacters(name) || /* @__PURE__ */ jsx(
               UserRound,
               {
                 className: cn("size-[50%]", classNames == null ? void 0 : classNames.fallbackIcon)
@@ -3396,12 +3398,12 @@ async function fileToBase64(file) {
 function DropdownMenu({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Root2, { "data-slot": "dropdown-menu", ...props });
+  return /* @__PURE__ */ jsx(Root2, { "data-slot": "dropdown-menu", ...props });
 }
 function DropdownMenuTrigger({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Trigger,
     {
       "data-slot": "dropdown-menu-trigger",
@@ -3414,7 +3416,7 @@ function DropdownMenuContent({
   sideOffset = 4,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal2, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Portal2, { children: /* @__PURE__ */ jsx(
     Content2,
     {
       "data-slot": "dropdown-menu-content",
@@ -3433,7 +3435,7 @@ function DropdownMenuItem({
   variant = "default",
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Item2,
     {
       "data-slot": "dropdown-menu-item",
@@ -3451,7 +3453,7 @@ function Label2({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Root,
     {
       "data-slot": "label",
@@ -3464,17 +3466,17 @@ function Label2({
   );
 }
 var Form = FormProvider;
-var FormFieldContext = reactExports.createContext(
+var FormFieldContext = React.createContext(
   {}
 );
 var FormField = ({
   ...props
 }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(FormFieldContext.Provider, { value: { name: props.name }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Controller, { ...props }) });
+  return /* @__PURE__ */ jsx(FormFieldContext.Provider, { value: { name: props.name }, children: /* @__PURE__ */ jsx(Controller, { ...props }) });
 };
 var useFormField = () => {
-  const fieldContext = reactExports.useContext(FormFieldContext);
-  const itemContext = reactExports.useContext(FormItemContext);
+  const fieldContext = React.useContext(FormFieldContext);
+  const itemContext = React.useContext(FormItemContext);
   const { getFieldState } = useFormContext();
   const formState = useFormState({ name: fieldContext.name });
   const fieldState = getFieldState(fieldContext.name, formState);
@@ -3491,12 +3493,12 @@ var useFormField = () => {
     ...fieldState
   };
 };
-var FormItemContext = reactExports.createContext(
+var FormItemContext = React.createContext(
   {}
 );
 function FormItem({ className, ...props }) {
-  const id = reactExports.useId();
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(FormItemContext.Provider, { value: { id }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  const id = React.useId();
+  return /* @__PURE__ */ jsx(FormItemContext.Provider, { value: { id }, children: /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "form-item",
@@ -3510,7 +3512,7 @@ function FormLabel({
   ...props
 }) {
   const { error, formItemId } = useFormField();
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Label2,
     {
       "data-slot": "form-label",
@@ -3523,7 +3525,7 @@ function FormLabel({
 }
 function FormControl({ ...props }) {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Slot,
     {
       "data-slot": "form-control",
@@ -3540,7 +3542,7 @@ function FormMessage({ className, ...props }) {
   if (!body) {
     return null;
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "p",
     {
       "data-slot": "form-message",
@@ -3552,7 +3554,7 @@ function FormMessage({ className, ...props }) {
   );
 }
 function Input({ className, type, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "input",
     {
       type,
@@ -3580,7 +3582,7 @@ function SettingsActionButton({
     const formState = useFormState();
     isSubmitting = formState.isSubmitting;
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Button,
     {
       className: cn(
@@ -3596,7 +3598,7 @@ function SettingsActionButton({
       onClick,
       ...props,
       children: [
-        isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+        isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
         actionLabel
       ]
     }
@@ -3613,7 +3615,7 @@ function SettingsCardFooter({
   variant,
   action
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     CardFooter,
     {
       className: cn(
@@ -3623,8 +3625,8 @@ function SettingsCardFooter({
         className,
         classNames == null ? void 0 : classNames.footer
       ),
-      children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        instructions && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: isPending ? /* @__PURE__ */ jsxs(Fragment, { children: [
+        instructions && /* @__PURE__ */ jsx(
           Skeleton,
           {
             className: cn(
@@ -3633,7 +3635,7 @@ function SettingsCardFooter({
             )
           }
         ),
-        actionLabel && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        actionLabel && /* @__PURE__ */ jsx(
           Skeleton,
           {
             className: cn(
@@ -3642,8 +3644,8 @@ function SettingsCardFooter({
             )
           }
         )
-      ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        instructions && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+        instructions && /* @__PURE__ */ jsx(
           CardDescription,
           {
             className: cn(
@@ -3653,7 +3655,7 @@ function SettingsCardFooter({
             children: instructions
           }
         ),
-        actionLabel && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        actionLabel && /* @__PURE__ */ jsx(
           SettingsActionButton,
           {
             classNames,
@@ -3675,8 +3677,8 @@ function SettingsCardHeader({
   isPending,
   title
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: cn(classNames == null ? void 0 : classNames.header, className), children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(CardHeader, { className: cn(classNames == null ? void 0 : classNames.header, className), children: isPending ? /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       Skeleton,
       {
         className: cn(
@@ -3685,7 +3687,7 @@ function SettingsCardHeader({
         )
       }
     ),
-    description && /* @__PURE__ */ jsxRuntimeExports.jsx(
+    description && /* @__PURE__ */ jsx(
       Skeleton,
       {
         className: cn(
@@ -3694,15 +3696,15 @@ function SettingsCardHeader({
         )
       }
     )
-  ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       CardTitle,
       {
         className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
         children: title
       }
     ),
-    description && /* @__PURE__ */ jsxRuntimeExports.jsx(
+    description && /* @__PURE__ */ jsx(
       CardDescription,
       {
         className: cn(
@@ -3730,7 +3732,7 @@ function SettingsCard({
   action,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -3741,7 +3743,7 @@ function SettingsCard({
       ),
       ...props,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           SettingsCardHeader,
           {
             classNames,
@@ -3751,7 +3753,7 @@ function SettingsCard({
           }
         ),
         children,
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           SettingsCardFooter,
           {
             classNames,
@@ -3772,7 +3774,7 @@ function SettingsCard({
 function SettingsCellSkeleton({
   classNames
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -3780,21 +3782,21 @@ function SettingsCellSkeleton({
         classNames == null ? void 0 : classNames.cell
       ),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsx(
             Skeleton,
             {
               className: cn("size-5 rounded-full", classNames == null ? void 0 : classNames.skeleton)
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx("div", { children: /* @__PURE__ */ jsx(
             Skeleton,
             {
               className: cn("h-4 w-24", classNames == null ? void 0 : classNames.skeleton)
             }
           ) })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Skeleton,
           {
             className: cn("ms-auto size-8 w-12", classNames == null ? void 0 : classNames.skeleton)
@@ -3812,12 +3814,12 @@ function UserView({
   user,
   localization: propLocalization
 }) {
-  const { localization: contextLocalization } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  const { localization: contextLocalization } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...propLocalization }),
     [contextLocalization, propLocalization]
   );
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -3826,7 +3828,7 @@ function UserView({
         classNames == null ? void 0 : classNames.base
       ),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           UserAvatar,
           {
             className: cn(size !== "sm" && "my-0.5"),
@@ -3837,15 +3839,15 @@ function UserView({
             localization
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           "div",
           {
             className: cn(
               "grid flex-1 text-start leading-tight",
               classNames == null ? void 0 : classNames.content
             ),
-            children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: isPending ? /* @__PURE__ */ jsxs(Fragment, { children: [
+              /* @__PURE__ */ jsx(
                 Skeleton,
                 {
                   className: cn(
@@ -3856,7 +3858,7 @@ function UserView({
                   )
                 }
               ),
-              size !== "sm" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              size !== "sm" && /* @__PURE__ */ jsx(
                 Skeleton,
                 {
                   className: cn(
@@ -3867,8 +3869,8 @@ function UserView({
                   )
                 }
               )
-            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+              /* @__PURE__ */ jsx(
                 "span",
                 {
                   className: cn(
@@ -3879,7 +3881,7 @@ function UserView({
                   children: (user == null ? void 0 : user.displayName) || (user == null ? void 0 : user.name) || (user == null ? void 0 : user.fullName) || (user == null ? void 0 : user.firstName) || (user == null ? void 0 : user.displayUsername) || (user == null ? void 0 : user.username) || (user == null ? void 0 : user.email) || (localization == null ? void 0 : localization.USER)
                 }
               ),
-              !(user == null ? void 0 : user.isAnonymous) && size !== "sm" && ((user == null ? void 0 : user.name) || (user == null ? void 0 : user.username)) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              !(user == null ? void 0 : user.isAnonymous) && size !== "sm" && ((user == null ? void 0 : user.name) || (user == null ? void 0 : user.username)) && /* @__PURE__ */ jsx(
                 "span",
                 {
                   className: cn(
@@ -3900,18 +3902,18 @@ function UserView({
 function Dialog({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog$1, { "data-slot": "dialog", ...props });
+  return /* @__PURE__ */ jsx(Dialog$1, { "data-slot": "dialog", ...props });
 }
 function DialogPortal({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(DialogPortal$1, { "data-slot": "dialog-portal", ...props });
+  return /* @__PURE__ */ jsx(DialogPortal$1, { "data-slot": "dialog-portal", ...props });
 }
 function DialogOverlay({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     DialogOverlay$1,
     {
       "data-slot": "dialog-overlay",
@@ -3929,9 +3931,9 @@ function DialogContent({
   showCloseButton = true,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogPortal, { "data-slot": "dialog-portal", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(DialogOverlay, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(DialogPortal, { "data-slot": "dialog-portal", children: [
+    /* @__PURE__ */ jsx(DialogOverlay, {}),
+    /* @__PURE__ */ jsxs(
       DialogContent$1,
       {
         "data-slot": "dialog-content",
@@ -3942,14 +3944,14 @@ function DialogContent({
         ...props,
         children: [
           children,
-          showCloseButton && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          showCloseButton && /* @__PURE__ */ jsxs(
             DialogClose,
             {
               "data-slot": "dialog-close",
               className: "ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(X, {}),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "sr-only", children: "Close" })
+                /* @__PURE__ */ jsx(X, {}),
+                /* @__PURE__ */ jsx("span", { className: "sr-only", children: "Close" })
               ]
             }
           )
@@ -3959,7 +3961,7 @@ function DialogContent({
   ] });
 }
 function DialogHeader({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "dialog-header",
@@ -3969,7 +3971,7 @@ function DialogHeader({ className, ...props }) {
   );
 }
 function DialogFooter({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "dialog-footer",
@@ -3985,7 +3987,7 @@ function DialogTitle({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     DialogTitle$1,
     {
       "data-slot": "dialog-title",
@@ -3998,7 +4000,7 @@ function DialogDescription({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     DialogDescription$1,
     {
       "data-slot": "dialog-description",
@@ -4021,10 +4023,10 @@ function ApiKeyDeleteDialog({
     mutators: { deleteApiKey },
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { lang } = useLang();
-  const [isLoading, setIsLoading] = reactExports.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const handleDelete = async () => {
     setIsLoading(true);
     try {
@@ -4055,14 +4057,14 @@ function ApiKeyDeleteDialog({
       }
     )}`;
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       onOpenAutoFocus: (e) => e.preventDefault(),
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsxs(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
@@ -4073,7 +4075,7 @@ function ApiKeyDeleteDialog({
               ]
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -4084,7 +4086,7 @@ function ApiKeyDeleteDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(
           Card,
           {
             className: cn(
@@ -4092,22 +4094,22 @@ function ApiKeyDeleteDialog({
               classNames == null ? void 0 : classNames.cell
             ),
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(KeyRound, { className: cn("size-4", classNames == null ? void 0 : classNames.icon) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-sm", children: apiKey.name }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-muted-foreground text-sm", children: [
+              /* @__PURE__ */ jsx(KeyRound, { className: cn("size-4", classNames == null ? void 0 : classNames.icon) }),
+              /* @__PURE__ */ jsxs("div", { className: "flex flex-col", children: [
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsx("span", { className: "font-semibold text-sm", children: apiKey.name }),
+                  /* @__PURE__ */ jsxs("span", { className: "text-muted-foreground text-sm", children: [
                     apiKey.start,
                     "******"
                   ] })
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-muted-foreground text-xs", children: formatExpiration() })
+                /* @__PURE__ */ jsx("div", { className: "text-muted-foreground text-xs", children: formatExpiration() })
               ] })
             ]
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -4121,7 +4123,7 @@ function ApiKeyDeleteDialog({
               children: localization.CANCEL
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             Button,
             {
               type: "button",
@@ -4133,7 +4135,7 @@ function ApiKeyDeleteDialog({
                 classNames == null ? void 0 : classNames.destructiveButton
               ),
               children: [
-                isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                isLoading && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.DELETE
               ]
             }
@@ -4150,10 +4152,10 @@ function ApiKeyCell({
   localization,
   refetch
 }) {
-  const { localization: contextLocalization } = reactExports.useContext(AuthUIContext);
+  const { localization: contextLocalization } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { lang } = useLang();
-  const [showDeleteDialog, setShowDeleteDialog] = reactExports.useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const formatExpiration = () => {
     if (!apiKey.expiresAt) return localization.NEVER_EXPIRES;
     const expiresDate = new Date(apiKey.expiresAt);
@@ -4166,8 +4168,8 @@ function ApiKeyCell({
       }
     )}`;
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsxs(
       Card,
       {
         className: cn(
@@ -4176,23 +4178,23 @@ function ApiKeyCell({
           classNames == null ? void 0 : classNames.cell
         ),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             KeyRound,
             {
               className: cn("size-4 flex-shrink-0", classNames == null ? void 0 : classNames.icon)
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col truncate", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate font-semibold text-sm", children: apiKey.name }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex-1 truncate text-muted-foreground text-sm", children: [
+          /* @__PURE__ */ jsxs("div", { className: "flex flex-col truncate", children: [
+            /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
+              /* @__PURE__ */ jsx("span", { className: "truncate font-semibold text-sm", children: apiKey.name }),
+              /* @__PURE__ */ jsxs("span", { className: "flex-1 truncate text-muted-foreground text-sm", children: [
                 apiKey.start,
                 "******"
               ] })
             ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "truncate text-muted-foreground text-xs", children: formatExpiration() })
+            /* @__PURE__ */ jsx("div", { className: "truncate text-muted-foreground text-xs", children: formatExpiration() })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             Button,
             {
               className: cn(
@@ -4209,7 +4211,7 @@ function ApiKeyCell({
         ]
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       ApiKeyDeleteDialog,
       {
         classNames,
@@ -4230,29 +4232,29 @@ function ApiKeyDisplayDialog({
   ...props
 }) {
   var _a, _b, _c;
-  const { localization: contextLocalization } = reactExports.useContext(AuthUIContext);
+  const { localization: contextLocalization } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
-  const [copied, setCopied] = reactExports.useState(false);
+  const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     navigator.clipboard.writeText(apiKey);
     setCopied(true);
     setTimeout(() => setCopied(false), 2e3);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       onOpenAutoFocus: (e) => e.preventDefault(),
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.API_KEY_CREATED
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -4263,9 +4265,9 @@ function ApiKeyDisplayDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "break-all rounded-md bg-muted p-4 font-mono text-sm", children: apiKey }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx("div", { className: "break-all rounded-md bg-muted p-4 font-mono text-sm", children: apiKey }),
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -4276,16 +4278,16 @@ function ApiKeyDisplayDialog({
                 classNames == null ? void 0 : classNames.button,
                 classNames == null ? void 0 : classNames.outlineButton
               ),
-              children: copied ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: classNames == null ? void 0 : classNames.icon }),
+              children: copied ? /* @__PURE__ */ jsxs(Fragment, { children: [
+                /* @__PURE__ */ jsx(Check, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.COPIED_TO_CLIPBOARD
-              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Copy, { className: classNames == null ? void 0 : classNames.icon }),
+              ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+                /* @__PURE__ */ jsx(Copy, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.COPY_TO_CLIPBOARD
               ] })
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -4311,12 +4313,12 @@ function PersonalAccountView({
   user,
   localization: propLocalization
 }) {
-  const { localization: contextLocalization } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  const { localization: contextLocalization } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...propLocalization }),
     [contextLocalization, propLocalization]
   );
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -4325,7 +4327,7 @@ function PersonalAccountView({
         classNames == null ? void 0 : classNames.base
       ),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           UserAvatar,
           {
             className: cn(size !== "sm" && "my-0.5"),
@@ -4336,15 +4338,15 @@ function PersonalAccountView({
             user
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           "div",
           {
             className: cn(
               "grid flex-1 text-left leading-tight",
               classNames == null ? void 0 : classNames.content
             ),
-            children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: isPending ? /* @__PURE__ */ jsxs(Fragment, { children: [
+              /* @__PURE__ */ jsx(
                 Skeleton,
                 {
                   className: cn(
@@ -4355,7 +4357,7 @@ function PersonalAccountView({
                   )
                 }
               ),
-              size !== "sm" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              size !== "sm" && /* @__PURE__ */ jsx(
                 Skeleton,
                 {
                   className: cn(
@@ -4366,8 +4368,8 @@ function PersonalAccountView({
                   )
                 }
               )
-            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+              /* @__PURE__ */ jsx(
                 "span",
                 {
                   className: cn(
@@ -4378,7 +4380,7 @@ function PersonalAccountView({
                   children: (user == null ? void 0 : user.displayName) || (user == null ? void 0 : user.name) || (user == null ? void 0 : user.fullName) || (user == null ? void 0 : user.firstName) || (user == null ? void 0 : user.displayUsername) || (user == null ? void 0 : user.username) || (user == null ? void 0 : user.email) || (localization == null ? void 0 : localization.USER)
                 }
               ),
-              size !== "sm" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              size !== "sm" && /* @__PURE__ */ jsx(
                 "span",
                 {
                   className: cn(
@@ -4399,12 +4401,12 @@ function PersonalAccountView({
 function Select({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Select$1, { "data-slot": "select", ...props });
+  return /* @__PURE__ */ jsx(Select$1, { "data-slot": "select", ...props });
 }
 function SelectValue({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(SelectValue$1, { "data-slot": "select-value", ...props });
+  return /* @__PURE__ */ jsx(SelectValue$1, { "data-slot": "select-value", ...props });
 }
 function SelectTrigger({
   className,
@@ -4412,7 +4414,7 @@ function SelectTrigger({
   children,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     SelectTrigger$1,
     {
       "data-slot": "select-trigger",
@@ -4424,7 +4426,7 @@ function SelectTrigger({
       ...props,
       children: [
         children,
-        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectIcon, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "size-4 opacity-50" }) })
+        /* @__PURE__ */ jsx(SelectIcon, { asChild: true, children: /* @__PURE__ */ jsx(ChevronDown, { className: "size-4 opacity-50" }) })
       ]
     }
   );
@@ -4435,7 +4437,7 @@ function SelectContent({
   position = "popper",
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(SelectPortal, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(SelectPortal, { children: /* @__PURE__ */ jsxs(
     SelectContent$1,
     {
       "data-slot": "select-content",
@@ -4447,8 +4449,8 @@ function SelectContent({
       position,
       ...props,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectScrollUpButton, {}),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(SelectScrollUpButton, {}),
+        /* @__PURE__ */ jsx(
           SelectViewport,
           {
             className: cn(
@@ -4458,7 +4460,7 @@ function SelectContent({
             children
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectScrollDownButton, {})
+        /* @__PURE__ */ jsx(SelectScrollDownButton, {})
       ]
     }
   ) });
@@ -4468,7 +4470,7 @@ function SelectItem({
   children,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     SelectItem$1,
     {
       "data-slot": "select-item",
@@ -4478,8 +4480,8 @@ function SelectItem({
       ),
       ...props,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "absolute right-2 flex size-3.5 items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItemIndicator, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "size-4" }) }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItemText, { children })
+        /* @__PURE__ */ jsx("span", { className: "absolute right-2 flex size-3.5 items-center justify-center", children: /* @__PURE__ */ jsx(SelectItemIndicator, { children: /* @__PURE__ */ jsx(Check, { className: "size-4" }) }) }),
+        /* @__PURE__ */ jsx(SelectItemText, { children })
       ]
     }
   );
@@ -4488,7 +4490,7 @@ function SelectScrollUpButton({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     SelectScrollUpButton$1,
     {
       "data-slot": "select-scroll-up-button",
@@ -4497,7 +4499,7 @@ function SelectScrollUpButton({
         className
       ),
       ...props,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronUp, { className: "size-4" })
+      children: /* @__PURE__ */ jsx(ChevronUp, { className: "size-4" })
     }
   );
 }
@@ -4505,7 +4507,7 @@ function SelectScrollDownButton({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     SelectScrollDownButton$1,
     {
       "data-slot": "select-scroll-down-button",
@@ -4514,7 +4516,7 @@ function SelectScrollDownButton({
         className
       ),
       ...props,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronDown, { className: "size-4" })
+      children: /* @__PURE__ */ jsx(ChevronDown, { className: "size-4" })
     }
   );
 }
@@ -4536,7 +4538,7 @@ function CreateApiKeyDialog({
     organization: contextOrganization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { lang } = useLang();
   let organizations;
@@ -4595,21 +4597,21 @@ function CreateApiKeyDialog({
     }
   };
   const rtf = new Intl.RelativeTimeFormat(lang ?? "en");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       onOpenAutoFocus: (e) => e.preventDefault(),
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.CREATE_API_KEY
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -4620,41 +4622,41 @@ function CreateApiKeyDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
           "form",
           {
             method: "POST",
             onSubmit: form.handleSubmit(onSubmit),
             className: "space-y-6",
             children: [
-              showOrganizationSelect && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              showOrganizationSelect && /* @__PURE__ */ jsx(
                 FormField,
                 {
                   control: form.control,
                   name: "organizationId",
-                  render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { className: "w-full", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { className: "w-full", children: [
+                    /* @__PURE__ */ jsx(
                       FormLabel,
                       {
                         className: classNames == null ? void 0 : classNames.label,
                         children: localization.ORGANIZATION
                       }
                     ),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    /* @__PURE__ */ jsxs(
                       Select,
                       {
                         onValueChange: field.onChange,
                         value: field.value,
                         disabled: isSubmitting,
                         children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                             SelectTrigger,
                             {
                               className: cn(
                                 "w-full p-2",
                                 classNames == null ? void 0 : classNames.input
                               ),
-                              children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              children: /* @__PURE__ */ jsx(
                                 SelectValue,
                                 {
                                   placeholder: localization.ORGANIZATION
@@ -4662,13 +4664,13 @@ function CreateApiKeyDialog({
                               )
                             }
                           ) }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs(SelectContent, { className: "w-[--radix-select-trigger-width]", children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          /* @__PURE__ */ jsxs(SelectContent, { className: "w-[--radix-select-trigger-width]", children: [
+                            /* @__PURE__ */ jsx(
                               SelectItem,
                               {
                                 value: "personal",
                                 className: "p-2",
-                                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                                children: /* @__PURE__ */ jsx(
                                   PersonalAccountView,
                                   {
                                     user,
@@ -4678,12 +4680,12 @@ function CreateApiKeyDialog({
                                 )
                               }
                             ),
-                            organizations == null ? void 0 : organizations.map((org) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            organizations == null ? void 0 : organizations.map((org) => /* @__PURE__ */ jsx(
                               SelectItem,
                               {
                                 value: org.id,
                                 className: "p-2",
-                                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                                children: /* @__PURE__ */ jsx(
                                   OrganizationCellView,
                                   {
                                     organization: org,
@@ -4698,25 +4700,25 @@ function CreateApiKeyDialog({
                         ]
                       }
                     ),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                    /* @__PURE__ */ jsx(FormMessage, {})
                   ] })
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-4", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsxs("div", { className: "flex gap-4", children: [
+                /* @__PURE__ */ jsx(
                   FormField,
                   {
                     control: form.control,
                     name: "name",
-                    render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { className: "flex-1", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { className: "flex-1", children: [
+                      /* @__PURE__ */ jsx(
                         FormLabel,
                         {
                           className: classNames == null ? void 0 : classNames.label,
                           children: localization.NAME
                         }
                       ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                         Input,
                         {
                           className: classNames == null ? void 0 : classNames.input,
@@ -4726,35 +4728,35 @@ function CreateApiKeyDialog({
                           ...field
                         }
                       ) }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                      /* @__PURE__ */ jsx(FormMessage, {})
                     ] })
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(
                   FormField,
                   {
                     control: form.control,
                     name: "expiresInDays",
-                    render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                      /* @__PURE__ */ jsx(
                         FormLabel,
                         {
                           className: classNames == null ? void 0 : classNames.label,
                           children: localization.EXPIRES
                         }
                       ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      /* @__PURE__ */ jsxs(
                         Select,
                         {
                           onValueChange: field.onChange,
                           defaultValue: field.value,
                           disabled: isSubmitting,
                           children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                               SelectTrigger,
                               {
                                 className: classNames == null ? void 0 : classNames.input,
-                                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                                children: /* @__PURE__ */ jsx(
                                   SelectValue,
                                   {
                                     placeholder: localization.NO_EXPIRATION
@@ -4762,8 +4764,8 @@ function CreateApiKeyDialog({
                                 )
                               }
                             ) }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsxs(SelectContent, { children: [
-                              /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: "none", children: localization.NO_EXPIRATION }),
+                            /* @__PURE__ */ jsxs(SelectContent, { children: [
+                              /* @__PURE__ */ jsx(SelectItem, { value: "none", children: localization.NO_EXPIRATION }),
                               [
                                 1,
                                 7,
@@ -4772,7 +4774,7 @@ function CreateApiKeyDialog({
                                 90,
                                 180,
                                 365
-                              ].map((days) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              ].map((days) => /* @__PURE__ */ jsx(
                                 SelectItem,
                                 {
                                   value: days.toString(),
@@ -4790,13 +4792,13 @@ function CreateApiKeyDialog({
                           ]
                         }
                       ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                      /* @__PURE__ */ jsx(FormMessage, {})
                     ] })
                   }
                 )
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+                /* @__PURE__ */ jsx(
                   Button,
                   {
                     type: "button",
@@ -4810,7 +4812,7 @@ function CreateApiKeyDialog({
                     children: localization.CANCEL
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                /* @__PURE__ */ jsxs(
                   Button,
                   {
                     type: "submit",
@@ -4821,7 +4823,7 @@ function CreateApiKeyDialog({
                     ),
                     disabled: isSubmitting,
                     children: [
-                      isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                      isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                       localization.CREATE_API_KEY
                     ]
                   }
@@ -4844,10 +4846,10 @@ function ApiKeysCard({
   const {
     hooks: { useListApiKeys },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: apiKeysRes, isPending, refetch } = useListApiKeys();
-  const filteredApiKeys = reactExports.useMemo(() => {
+  const filteredApiKeys = useMemo(() => {
     var _a;
     return (_a = apiKeysRes == null ? void 0 : apiKeysRes.apiKeys) == null ? void 0 : _a.filter(
       (apiKey) => {
@@ -4856,15 +4858,15 @@ function ApiKeysCard({
       }
     );
   }, [apiKeysRes, organizationId]);
-  const [createDialogOpen, setCreateDialogOpen] = reactExports.useState(false);
-  const [displayDialogOpen, setDisplayDialogOpen] = reactExports.useState(false);
-  const [createdApiKey, setCreatedApiKey] = reactExports.useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [displayDialogOpen, setDisplayDialogOpen] = useState(false);
+  const [createdApiKey, setCreatedApiKey] = useState("");
   const handleCreateApiKey = (apiKey) => {
     setCreatedApiKey(apiKey);
     setDisplayDialogOpen(true);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -4876,11 +4878,11 @@ function ApiKeysCard({
         title: localization.API_KEYS,
         action: () => setCreateDialogOpen(true),
         ...props,
-        children: filteredApiKeys && filteredApiKeys.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: filteredApiKeys && filteredApiKeys.length > 0 && /* @__PURE__ */ jsx(
           CardContent,
           {
             className: cn("grid gap-4", classNames == null ? void 0 : classNames.content),
-            children: filteredApiKeys == null ? void 0 : filteredApiKeys.map((apiKey) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: filteredApiKeys == null ? void 0 : filteredApiKeys.map((apiKey) => /* @__PURE__ */ jsx(
               ApiKeyCell,
               {
                 classNames,
@@ -4894,7 +4896,7 @@ function ApiKeysCard({
         )
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       CreateApiKeyDialog,
       {
         classNames,
@@ -4906,7 +4908,7 @@ function ApiKeysCard({
         organizationId
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       ApiKeyDisplayDialog,
       {
         classNames,
@@ -4921,23 +4923,23 @@ function ApiKeysCard({
 function Drawer({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Drawer$1.Root, { "data-slot": "drawer", ...props });
+  return /* @__PURE__ */ jsx(Drawer$1.Root, { "data-slot": "drawer", ...props });
 }
 function DrawerTrigger({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Drawer$1.Trigger, { "data-slot": "drawer-trigger", ...props });
+  return /* @__PURE__ */ jsx(Drawer$1.Trigger, { "data-slot": "drawer-trigger", ...props });
 }
 function DrawerPortal({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Drawer$1.Portal, { "data-slot": "drawer-portal", ...props });
+  return /* @__PURE__ */ jsx(Drawer$1.Portal, { "data-slot": "drawer-portal", ...props });
 }
 function DrawerOverlay({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Drawer$1.Overlay,
     {
       "data-slot": "drawer-overlay",
@@ -4954,9 +4956,9 @@ function DrawerContent({
   children,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(DrawerPortal, { "data-slot": "drawer-portal", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(DrawerOverlay, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(DrawerPortal, { "data-slot": "drawer-portal", children: [
+    /* @__PURE__ */ jsx(DrawerOverlay, {}),
+    /* @__PURE__ */ jsxs(
       Drawer$1.Content,
       {
         "data-slot": "drawer-content",
@@ -4970,7 +4972,7 @@ function DrawerContent({
         ),
         ...props,
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-muted mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block" }),
+          /* @__PURE__ */ jsx("div", { className: "bg-muted mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block" }),
           children
         ]
       }
@@ -4978,7 +4980,7 @@ function DrawerContent({
   ] });
 }
 function DrawerHeader({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "drawer-header",
@@ -4994,7 +4996,7 @@ function DrawerTitle({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Drawer$1.Title,
     {
       "data-slot": "drawer-title",
@@ -5018,13 +5020,13 @@ function LeaveOrganizationDialog({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const { refetch: refetchOrganizations } = useListOrganizations();
-  const [isLeaving, setIsLeaving] = reactExports.useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const handleLeaveOrganization = async () => {
     setIsLeaving(true);
     try {
@@ -5050,21 +5052,21 @@ function LeaveOrganizationDialog({
     }
     setIsLeaving(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       onOpenAutoFocus: (e) => e.preventDefault(),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.LEAVE_ORGANIZATION
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -5075,7 +5077,7 @@ function LeaveOrganizationDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Card,
           {
             className: cn(
@@ -5083,7 +5085,7 @@ function LeaveOrganizationDialog({
               className,
               classNames == null ? void 0 : classNames.cell
             ),
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: /* @__PURE__ */ jsx(
               OrganizationCellView,
               {
                 organization,
@@ -5092,8 +5094,8 @@ function LeaveOrganizationDialog({
             )
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -5107,7 +5109,7 @@ function LeaveOrganizationDialog({
               children: localization.CANCEL
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             Button,
             {
               type: "button",
@@ -5119,7 +5121,7 @@ function LeaveOrganizationDialog({
               ),
               disabled: isLeaving,
               children: [
-                isLeaving && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                isLeaving && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.LEAVE_ORGANIZATION
               ]
             }
@@ -5129,13 +5131,13 @@ function LeaveOrganizationDialog({
     }
   ) });
 }
-var AppleIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var AppleIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     viewBox: "0 0 32 32",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         d: "M9.438 31.401a7 7 0 0 1-1.656-1.536a20 20 0 0 1-1.422-1.938a18.9 18.9 0 0 1-2.375-4.849c-.667-2-.99-3.917-.99-5.792c0-2.094.453-3.922 1.339-5.458a7.7 7.7 0 0 1 2.797-2.906a7.45 7.45 0 0 1 3.786-1.12q.705.002 1.51.198c.385.109.854.281 1.427.495c.729.281 1.13.453 1.266.495c.427.156.786.224 1.068.224c.214 0 .516-.068.859-.172c.193-.068.557-.188 1.078-.411c.516-.188.922-.349 1.245-.469c.495-.146.974-.281 1.401-.349a6.7 6.7 0 0 1 1.531-.063a9 9 0 0 1 2.589.557c1.359.547 2.458 1.401 3.276 2.615a6.4 6.4 0 0 0-.969.734a8.2 8.2 0 0 0-1.641 2.005a6.8 6.8 0 0 0-.859 3.359c.021 1.443.391 2.714 1.12 3.813a7.2 7.2 0 0 0 2.047 2.047c.417.281.776.474 1.12.604c-.161.5-.333.984-.536 1.464a19 19 0 0 1-1.667 3.083c-.578.839-1.031 1.464-1.375 1.88c-.536.635-1.052 1.12-1.573 1.458c-.573.38-1.25.583-1.938.583a4.4 4.4 0 0 1-1.38-.167c-.385-.13-.766-.271-1.141-.432a9 9 0 0 0-1.203-.453a6.3 6.3 0 0 0-3.099-.005c-.417.12-.818.26-1.214.432c-.557.234-.927.391-1.141.458c-.427.125-.87.203-1.318.229c-.693 0-1.339-.198-1.979-.599zm9.14-24.615c-.906.453-1.771.646-2.63.583c-.135-.865 0-1.75.359-2.719a7.3 7.3 0 0 1 1.333-2.24A7.1 7.1 0 0 1 19.812.733q1.319-.68 2.521-.734c.104.906 0 1.797-.333 2.76a8 8 0 0 1-1.333 2.344a6.8 6.8 0 0 1-2.115 1.682z",
@@ -5144,13 +5146,13 @@ var AppleIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var DiscordIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var DiscordIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     viewBox: "0 0 256 199",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         d: "M216.856 16.597A208.5 208.5 0 0 0 164.042 0c-2.275 4.113-4.933 9.645-6.766 14.046q-29.538-4.442-58.533 0c-1.832-4.4-4.55-9.933-6.846-14.046a207.8 207.8 0 0 0-52.855 16.638C5.618 67.147-3.443 116.4 1.087 164.956c22.169 16.555 43.653 26.612 64.775 33.193A161 161 0 0 0 79.735 175.3a136.4 136.4 0 0 1-21.846-10.632a109 109 0 0 0 5.356-4.237c42.122 19.702 87.89 19.702 129.51 0a132 132 0 0 0 5.355 4.237a136 136 0 0 1-21.886 10.653c4.006 8.02 8.638 15.67 13.873 22.848c21.142-6.58 42.646-16.637 64.815-33.213c5.316-56.288-9.08-105.09-38.056-148.36M85.474 135.095c-12.645 0-23.015-11.805-23.015-26.18s10.149-26.2 23.015-26.2s23.236 11.804 23.015 26.2c.02 14.375-10.148 26.18-23.015 26.18m85.051 0c-12.645 0-23.014-11.805-23.014-26.18s10.148-26.2 23.014-26.2c12.867 0 23.236 11.804 23.015 26.2c0 14.375-10.148 26.18-23.015 26.18",
@@ -5159,13 +5161,13 @@ var DiscordIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var DropboxIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var DropboxIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     viewBox: "0 0 256 218",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         d: "M63.995 0L0 40.771l63.995 40.772L128 40.771zM192 0l-64 40.775l64 40.775l64.001-40.775zM0 122.321l63.995 40.772L128 122.321L63.995 81.55zM192 81.55l-64 40.775l64 40.774l64-40.774zM64 176.771l64.005 40.772L192 176.771L128.005 136z",
@@ -5174,21 +5176,21 @@ var DropboxIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var FacebookIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+var FacebookIcon = ({ className }) => /* @__PURE__ */ jsxs(
   "svg",
   {
     className,
     viewBox: "0 0 256 256",
     xmlns: "http://www.w3.org/2000/svg",
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M256 128C256 57.308 198.692 0 128 0S0 57.308 0 128c0 63.888 46.808 116.843 108 126.445V165H75.5v-37H108V99.8c0-32.08 19.11-49.8 48.348-49.8C170.352 50 185 52.5 185 52.5V84h-16.14C152.959 84 148 93.867 148 103.99V128h35.5l-5.675 37H148v89.445c61.192-9.602 108-62.556 108-126.445",
           fill: "#1877f2"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "m177.825 165l5.675-37H148v-24.01C148 93.866 152.959 84 168.86 84H185V52.5S170.352 50 156.347 50C127.11 50 108 67.72 108 99.8V128H75.5v37H108v89.445A129 129 0 0 0 128 256a129 129 0 0 0 20-1.555V165z",
@@ -5198,13 +5200,13 @@ var FacebookIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
     ]
   }
 );
-var GitHubIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var GitHubIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     viewBox: "0 0 24 24",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         d: "M12 .297c-6.63 0-12 5.373-12 12c0 5.303 3.438 9.8 8.205 11.385c.6.113.82-.258.82-.577c0-.285-.01-1.04-.015-2.04c-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729c1.205.084 1.838 1.236 1.838 1.236c1.07 1.835 2.809 1.305 3.495.998c.108-.776.417-1.305.76-1.605c-2.665-.3-5.466-1.332-5.466-5.93c0-1.31.465-2.38 1.235-3.22c-.135-.303-.54-1.523.105-3.176c0 0 1.005-.322 3.3 1.23c.96-.267 1.98-.399 3-.405c1.02.006 2.04.138 3 .405c2.28-1.552 3.285-1.23 3.285-1.23c.645 1.653.24 2.873.12 3.176c.765.84 1.23 1.91 1.23 3.22c0 4.61-2.805 5.625-5.475 5.92c.42.36.81 1.096.81 2.22c0 1.606-.015 2.896-.015 3.286c0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
@@ -5213,38 +5215,38 @@ var GitHubIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var GitLabIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+var GitLabIcon = ({ className }) => /* @__PURE__ */ jsxs(
   "svg",
   {
     className,
     viewBox: "0 0 256 236",
     xmlns: "http://www.w3.org/2000/svg",
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "m128.075 236.075l47.104-144.97H80.97z", fill: "#e24329" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M128.075 236.074L80.97 91.104H14.956z", fill: "#fc6d26" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx("path", { d: "m128.075 236.075l47.104-144.97H80.97z", fill: "#e24329" }),
+      /* @__PURE__ */ jsx("path", { d: "M128.075 236.074L80.97 91.104H14.956z", fill: "#fc6d26" }),
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M14.956 91.104L.642 135.16a9.75 9.75 0 0 0 3.542 10.903l123.891 90.012z",
           fill: "#fca326"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M14.956 91.105H80.97L52.601 3.79c-1.46-4.493-7.816-4.492-9.275 0z",
           fill: "#e24329"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "m128.075 236.074l47.104-144.97h66.015z", fill: "#fc6d26" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx("path", { d: "m128.075 236.074l47.104-144.97h66.015z", fill: "#fc6d26" }),
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "m241.194 91.104l14.314 44.056a9.75 9.75 0 0 1-3.543 10.903l-123.89 90.012z",
           fill: "#fca326"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M241.194 91.105h-66.015l28.37-87.315c1.46-4.493 7.816-4.492 9.275 0z",
@@ -5254,35 +5256,35 @@ var GitLabIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
     ]
   }
 );
-var GoogleIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+var GoogleIcon = ({ className }) => /* @__PURE__ */ jsxs(
   "svg",
   {
     className,
     viewBox: "0 0 256 262",
     xmlns: "http://www.w3.org/2000/svg",
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622l38.755 30.023l2.685.268c24.659-22.774 38.875-56.282 38.875-96.027",
           fill: "#4285f4"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055c-34.523 0-63.824-22.773-74.269-54.25l-1.531.13l-40.298 31.187l-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1",
           fill: "#34a853"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82c0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602z",
           fill: "#fbbc05"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0C79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251",
@@ -5292,13 +5294,13 @@ var GoogleIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
     ]
   }
 );
-var HuggingFaceIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var HuggingFaceIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     xmlns: "http://www.w3.org/2000/svg",
     viewBox: "0 0 24 24",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         fill: "currentColor",
@@ -5307,7 +5309,7 @@ var HuggingFaceIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var KickIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var KickIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
@@ -5315,7 +5317,7 @@ var KickIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     width: 24,
     height: 24,
     viewBox: "0 0 24 24",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         fill: "currentColor",
@@ -5324,13 +5326,13 @@ var KickIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var LinearIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var LinearIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     xmlns: "http://www.w3.org/2000/svg",
     viewBox: "0 0 24 24",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         fill: "currentColor",
@@ -5339,21 +5341,21 @@ var LinearIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var LinkedInIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+var LinkedInIcon = ({ className }) => /* @__PURE__ */ jsxs(
   "svg",
   {
     className,
     viewBox: "0 0 128 128",
     xmlns: "http://www.w3.org/2000/svg",
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M116 3H12a8.91 8.91 0 0 0-9 8.8v104.42a8.91 8.91 0 0 0 9 8.78h104a8.93 8.93 0 0 0 9-8.81V11.77A8.93 8.93 0 0 0 116 3",
           fill: "#0076b2"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M21.06 48.73h18.11V107H21.06zm9.06-29a10.5 10.5 0 1 1-10.5 10.49a10.5 10.5 0 0 1 10.5-10.49m20.41 29h17.36v8h.24c2.42-4.58 8.32-9.41 17.13-9.41C103.6 47.28 107 59.35 107 75v32H88.89V78.65c0-6.75-.12-15.44-9.41-15.44s-10.87 7.36-10.87 15V107H50.53z",
@@ -5363,27 +5365,27 @@ var LinkedInIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
     ]
   }
 );
-var MicrosoftIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+var MicrosoftIcon = ({ className }) => /* @__PURE__ */ jsxs(
   "svg",
   {
     className,
     viewBox: "0 0 256 256",
     xmlns: "http://www.w3.org/2000/svg",
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M121.666 121.666H0V0h121.666z", fill: "#f1511b" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M256 121.666H134.335V0H256z", fill: "#80cc28" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M121.663 256.002H0V134.336h121.663z", fill: "#00adef" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M256 256.002H134.335V134.336H256z", fill: "#fbbc09" })
+      /* @__PURE__ */ jsx("path", { d: "M121.666 121.666H0V0h121.666z", fill: "#f1511b" }),
+      /* @__PURE__ */ jsx("path", { d: "M256 121.666H134.335V0H256z", fill: "#80cc28" }),
+      /* @__PURE__ */ jsx("path", { d: "M121.663 256.002H0V134.336h121.663z", fill: "#00adef" }),
+      /* @__PURE__ */ jsx("path", { d: "M256 256.002H134.335V134.336H256z", fill: "#fbbc09" })
     ]
   }
 );
-var NotionIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var NotionIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     xmlns: "http://www.w3.org/2000/svg",
     viewBox: "0 0 24 24",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         fill: "currentColor",
@@ -5392,15 +5394,15 @@ var NotionIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var RedditIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+var RedditIcon = ({ className }) => /* @__PURE__ */ jsxs(
   "svg",
   {
     className,
     viewBox: "0 0 256 256",
     xmlns: "http://www.w3.org/2000/svg",
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "128", cy: "128", fill: "#ff4500", r: "128" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx("circle", { cx: "128", cy: "128", fill: "#ff4500", r: "128" }),
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M213.15 129.22c0-10.376-8.391-18.617-18.617-18.617a18.74 18.74 0 0 0-12.97 5.189c-12.818-9.157-30.368-15.107-49.9-15.87l8.544-39.981l27.773 5.95c.307 7.02 6.104 12.667 13.278 12.667c7.324 0 13.275-5.95 13.275-13.278c0-7.324-5.95-13.275-13.275-13.275c-5.188 0-9.768 3.052-11.904 7.478l-30.976-6.562c-.916-.154-1.832 0-2.443.458c-.763.458-1.22 1.22-1.371 2.136l-9.464 44.558c-19.837.612-37.692 6.562-50.662 15.872a18.74 18.74 0 0 0-12.971-5.188c-10.377 0-18.617 8.391-18.617 18.617c0 7.629 4.577 14.037 10.988 16.939a33.6 33.6 0 0 0-.458 5.646c0 28.686 33.42 52.036 74.621 52.036c41.202 0 74.622-23.196 74.622-52.036a35 35 0 0 0-.458-5.646c6.408-2.902 10.985-9.464 10.985-17.093M85.272 142.495c0-7.324 5.95-13.275 13.278-13.275c7.324 0 13.275 5.95 13.275 13.275s-5.95 13.278-13.275 13.278c-7.327.15-13.278-5.953-13.278-13.278m74.317 35.251c-9.156 9.157-26.553 9.768-31.588 9.768c-5.188 0-22.584-.765-31.59-9.768c-1.371-1.373-1.371-3.51 0-4.883c1.374-1.371 3.51-1.371 4.884 0c5.8 5.8 18.008 7.782 26.706 7.782s21.058-1.983 26.704-7.782c1.374-1.371 3.51-1.371 4.884 0c1.22 1.373 1.22 3.51 0 4.883m-2.443-21.822c-7.325 0-13.275-5.95-13.275-13.275s5.95-13.275 13.275-13.275c7.327 0 13.277 5.95 13.277 13.275c0 7.17-5.95 13.275-13.277 13.275",
@@ -5410,13 +5412,13 @@ var RedditIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
     ]
   }
 );
-var RobloxIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var RobloxIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     viewBox: "0 0 24 24",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         d: "M18.926 23.998L0 18.892L5.075.002L24 5.108ZM15.348 10.09l-5.282-1.453l-1.414 5.273l5.282 1.453z",
@@ -5425,13 +5427,13 @@ var RobloxIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var SlackIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var SlackIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     xmlns: "http://www.w3.org/2000/svg",
     viewBox: "0 0 24 24",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         fill: "currentColor",
@@ -5440,13 +5442,13 @@ var SlackIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var SpotifyIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var SpotifyIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     viewBox: "0 0 256 256",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         d: "M128 0C57.308 0 0 57.309 0 128c0 70.696 57.309 128 128 128c70.697 0 128-57.304 128-128C256 57.314 198.697.007 127.998.007zm58.699 184.614c-2.293 3.76-7.215 4.952-10.975 2.644c-30.053-18.357-67.885-22.515-112.44-12.335a7.98 7.98 0 0 1-9.552-6.007a7.97 7.97 0 0 1 6-9.553c48.76-11.14 90.583-6.344 124.323 14.276c3.76 2.308 4.952 7.215 2.644 10.975m15.667-34.853c-2.89 4.695-9.034 6.178-13.726 3.289c-34.406-21.148-86.853-27.273-127.548-14.92c-5.278 1.594-10.852-1.38-12.454-6.649c-1.59-5.278 1.386-10.842 6.655-12.446c46.485-14.106 104.275-7.273 143.787 17.007c4.692 2.89 6.175 9.034 3.286 13.72zm1.345-36.293C162.457 88.964 94.394 86.71 55.007 98.666c-6.325 1.918-13.014-1.653-14.93-7.978c-1.917-6.328 1.65-13.012 7.98-14.935C93.27 62.027 168.434 64.68 215.929 92.876c5.702 3.376 7.566 10.724 4.188 16.405c-3.362 5.69-10.73 7.565-16.4 4.187z",
@@ -5455,22 +5457,22 @@ var SpotifyIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var TikTokIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+var TikTokIcon = ({ className }) => /* @__PURE__ */ jsxs(
   "svg",
   {
     className,
     viewBox: "0 0 256 290",
     xmlns: "http://www.w3.org/2000/svg",
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M189.72 104.421c18.678 13.345 41.56 21.197 66.273 21.197v-47.53a67 67 0 0 1-13.918-1.456v37.413c-24.711 0-47.59-7.851-66.272-21.195v96.996c0 48.523-39.356 87.855-87.9 87.855c-18.113 0-34.949-5.473-48.934-14.86c15.962 16.313 38.222 26.432 62.848 26.432c48.548 0 87.905-39.332 87.905-87.857v-96.995zm17.17-47.952c-9.546-10.423-15.814-23.893-17.17-38.785v-6.113h-13.189c3.32 18.927 14.644 35.097 30.358 44.898M69.673 225.607a40 40 0 0 1-8.203-24.33c0-22.192 18.001-40.186 40.21-40.186a40.3 40.3 0 0 1 12.197 1.883v-48.593c-4.61-.631-9.262-.9-13.912-.801v37.822a40.3 40.3 0 0 0-12.203-1.882c-22.208 0-40.208 17.992-40.208 40.187c0 15.694 8.997 29.281 22.119 35.9",
           fill: "#ff004f"
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M175.803 92.849c18.683 13.344 41.56 21.195 66.272 21.195V76.631c-13.794-2.937-26.005-10.141-35.186-20.162c-15.715-9.802-27.038-25.972-30.358-44.898h-34.643v189.843c-.079 22.132-18.049 40.052-40.21 40.052c-13.058 0-24.66-6.221-32.007-15.86c-13.12-6.618-22.118-20.206-22.118-35.898c0-22.193 18-40.187 40.208-40.187c4.255 0 8.356.662 12.203 1.882v-37.822c-47.692.985-86.047 39.933-86.047 87.834c0 23.912 9.551 45.589 25.053 61.428c13.985 9.385 30.82 14.86 48.934 14.86c48.545 0 87.9-39.335 87.9-87.857z" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx("path", { d: "M175.803 92.849c18.683 13.344 41.56 21.195 66.272 21.195V76.631c-13.794-2.937-26.005-10.141-35.186-20.162c-15.715-9.802-27.038-25.972-30.358-44.898h-34.643v189.843c-.079 22.132-18.049 40.052-40.21 40.052c-13.058 0-24.66-6.221-32.007-15.86c-13.12-6.618-22.118-20.206-22.118-35.898c0-22.193 18-40.187 40.208-40.187c4.255 0 8.356.662 12.203 1.882v-37.822c-47.692.985-86.047 39.933-86.047 87.834c0 23.912 9.551 45.589 25.053 61.428c13.985 9.385 30.82 14.86 48.934 14.86c48.545 0 87.9-39.335 87.9-87.857z" }),
+      /* @__PURE__ */ jsx(
         "path",
         {
           d: "M242.075 76.63V66.516a66.3 66.3 0 0 1-35.186-10.047a66.47 66.47 0 0 0 35.186 20.163M176.53 11.57a68 68 0 0 1-.728-5.457V0h-47.834v189.845c-.076 22.13-18.046 40.05-40.208 40.05a40.06 40.06 0 0 1-18.09-4.287c7.347 9.637 18.949 15.857 32.007 15.857c22.16 0 40.132-17.918 40.21-40.05V11.571zM99.966 113.58v-10.769a89 89 0 0 0-12.061-.818C39.355 101.993 0 141.327 0 189.845c0 30.419 15.467 57.227 38.971 72.996c-15.502-15.838-25.053-37.516-25.053-61.427c0-47.9 38.354-86.848 86.048-87.833",
@@ -5480,7 +5482,7 @@ var TikTokIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
     ]
   }
 );
-var TwitchIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+var TwitchIcon = ({ className }) => /* @__PURE__ */ jsxs(
   "svg",
   {
     className,
@@ -5492,28 +5494,28 @@ var TwitchIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
     xmlnsXlink: "http://www.w3.org/1999/xlink",
     y: "0px",
     children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("style", { type: "text/css", children: `
+      /* @__PURE__ */ jsx("style", { type: "text/css", children: `
                 .st0{fill:#FFFFFF}
                 .st1{fill:#9146FF}
             ` }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("title", { children: "Asset 2" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("g", { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx("title", { children: "Asset 2" }),
+      /* @__PURE__ */ jsxs("g", { children: [
+        /* @__PURE__ */ jsx(
           "polygon",
           {
             className: "st0",
             points: "2200,1300 1800,1700 1400,1700 1050,2050 1050,1700 600,1700 600,200 2200,200"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("g", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("g", { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx("g", { children: /* @__PURE__ */ jsxs("g", { children: [
+          /* @__PURE__ */ jsx(
             "path",
             {
               className: "st1",
               d: "M500,0L0,500v1800h600v500l500-500h400l900-900V0H500z M2200,1300l-400,400h-400l-350,350v-350H600V200h1600V1300z"
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             "rect",
             {
               className: "st1",
@@ -5523,7 +5525,7 @@ var TwitchIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
               y: "550"
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             "rect",
             {
               className: "st1",
@@ -5538,7 +5540,7 @@ var TwitchIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
     ]
   }
 );
-var VercelIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var VercelIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     "data-testid": "geist-icon",
@@ -5548,7 +5550,7 @@ var VercelIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     width: "16",
     className,
     style: { color: "currentcolor" },
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         "fill-rule": "evenodd",
@@ -5559,13 +5561,13 @@ var VercelIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var VKIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var VKIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     viewBox: "0 0 576 512",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         d: "M545 117.7c3.7-12.5 0-21.7-17.8-21.7h-58.9c-15 0-21.9 7.9-25.6 16.7c0 0-30 73.1-72.4 120.5c-13.7 13.7-20 18.1-27.5 18.1c-3.7 0-9.4-4.4-9.4-16.9V117.7c0-15-4.2-21.7-16.6-21.7h-92.6c-9.4 0-15 7-15 13.5c0 14.2 21.2 17.5 23.4 57.5v86.8c0 19-3.4 22.5-10.9 22.5c-20 0-68.6-73.4-97.4-157.4c-5.8-16.3-11.5-22.9-26.6-22.9H38.8c-16.8 0-20.2 7.9-20.2 16.7c0 15.6 20 93.1 93.1 195.5C160.4 378.1 229 416 291.4 416c37.5 0 42.1-8.4 42.1-22.9c0-66.8-3.4-73.1 15.4-73.1c8.7 0 23.7 4.4 58.7 38.1c40 40 46.6 57.9 69 57.9h58.9c16.8 0 25.3-8.4 20.4-25c-11.2-34.9-86.9-106.7-90.3-111.5c-8.7-11.2-6.2-16.2 0-26.2c.1-.1 72-101.3 79.4-135.6",
@@ -5574,13 +5576,13 @@ var VKIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var XIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var XIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
     viewBox: "0 0 512 512",
     xmlns: "http://www.w3.org/2000/svg",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         d: "M389.2 48h70.6L305.6 224.2L487 464H345L233.7 318.6L106.5 464H35.8l164.9-188.5L26.8 48h145.6l100.5 132.9zm-24.8 373.8h39.1L151.1 88h-42z",
@@ -5589,7 +5591,7 @@ var XIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     )
   }
 );
-var ZoomIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+var ZoomIcon = ({ className }) => /* @__PURE__ */ jsx(
   "svg",
   {
     className,
@@ -5597,7 +5599,7 @@ var ZoomIcon = ({ className }) => /* @__PURE__ */ jsxRuntimeExports.jsx(
     width: 512,
     height: 117,
     viewBox: "0 0 512 117",
-    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    children: /* @__PURE__ */ jsx(
       "path",
       {
         fill: "#0b5cff",
@@ -5729,10 +5731,10 @@ function PasswordInput({
   onChange,
   ...props
 }) {
-  const [disabled, setDisabled] = reactExports.useState(true);
-  const [isVisible, setIsVisible] = reactExports.useState(false);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  const [disabled, setDisabled] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
+    /* @__PURE__ */ jsx(
       Input,
       {
         className: cn(enableToggle && "pr-10", className),
@@ -5744,8 +5746,8 @@ function PasswordInput({
         }
       }
     ),
-    enableToggle && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+    enableToggle && /* @__PURE__ */ jsxs(Fragment, { children: [
+      /* @__PURE__ */ jsx(
         Button,
         {
           className: "!bg-transparent absolute top-0 right-0",
@@ -5754,10 +5756,10 @@ function PasswordInput({
           type: "button",
           variant: "ghost",
           onClick: () => setIsVisible(!isVisible),
-          children: isVisible ? /* @__PURE__ */ jsxRuntimeExports.jsx(Eye, {}) : /* @__PURE__ */ jsxRuntimeExports.jsx(EyeOff, {})
+          children: isVisible ? /* @__PURE__ */ jsx(Eye, {}) : /* @__PURE__ */ jsx(EyeOff, {})
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+      /* @__PURE__ */ jsx("style", { children: `
                         .hide-password-toggle::-ms-reveal,
                         .hide-password-toggle::-ms-clear {
                             visibility: hidden;
@@ -5772,7 +5774,7 @@ function Checkbox({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Checkbox$1,
     {
       "data-slot": "checkbox",
@@ -5781,19 +5783,19 @@ function Checkbox({
         className
       ),
       ...props,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(
         CheckboxIndicator,
         {
           "data-slot": "checkbox-indicator",
           className: "flex items-center justify-center text-current transition-none",
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "size-3.5" })
+          children: /* @__PURE__ */ jsx(Check, { className: "size-3.5" })
         }
       )
     }
   );
 }
 function Textarea({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "textarea",
     {
       "data-slot": "textarea",
@@ -5818,9 +5820,9 @@ var sanitizeActionName = (action) => {
 function useCaptcha({
   localization
 }) {
-  const { captcha, localization: contextLocalization } = reactExports.useContext(AuthUIContext);
+  const { captcha, localization: contextLocalization } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
-  const captchaRef = reactExports.useRef(null);
+  const captchaRef = useRef(null);
   const { executeRecaptcha } = useReCaptcha();
   const executeCaptcha = async (action) => {
     if (!captcha) throw new Error(localization.MISSING_RESPONSE);
@@ -5911,25 +5913,25 @@ function RecaptchaBadge({
   localization: propLocalization
 }) {
   const isHydrated = useIsHydrated();
-  const { captcha, localization: contextLocalization } = reactExports.useContext(AuthUIContext);
+  const { captcha, localization: contextLocalization } = useContext(AuthUIContext);
   const localization = { ...contextLocalization, ...propLocalization };
   if (!captcha) return null;
   if (!captcha.hideBadge) {
-    return isHydrated ? /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+    return isHydrated ? /* @__PURE__ */ jsx("style", { children: `
                 .grecaptcha-badge { visibility: visible !important; }
             ` }) : null;
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("style", { children: `
                 .grecaptcha-badge { visibility: hidden; }
             ` }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: cn("text-muted-foreground text-xs", className), children: [
+    /* @__PURE__ */ jsxs("p", { className: cn("text-muted-foreground text-xs", className), children: [
       localization.PROTECTED_BY_RECAPTCHA,
       " ",
       localization.BY_CONTINUING_YOU_AGREE,
       " Google",
       " ",
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "a",
         {
           className: "text-foreground hover:underline",
@@ -5942,7 +5944,7 @@ function RecaptchaBadge({
       " ",
       "&",
       " ",
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         "a",
         {
           className: "text-foreground hover:underline",
@@ -5957,18 +5959,18 @@ function RecaptchaBadge({
   ] });
 }
 function RecaptchaV2({ ref }) {
-  const { captcha } = reactExports.useContext(AuthUIContext);
+  const { captcha } = useContext(AuthUIContext);
   const { theme } = useTheme();
   const { lang } = useLang();
-  reactExports.useEffect(() => {
+  useEffect(() => {
     window.recaptchaOptions = {
       useRecaptchaNet: captcha == null ? void 0 : captcha.recaptchaNet,
       enterprise: captcha == null ? void 0 : captcha.enterprise
     };
   }, [captcha]);
   if (!captcha) return null;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("style", { children: `
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx("style", { children: `
                 .grecaptcha-badge {
                     border-radius: var(--radius) !important;
                     --tw-shadow: 0 1px 2px 0 var(--tw-shadow-color, #0000000d);
@@ -5981,7 +5983,7 @@ function RecaptchaV2({ ref }) {
                     border-color: var(--input) !important;
                 }
             ` }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       RecaptchaWrapper,
       {
         ref,
@@ -6003,7 +6005,7 @@ var DEFAULT_CAPTCHA_ENDPOINTS2 = [
   "/forget-password"
 ];
 function Captcha({ ref, localization, action }) {
-  const { captcha } = reactExports.useContext(AuthUIContext);
+  const { captcha } = useContext(AuthUIContext);
   if (!captcha) return null;
   if (action) {
     const endpoints = captcha.endpoints || DEFAULT_CAPTCHA_ENDPOINTS2;
@@ -6017,10 +6019,10 @@ function Captcha({ ref, localization, action }) {
   const showTurnstile = captcha.provider === "cloudflare-turnstile";
   const showHCaptcha = captcha.provider === "hcaptcha";
   const showCaptchaFox = captcha.provider === "captchafox";
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    showRecaptchaV2 && /* @__PURE__ */ jsxRuntimeExports.jsx(RecaptchaV2, { ref }),
-    showRecaptchaBadge && /* @__PURE__ */ jsxRuntimeExports.jsx(RecaptchaBadge, { localization }),
-    showTurnstile && /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    showRecaptchaV2 && /* @__PURE__ */ jsx(RecaptchaV2, { ref }),
+    showRecaptchaBadge && /* @__PURE__ */ jsx(RecaptchaBadge, { localization }),
+    showTurnstile && /* @__PURE__ */ jsx(
       S,
       {
         className: "mx-auto",
@@ -6032,7 +6034,7 @@ function Captcha({ ref, localization, action }) {
         }
       }
     ),
-    showHCaptcha && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mx-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    showHCaptcha && /* @__PURE__ */ jsx("div", { className: "mx-auto", children: /* @__PURE__ */ jsx(
       re,
       {
         ref,
@@ -6040,7 +6042,7 @@ function Captcha({ ref, localization, action }) {
         theme
       }
     ) }),
-    showCaptchaFox && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mx-auto", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    showCaptchaFox && /* @__PURE__ */ jsx("div", { className: "mx-auto", children: /* @__PURE__ */ jsx(
       CaptchaFox,
       {
         ref,
@@ -6065,14 +6067,14 @@ function CreateOrganizationDialog({
     navigate,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
-  const [logo, setLogo] = reactExports.useState(null);
-  const [logoPending, setLogoPending] = reactExports.useState(false);
-  const fileInputRef = reactExports.useRef(null);
+  const [logo, setLogo] = useState(null);
+  const [logoPending, setLogoPending] = useState(false);
+  const fileInputRef = useRef(null);
   const openFileDialog = () => {
     var _a2;
     return (_a2 = fileInputRef.current) == null ? void 0 : _a2.click();
@@ -6171,16 +6173,16 @@ function CreateOrganizationDialog({
       });
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogContent, { className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(DialogContent, { className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content, children: [
+    /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+      /* @__PURE__ */ jsx(
         DialogTitle,
         {
           className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
           children: localization.CREATE_ORGANIZATION
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         DialogDescription,
         {
           className: cn(
@@ -6191,20 +6193,20 @@ function CreateOrganizationDialog({
         }
       )
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
       "form",
       {
         method: "POST",
         onSubmit: form.handleSubmit(onSubmit),
         className: "space-y-6",
         children: [
-          (organizationOptions == null ? void 0 : organizationOptions.logo) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          (organizationOptions == null ? void 0 : organizationOptions.logo) && /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "logo",
-              render: () => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: () => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(
                   "input",
                   {
                     ref: fileInputRef,
@@ -6220,17 +6222,17 @@ function CreateOrganizationDialog({
                     }
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { children: localization.LOGO }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-4", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(FormLabel, { children: localization.LOGO }),
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4", children: [
+                  /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+                    /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
                       Button,
                       {
                         className: "size-fit rounded-full",
                         size: "icon",
                         type: "button",
                         variant: "ghost",
-                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        children: /* @__PURE__ */ jsx(
                           OrganizationLogo,
                           {
                             className: "size-16",
@@ -6246,31 +6248,31 @@ function CreateOrganizationDialog({
                         )
                       }
                     ) }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    /* @__PURE__ */ jsxs(
                       DropdownMenuContent,
                       {
                         align: "start",
                         onCloseAutoFocus: (e) => e.preventDefault(),
                         children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                          /* @__PURE__ */ jsxs(
                             DropdownMenuItem,
                             {
                               onClick: openFileDialog,
                               disabled: logoPending,
                               children: [
-                                /* @__PURE__ */ jsxRuntimeExports.jsx(CloudUpload, {}),
+                                /* @__PURE__ */ jsx(CloudUpload, {}),
                                 localization.UPLOAD_LOGO
                               ]
                             }
                           ),
-                          logo && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                          logo && /* @__PURE__ */ jsxs(
                             DropdownMenuItem,
                             {
                               onClick: deleteLogo,
                               disabled: logoPending,
                               variant: "destructive",
                               children: [
-                                /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, {}),
+                                /* @__PURE__ */ jsx(Trash2, {}),
                                 localization.DELETE_LOGO
                               ]
                             }
@@ -6279,7 +6281,7 @@ function CreateOrganizationDialog({
                       }
                     )
                   ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     Button,
                     {
                       disabled: logoPending,
@@ -6287,54 +6289,54 @@ function CreateOrganizationDialog({
                       onClick: openFileDialog,
                       type: "button",
                       children: [
-                        logoPending && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                        logoPending && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                         localization.UPLOAD
                       ]
                     }
                   )
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                /* @__PURE__ */ jsx(FormMessage, {})
               ] })
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "name",
-              render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { children: localization.ORGANIZATION_NAME }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(FormLabel, { children: localization.ORGANIZATION_NAME }),
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   Input,
                   {
                     placeholder: localization.ORGANIZATION_NAME_PLACEHOLDER,
                     ...field
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                /* @__PURE__ */ jsx(FormMessage, {})
               ] })
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "slug",
-              render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { children: localization.ORGANIZATION_SLUG }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(FormLabel, { children: localization.ORGANIZATION_SLUG }),
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   Input,
                   {
                     placeholder: localization.ORGANIZATION_SLUG_PLACEHOLDER,
                     ...field
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                /* @__PURE__ */ jsx(FormMessage, {})
               ] })
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+            /* @__PURE__ */ jsx(
               Button,
               {
                 type: "button",
@@ -6347,7 +6349,7 @@ function CreateOrganizationDialog({
                 children: localization.CANCEL
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               Button,
               {
                 type: "submit",
@@ -6357,7 +6359,7 @@ function CreateOrganizationDialog({
                 ),
                 disabled: isSubmitting,
                 children: [
-                  isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                  isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                   localization.CREATE_ORGANIZATION
                 ]
               }
@@ -6382,15 +6384,15 @@ function OrganizationCell({
     navigate,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const { pathMode } = organizationOptions || {};
-  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = reactExports.useState(false);
-  const [isManagingOrganization, setIsManagingOrganization] = reactExports.useState(false);
-  const handleManageOrganization = reactExports.useCallback(async () => {
+  const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+  const [isManagingOrganization, setIsManagingOrganization] = useState(false);
+  const handleManageOrganization = useCallback(async () => {
     var _a2;
     setIsManagingOrganization(true);
     if (pathMode === "slug") {
@@ -6432,17 +6434,17 @@ function OrganizationCell({
     localization,
     localizeErrors
   ]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: cn("flex-row p-4", className, classNames == null ? void 0 : classNames.cell), children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsxs(Card, { className: cn("flex-row p-4", className, classNames == null ? void 0 : classNames.cell), children: [
+      /* @__PURE__ */ jsx(
         OrganizationCellView,
         {
           organization,
           localization
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+        /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
           Button,
           {
             className: cn(
@@ -6454,28 +6456,28 @@ function OrganizationCell({
             size: "icon",
             type: "button",
             variant: "outline",
-            children: isManagingOrganization ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
+            children: isManagingOrganization ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
           }
         ) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuContent, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(DropdownMenuContent, { children: [
+          /* @__PURE__ */ jsxs(
             DropdownMenuItem,
             {
               onClick: handleManageOrganization,
               disabled: isManagingOrganization,
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Settings, { className: classNames == null ? void 0 : classNames.icon }),
+                /* @__PURE__ */ jsx(Settings, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.MANAGE_ORGANIZATION
               ]
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             DropdownMenuItem,
             {
               onClick: () => setIsLeaveDialogOpen(true),
               variant: "destructive",
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(LogOut, { className: classNames == null ? void 0 : classNames.icon }),
+                /* @__PURE__ */ jsx(LogOut, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.LEAVE_ORGANIZATION
               ]
             }
@@ -6483,7 +6485,7 @@ function OrganizationCell({
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       LeaveOrganizationDialog,
       {
         open: isLeaveDialogOpen,
@@ -6503,17 +6505,17 @@ function OrganizationsCard({
   const {
     hooks: { useListOrganizations },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
-  localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  localization = useMemo(
     () => ({ ...contextLocalization, ...localization }),
     [contextLocalization, localization]
   );
   const isHydrated = useIsHydrated();
   const { data: organizations, isPending: organizationsPending } = useListOrganizations();
   const isPending = !isHydrated || organizationsPending;
-  const [createDialogOpen, setCreateDialogOpen] = reactExports.useState(false);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -6525,9 +6527,9 @@ function OrganizationsCard({
         action: () => setCreateDialogOpen(true),
         isPending,
         ...props,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: [
-          isPending && /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsCellSkeleton, {}),
-          organizations == null ? void 0 : organizations.map((organization) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsxs(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: [
+          isPending && /* @__PURE__ */ jsx(SettingsCellSkeleton, {}),
+          organizations == null ? void 0 : organizations.map((organization) => /* @__PURE__ */ jsx(
             OrganizationCell,
             {
               classNames,
@@ -6539,7 +6541,7 @@ function OrganizationsCard({
         ] })
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       CreateOrganizationDialog,
       {
         classNames,
@@ -6559,8 +6561,8 @@ function UserInvitationsCard({
   const {
     hooks: { useListUserInvitations, useListOrganizations },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -6574,7 +6576,7 @@ function UserInvitationsCard({
     (invitation) => invitation.status === "pending"
   );
   if (!(pendingInvitations == null ? void 0 : pendingInvitations.length)) return null;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     SettingsCard,
     {
       className,
@@ -6582,7 +6584,7 @@ function UserInvitationsCard({
       title: localization.PENDING_INVITATIONS,
       description: localization.PENDING_USER_INVITATIONS_DESCRIPTION || localization.PENDING_INVITATIONS_DESCRIPTION,
       ...props,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: pendingInvitations.map((invitation) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: pendingInvitations.map((invitation) => /* @__PURE__ */ jsx(
         UserInvitationRow,
         {
           classNames,
@@ -6611,10 +6613,10 @@ function UserInvitationRow({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const localization = contextLocalization;
   const { lang } = useLang();
-  const [isLoading, setIsLoading] = reactExports.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const builtInRoles = [
     { role: "owner", label: localization.OWNER },
     { role: "admin", label: localization.ADMIN },
@@ -6670,9 +6672,9 @@ function UserInvitationRow({
     }
     setIsLoading(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: cn("flex-row items-center p-4", classNames == null ? void 0 : classNames.cell), children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-1 items-center gap-2", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Card, { className: cn("flex-row items-center p-4", classNames == null ? void 0 : classNames.cell), children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex flex-1 items-center gap-2", children: [
+      /* @__PURE__ */ jsx(
         UserAvatar,
         {
           className: "my-0.5",
@@ -6680,18 +6682,18 @@ function UserInvitationRow({
           localization
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid flex-1 text-left leading-tight", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate font-semibold text-sm", children: invitation.email }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate text-muted-foreground text-xs", children: [
+      /* @__PURE__ */ jsxs("div", { className: "grid flex-1 text-left leading-tight", children: [
+        /* @__PURE__ */ jsx("span", { className: "truncate font-semibold text-sm", children: invitation.email }),
+        /* @__PURE__ */ jsxs("span", { className: "truncate text-muted-foreground text-xs", children: [
           localization.EXPIRES,
           " ",
           invitation.expiresAt.toLocaleDateString(lang ?? "en")
         ] })
       ] })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate text-sm opacity-70", children: role == null ? void 0 : role.label }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx("span", { className: "truncate text-sm opacity-70", children: role == null ? void 0 : role.label }),
+    /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+      /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
         Button,
         {
           className: cn(
@@ -6703,33 +6705,33 @@ function UserInvitationRow({
           size: "icon",
           type: "button",
           variant: "outline",
-          children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
+          children: isLoading ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
         }
       ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      /* @__PURE__ */ jsxs(
         DropdownMenuContent,
         {
           onCloseAutoFocus: (e) => e.preventDefault(),
           children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               DropdownMenuItem,
               {
                 onClick: handleAccept,
                 disabled: isLoading,
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: classNames == null ? void 0 : classNames.icon }),
+                  /* @__PURE__ */ jsx(Check, { className: classNames == null ? void 0 : classNames.icon }),
                   localization.ACCEPT
                 ]
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               DropdownMenuItem,
               {
                 onClick: handleReject,
                 disabled: isLoading,
                 variant: "destructive",
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: classNames == null ? void 0 : classNames.icon }),
+                  /* @__PURE__ */ jsx(X, { className: classNames == null ? void 0 : classNames.icon }),
                   localization.REJECT
                 ]
               }
@@ -6756,10 +6758,10 @@ function AccountCell({
     viewPaths,
     navigate,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: sessionData } = useSession();
-  const [isLoading, setIsLoading] = reactExports.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const handleRevoke = async () => {
     setIsLoading(true);
     try {
@@ -6799,10 +6801,10 @@ function AccountCell({
     setIsLoading(false);
   };
   const isCurrentSession = deviceSession.session.id === (sessionData == null ? void 0 : sessionData.session.id);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: cn("flex-row p-4", className, classNames == null ? void 0 : classNames.cell), children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(UserView, { user: deviceSession.user, localization }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Card, { className: cn("flex-row p-4", className, classNames == null ? void 0 : classNames.cell), children: [
+    /* @__PURE__ */ jsx(UserView, { user: deviceSession.user, localization }),
+    /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+      /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
         Button,
         {
           className: cn(
@@ -6814,15 +6816,15 @@ function AccountCell({
           size: "icon",
           type: "button",
           variant: "outline",
-          children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
+          children: isLoading ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
         }
       ) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuContent, { children: [
-        !isCurrentSession && /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenuItem, { onClick: handleSetActiveSession, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Repeat, { className: classNames == null ? void 0 : classNames.icon }),
+      /* @__PURE__ */ jsxs(DropdownMenuContent, { children: [
+        !isCurrentSession && /* @__PURE__ */ jsxs(DropdownMenuItem, { onClick: handleSetActiveSession, children: [
+          /* @__PURE__ */ jsx(Repeat, { className: classNames == null ? void 0 : classNames.icon }),
           localization.SWITCH_ACCOUNT
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(
           DropdownMenuItem,
           {
             onClick: () => {
@@ -6834,7 +6836,7 @@ function AccountCell({
             },
             variant: "destructive",
             children: [
-              isCurrentSession ? /* @__PURE__ */ jsxRuntimeExports.jsx(LogOut, { className: classNames == null ? void 0 : classNames.icon }) : /* @__PURE__ */ jsxRuntimeExports.jsx(UserRoundX, { className: classNames == null ? void 0 : classNames.icon }),
+              isCurrentSession ? /* @__PURE__ */ jsx(LogOut, { className: classNames == null ? void 0 : classNames.icon }) : /* @__PURE__ */ jsx(UserRoundX, { className: classNames == null ? void 0 : classNames.icon }),
               isCurrentSession ? localization.SIGN_OUT : localization.REVOKE
             ]
           }
@@ -6854,14 +6856,14 @@ function AccountsCard({
     localization: contextLocalization,
     viewPaths,
     navigate
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: deviceSessions, isPending, refetch } = useListDeviceSessions();
   const { data: sessionData } = useSession();
   const otherDeviceSessions = (deviceSessions || []).filter(
     (ds) => ds.session.id !== (sessionData == null ? void 0 : sessionData.session.id)
   );
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     SettingsCard,
     {
       className,
@@ -6872,8 +6874,8 @@ function AccountsCard({
       instructions: localization.ACCOUNTS_INSTRUCTIONS,
       isPending,
       action: () => navigate(`${basePath}/${viewPaths.SIGN_IN}`),
-      children: (deviceSessions == null ? void 0 : deviceSessions.length) ? /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: [
-        sessionData && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: (deviceSessions == null ? void 0 : deviceSessions.length) ? /* @__PURE__ */ jsxs(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: [
+        sessionData && /* @__PURE__ */ jsx(
           AccountCell,
           {
             classNames,
@@ -6882,7 +6884,7 @@ function AccountsCard({
             refetch
           }
         ),
-        otherDeviceSessions.map((deviceSession) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        otherDeviceSessions.map((deviceSession) => /* @__PURE__ */ jsx(
           AccountCell,
           {
             classNames,
@@ -6910,11 +6912,11 @@ function UpdateAvatarCard({
     avatar,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...authLocalization2, ...localization };
   const { data: sessionData, isPending, refetch } = useSession();
-  const fileInputRef = reactExports.useRef(null);
-  const [loading, setLoading] = reactExports.useState(false);
+  const fileInputRef = useRef(null);
+  const [loading, setLoading] = useState(false);
   const handleAvatarChange = async (file) => {
     if (!sessionData || !avatar) return;
     setLoading(true);
@@ -6982,7 +6984,7 @@ function UpdateAvatarCard({
     var _a;
     return (_a = fileInputRef.current) == null ? void 0 : _a.click();
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -6992,7 +6994,7 @@ function UpdateAvatarCard({
       ),
       ...props,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           "input",
           {
             ref: fileInputRef,
@@ -7008,8 +7010,8 @@ function UpdateAvatarCard({
             }
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs("div", { className: "flex justify-between", children: [
+          /* @__PURE__ */ jsx(
             SettingsCardHeader,
             {
               className: "grow self-start",
@@ -7019,14 +7021,14 @@ function UpdateAvatarCard({
               classNames
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
               Button,
               {
                 className: "me-6 size-fit rounded-full",
                 size: "icon",
                 variant: "ghost",
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                children: /* @__PURE__ */ jsx(
                   UserAvatar,
                   {
                     isPending: isPending || loading,
@@ -7039,31 +7041,31 @@ function UpdateAvatarCard({
                 )
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               DropdownMenuContent,
               {
                 align: "end",
                 onCloseAutoFocus: (e) => e.preventDefault(),
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     DropdownMenuItem,
                     {
                       onClick: openFileDialog,
                       disabled: loading,
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(CloudUpload, {}),
+                        /* @__PURE__ */ jsx(CloudUpload, {}),
                         localization.UPLOAD_AVATAR
                       ]
                     }
                   ),
-                  (sessionData == null ? void 0 : sessionData.user.image) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  (sessionData == null ? void 0 : sessionData.user.image) && /* @__PURE__ */ jsxs(
                     DropdownMenuItem,
                     {
                       onClick: handleDeleteAvatar,
                       disabled: loading,
                       variant: "destructive",
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, {}),
+                        /* @__PURE__ */ jsx(Trash2, {}),
                         localization.DELETE_AVATAR
                       ]
                     }
@@ -7073,7 +7075,7 @@ function UpdateAvatarCard({
             )
           ] })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           SettingsCardFooter,
           {
             className: "!py-5",
@@ -7112,8 +7114,8 @@ function UpdateFieldCard({
     optimistic,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -7186,7 +7188,7 @@ function UpdateFieldCard({
       });
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsx("form", { method: "POST", onSubmit: form.handleSubmit(updateField), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsx("form", { method: "POST", onSubmit: form.handleSubmit(updateField), children: /* @__PURE__ */ jsx(
     SettingsCard,
     {
       className,
@@ -7197,13 +7199,13 @@ function UpdateFieldCard({
       title: label,
       actionLabel: localization.SAVE,
       optimistic,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: type === "boolean" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: type === "boolean" ? /* @__PURE__ */ jsx(
         FormField,
         {
           control: form.control,
           name,
-          render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { className: "flex", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { className: "flex", children: [
+            /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
               Checkbox,
               {
                 checked: field.value,
@@ -7212,14 +7214,14 @@ function UpdateFieldCard({
                 className: classNames == null ? void 0 : classNames.checkbox
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsx(
               FormLabel,
               {
                 className: classNames == null ? void 0 : classNames.label,
                 children: label
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsx(
               FormMessage,
               {
                 className: classNames == null ? void 0 : classNames.error
@@ -7227,7 +7229,7 @@ function UpdateFieldCard({
             )
           ] })
         }
-      ) : isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ) : isPending ? /* @__PURE__ */ jsx(
         Skeleton,
         {
           className: cn(
@@ -7235,27 +7237,27 @@ function UpdateFieldCard({
             classNames == null ? void 0 : classNames.skeleton
           )
         }
-      ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ) : /* @__PURE__ */ jsx(
         FormField,
         {
           control: form.control,
           name,
-          render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: type === "select" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+            /* @__PURE__ */ jsx(FormControl, { children: type === "select" ? /* @__PURE__ */ jsxs(
               Select,
               {
                 onValueChange: field.onChange,
                 value: field.value,
                 disabled: isSubmitting,
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(
                     SelectTrigger,
                     {
                       className: cn(
                         "w-full",
                         classNames == null ? void 0 : classNames.input
                       ),
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      children: /* @__PURE__ */ jsx(
                         SelectValue,
                         {
                           placeholder: placeholder || (typeof label === "string" ? label : "Select an option")
@@ -7263,8 +7265,8 @@ function UpdateFieldCard({
                       )
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(SelectContent, { children: options == null ? void 0 : options.map(
-                    (option) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(SelectContent, { children: options == null ? void 0 : options.map(
+                    (option) => /* @__PURE__ */ jsx(
                       SelectItem,
                       {
                         value: option.value,
@@ -7275,7 +7277,7 @@ function UpdateFieldCard({
                   ) })
                 ]
               }
-            ) : type === "number" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ) : type === "number" ? /* @__PURE__ */ jsx(
               Input,
               {
                 className: classNames == null ? void 0 : classNames.input,
@@ -7285,7 +7287,7 @@ function UpdateFieldCard({
                 ...field,
                 value: field.value
               }
-            ) : multiline ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ) : multiline ? /* @__PURE__ */ jsx(
               Textarea,
               {
                 className: classNames == null ? void 0 : classNames.input,
@@ -7294,7 +7296,7 @@ function UpdateFieldCard({
                 ...field,
                 value: field.value
               }
-            ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ) : /* @__PURE__ */ jsx(
               Input,
               {
                 className: classNames == null ? void 0 : classNames.input,
@@ -7305,7 +7307,7 @@ function UpdateFieldCard({
                 value: field.value
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsx(
               FormMessage,
               {
                 className: classNames == null ? void 0 : classNames.error
@@ -7327,10 +7329,10 @@ function UpdateNameCard({
     hooks: { useSession },
     localization: contextLocalization,
     nameRequired
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: sessionData } = useSession();
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     UpdateFieldCard,
     {
       className,
@@ -7357,11 +7359,11 @@ function UpdateUsernameCard({
   const {
     hooks: { useSession },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: sessionData } = useSession();
   const value = ((_a = sessionData == null ? void 0 : sessionData.user) == null ? void 0 : _a.displayUsername) || ((_b = sessionData == null ? void 0 : sessionData.user) == null ? void 0 : _b.username);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     UpdateFieldCard,
     {
       className,
@@ -7391,10 +7393,10 @@ function ChangeEmailCard({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: sessionData, isPending, refetch } = useSession();
-  const [resendDisabled, setResendDisabled] = reactExports.useState(false);
+  const [resendDisabled, setResendDisabled] = useState(false);
   const formSchema = object({
     email: string().email({ message: localization.INVALID_EMAIL })
   });
@@ -7470,14 +7472,14 @@ function ChangeEmailCard({
       throw error;
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsx(
       "form",
       {
         method: "POST",
         noValidate: true,
         onSubmit: form.handleSubmit(changeEmail),
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(
           SettingsCard,
           {
             className,
@@ -7488,7 +7490,7 @@ function ChangeEmailCard({
             title: localization.EMAIL,
             actionLabel: localization.SAVE,
             ...props,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: /* @__PURE__ */ jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: isPending ? /* @__PURE__ */ jsx(
               Skeleton,
               {
                 className: cn(
@@ -7496,13 +7498,13 @@ function ChangeEmailCard({
                   classNames == null ? void 0 : classNames.skeleton
                 )
               }
-            ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ) : /* @__PURE__ */ jsx(
               FormField,
               {
                 control: form.control,
                 name: "email",
-                render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                  /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                     Input,
                     {
                       className: classNames == null ? void 0 : classNames.input,
@@ -7512,7 +7514,7 @@ function ChangeEmailCard({
                       ...field
                     }
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(
                     FormMessage,
                     {
                       className: classNames == null ? void 0 : classNames.error
@@ -7525,14 +7527,14 @@ function ChangeEmailCard({
         )
       }
     ) }),
-    emailVerification && (sessionData == null ? void 0 : sessionData.user) && !(sessionData == null ? void 0 : sessionData.user.emailVerified) && /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...resendForm, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    emailVerification && (sessionData == null ? void 0 : sessionData.user) && !(sessionData == null ? void 0 : sessionData.user.emailVerified) && /* @__PURE__ */ jsx(Form, { ...resendForm, children: /* @__PURE__ */ jsx(
       "form",
       {
         method: "POST",
         onSubmit: resendForm.handleSubmit(
           resendVerification
         ),
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(
           SettingsCard,
           {
             className,
@@ -7562,9 +7564,9 @@ function AccountSettingsCards({
     hooks: { useSession },
     multiSession,
     account: accountOptions
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { data: sessionData } = useSession();
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -7573,28 +7575,28 @@ function AccountSettingsCards({
         classNames == null ? void 0 : classNames.cards
       ),
       children: [
-        ((_a = accountOptions == null ? void 0 : accountOptions.fields) == null ? void 0 : _a.includes("image")) && avatar && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ((_a = accountOptions == null ? void 0 : accountOptions.fields) == null ? void 0 : _a.includes("image")) && avatar && /* @__PURE__ */ jsx(
           UpdateAvatarCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
             localization
           }
         ),
-        (credentials == null ? void 0 : credentials.username) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (credentials == null ? void 0 : credentials.username) && /* @__PURE__ */ jsx(
           UpdateUsernameCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
             localization
           }
         ),
-        ((_b = accountOptions == null ? void 0 : accountOptions.fields) == null ? void 0 : _b.includes("name")) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ((_b = accountOptions == null ? void 0 : accountOptions.fields) == null ? void 0 : _b.includes("name")) && /* @__PURE__ */ jsx(
           UpdateNameCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
             localization
           }
         ),
-        changeEmail && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        changeEmail && /* @__PURE__ */ jsx(
           ChangeEmailCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
@@ -7618,7 +7620,7 @@ function AccountSettingsCards({
             errorMessage
           } = additionalField;
           const defaultValue = sessionData == null ? void 0 : sessionData.user[field];
-          return /* @__PURE__ */ jsxRuntimeExports.jsx(
+          return /* @__PURE__ */ jsx(
             UpdateFieldCard,
             {
               classNames: classNames == null ? void 0 : classNames.card,
@@ -7638,7 +7640,7 @@ function AccountSettingsCards({
             field
           );
         }),
-        multiSession && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        multiSession && /* @__PURE__ */ jsx(
           AccountsCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
@@ -7669,7 +7671,7 @@ function DeleteAccountDialog({
     navigate,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: sessionData } = useSession();
   const session = sessionData == null ? void 0 : sessionData.session;
@@ -7730,20 +7732,20 @@ function DeleteAccountDialog({
     }
     onOpenChange == null ? void 0 : onOpenChange(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: cn("sm:max-w-md", (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization == null ? void 0 : localization.DELETE_ACCOUNT
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -7754,28 +7756,28 @@ function DeleteAccountDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: cn("my-2 flex-row p-4", classNames == null ? void 0 : classNames.cell), children: /* @__PURE__ */ jsxRuntimeExports.jsx(UserView, { user, localization }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsx(Card, { className: cn("my-2 flex-row p-4", classNames == null ? void 0 : classNames.cell), children: /* @__PURE__ */ jsx(UserView, { user, localization }) }),
+        /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
           "form",
           {
             method: "POST",
             onSubmit: form.handleSubmit(deleteAccount),
             className: "grid gap-6",
             children: [
-              credentialsLinked && /* @__PURE__ */ jsxRuntimeExports.jsx(
+              credentialsLinked && /* @__PURE__ */ jsx(
                 FormField,
                 {
                   control: form.control,
                   name: "password",
-                  render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                    /* @__PURE__ */ jsx(
                       FormLabel,
                       {
                         className: classNames == null ? void 0 : classNames.label,
                         children: localization == null ? void 0 : localization.PASSWORD
                       }
                     ),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                       Input,
                       {
                         autoComplete: "current-password",
@@ -7785,7 +7787,7 @@ function DeleteAccountDialog({
                         ...field
                       }
                     ) }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    /* @__PURE__ */ jsx(
                       FormMessage,
                       {
                         className: classNames == null ? void 0 : classNames.error
@@ -7794,8 +7796,8 @@ function DeleteAccountDialog({
                   ] })
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+                /* @__PURE__ */ jsx(
                   Button,
                   {
                     type: "button",
@@ -7808,7 +7810,7 @@ function DeleteAccountDialog({
                     children: localization.CANCEL
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                /* @__PURE__ */ jsxs(
                   Button,
                   {
                     className: cn(
@@ -7819,7 +7821,7 @@ function DeleteAccountDialog({
                     variant: "destructive",
                     type: "submit",
                     children: [
-                      isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                      isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                       isFresh ? localization == null ? void 0 : localization.DELETE_ACCOUNT : localization == null ? void 0 : localization.SIGN_OUT
                     ]
                   }
@@ -7843,16 +7845,16 @@ function DeleteAccountCard({
   const {
     hooks: { useListAccounts },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
-  const [showDialog, setShowDialog] = reactExports.useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   if (!skipHook) {
     const result = useListAccounts();
     accounts = result.data;
     isPending = result.isPending;
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs("div", { children: [
+    /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -7865,7 +7867,7 @@ function DeleteAccountCard({
         action: () => setShowDialog(true)
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       DeleteAccountDialog,
       {
         classNames,
@@ -7891,26 +7893,26 @@ function SessionFreshnessDialog({
     localization: contextLocalization,
     viewPaths,
     navigate
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const handleSignOut = () => {
     navigate(`${basePath}/${viewPaths.SIGN_OUT}`);
     onOpenChange == null ? void 0 : onOpenChange(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: cn("sm:max-w-md", (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: title || (localization == null ? void 0 : localization.SESSION_EXPIRED) || "Session Expired"
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -7921,8 +7923,8 @@ function SessionFreshnessDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -7935,7 +7937,7 @@ function SessionFreshnessDialog({
               children: localization.CANCEL
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             Button,
             {
               className: cn(
@@ -7965,14 +7967,14 @@ function PasskeyCell({
     mutators: { deletePasskey },
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { refetch } = useListPasskeys();
   const { data: sessionData } = useSession();
   const session = sessionData == null ? void 0 : sessionData.session;
   const isFresh = session ? Date.now() - new Date(session == null ? void 0 : session.createdAt).getTime() < freshAge * 1e3 : false;
-  const [showFreshnessDialog, setShowFreshnessDialog] = reactExports.useState(false);
-  const [isLoading, setIsLoading] = reactExports.useState(false);
+  const [showFreshnessDialog, setShowFreshnessDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const handleDeletePasskey = async () => {
     if (!isFresh) {
       setShowFreshnessDialog(true);
@@ -7994,8 +7996,8 @@ function PasskeyCell({
       });
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       SessionFreshnessDialog,
       {
         open: showFreshnessDialog,
@@ -8004,7 +8006,7 @@ function PasskeyCell({
         localization
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsxs(
       Card,
       {
         className: cn(
@@ -8013,16 +8015,16 @@ function PasskeyCell({
           classNames == null ? void 0 : classNames.cell
         ),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsx(
               FingerprintPattern,
               {
                 className: cn("size-4", classNames == null ? void 0 : classNames.icon)
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm", children: new Date(passkey.createdAt).toLocaleString() })
+            /* @__PURE__ */ jsx("span", { className: "text-sm", children: new Date(passkey.createdAt).toLocaleString() })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             Button,
             {
               className: cn(
@@ -8035,7 +8037,7 @@ function PasskeyCell({
               variant: "outline",
               onClick: handleDeletePasskey,
               children: [
-                isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                isLoading && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.DELETE
               ]
             }
@@ -8057,13 +8059,13 @@ function PasskeysCard({
     localization: authLocalization2,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...authLocalization2, ...localization };
   const { data: passkeys, isPending, refetch } = useListPasskeys();
   const { data: sessionData } = useSession();
   const session = sessionData == null ? void 0 : sessionData.session;
   const isFresh = session ? Date.now() - new Date(session == null ? void 0 : session.createdAt).getTime() < freshAge * 1e3 : false;
-  const [showFreshnessDialog, setShowFreshnessDialog] = reactExports.useState(false);
+  const [showFreshnessDialog, setShowFreshnessDialog] = useState(false);
   const addPasskey = async () => {
     if (!isFresh) {
       setShowFreshnessDialog(true);
@@ -8086,8 +8088,8 @@ function PasskeysCard({
     }
   };
   const form = useForm();
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       SessionFreshnessDialog,
       {
         open: showFreshnessDialog,
@@ -8096,7 +8098,7 @@ function PasskeysCard({
         localization
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsx("form", { method: "POST", onSubmit: form.handleSubmit(addPasskey), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsx("form", { method: "POST", onSubmit: form.handleSubmit(addPasskey), children: /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -8106,14 +8108,14 @@ function PasskeysCard({
         instructions: localization.PASSKEYS_INSTRUCTIONS,
         isPending,
         title: localization.PASSKEYS,
-        children: passkeys && passkeys.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: passkeys && passkeys.length > 0 && /* @__PURE__ */ jsx(
           CardContent,
           {
             className: cn(
               "grid gap-4",
               classNames == null ? void 0 : classNames.content
             ),
-            children: passkeys == null ? void 0 : passkeys.map((passkey) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: passkeys == null ? void 0 : passkeys.map((passkey) => /* @__PURE__ */ jsx(
               PasskeyCell,
               {
                 classNames,
@@ -8129,10 +8131,10 @@ function PasskeysCard({
   ] });
 }
 function useIsOverflow() {
-  const [isOverflow, setIsOverflow] = reactExports.useState(false);
-  const ref = reactExports.useRef(null);
-  const triggerRef = reactExports.useRef(void 0);
-  reactExports.useEffect(() => {
+  const [isOverflow, setIsOverflow] = useState(false);
+  const ref = useRef(null);
+  const triggerRef = useRef(void 0);
+  useEffect(() => {
     const element = ref.current;
     if (!element) {
       setIsOverflow(false);
@@ -8159,7 +8161,7 @@ function TooltipProvider({
   delayDuration = 0,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Provider,
     {
       "data-slot": "tooltip-provider",
@@ -8171,12 +8173,12 @@ function TooltipProvider({
 function Tooltip({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(Root3, { "data-slot": "tooltip", ...props }) });
+  return /* @__PURE__ */ jsx(TooltipProvider, { children: /* @__PURE__ */ jsx(Root3, { "data-slot": "tooltip", ...props }) });
 }
 function TooltipTrigger({
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Trigger$1, { "data-slot": "tooltip-trigger", ...props });
+  return /* @__PURE__ */ jsx(Trigger$1, { "data-slot": "tooltip-trigger", ...props });
 }
 function TooltipContent({
   className,
@@ -8184,7 +8186,7 @@ function TooltipContent({
   children,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Portal, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Portal, { children: /* @__PURE__ */ jsxs(
     Content2$1,
     {
       className: cn(
@@ -8196,7 +8198,7 @@ function TooltipContent({
       ...props,
       children: [
         children,
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Arrow2, { className: "z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground" })
+        /* @__PURE__ */ jsx(Arrow2, { className: "z-50 size-2.5 translate-y-[calc(-50%_-_2px)] rotate-45 rounded-[2px] bg-foreground fill-foreground" })
       ]
     }
   ) });
@@ -8219,9 +8221,9 @@ function ProviderCell({
     viewPaths,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
-  const [isLoading, setIsLoading] = reactExports.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const handleLink = async () => {
     setIsLoading(true);
     const callbackURL = `${baseURL}${basePath}/${viewPaths.CALLBACK}?redirectTo=${encodeURIComponent(window.location.pathname)}`;
@@ -8271,7 +8273,7 @@ function ProviderCell({
     }
     setIsLoading(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -8280,7 +8282,7 @@ function ProviderCell({
         classNames == null ? void 0 : classNames.cell
       ),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           ProviderCellContent,
           {
             account,
@@ -8288,7 +8290,7 @@ function ProviderCell({
             classNames
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(
           Button,
           {
             className: cn("relative ms-auto shrink-0", classNames == null ? void 0 : classNames.button),
@@ -8298,7 +8300,7 @@ function ProviderCell({
             variant: account ? "outline" : "default",
             onClick: account ? handleUnlink : handleLink,
             children: [
-              isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+              isLoading && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
               account ? localization.UNLINK : localization.LINK
             ]
           }
@@ -8313,7 +8315,7 @@ function ProviderCellContent({
   provider
 }) {
   if (account) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       ConnectedProviderContent,
       {
         account,
@@ -8322,7 +8324,7 @@ function ProviderCellContent({
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex min-w-0 flex-1 items-center gap-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(ProviderContent, { classNames, provider }) });
+  return /* @__PURE__ */ jsx("div", { className: "flex min-w-0 flex-1 items-center gap-3", children: /* @__PURE__ */ jsx(ProviderContent, { classNames, provider }) });
 }
 function ConnectedProviderContent({
   account,
@@ -8331,14 +8333,14 @@ function ConnectedProviderContent({
 }) {
   const {
     hooks: { useAccountInfo }
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { data: accountInfo, isPending } = useAccountInfo({
     query: { accountId: account.accountId }
   });
   const email = accountInfo == null ? void 0 : accountInfo.user.email;
   const { ref: emailRef, isOverflow } = useIsOverflow();
-  const emailElement = isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "my-0.5 h-3 w-28" }) : email ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { ref: emailRef, className: "truncate text-muted-foreground text-xs", children: email }) : null;
-  const content = /* @__PURE__ */ jsxRuntimeExports.jsx(
+  const emailElement = isPending ? /* @__PURE__ */ jsx(Skeleton, { className: "my-0.5 h-3 w-28" }) : email ? /* @__PURE__ */ jsx("span", { ref: emailRef, className: "truncate text-muted-foreground text-xs", children: email }) : null;
+  const content = /* @__PURE__ */ jsx(
     ProviderContent,
     {
       accountInfo: emailElement,
@@ -8348,27 +8350,27 @@ function ConnectedProviderContent({
   );
   const wrapperClassName = "flex min-w-0 flex-1 items-center gap-3";
   if (email && isOverflow) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(Tooltip, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: cn(wrapperClassName, "cursor-default"), children: content }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(TooltipContent, { children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { children: email }) })
+    return /* @__PURE__ */ jsxs(Tooltip, { children: [
+      /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsx("div", { className: cn(wrapperClassName, "cursor-default"), children: content }) }),
+      /* @__PURE__ */ jsx(TooltipContent, { children: /* @__PURE__ */ jsx("p", { children: email }) })
     ] });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: wrapperClassName, children: content });
+  return /* @__PURE__ */ jsx("div", { className: wrapperClassName, children: content });
 }
 function ProviderContent({
   accountInfo,
   classNames,
   provider
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    provider.icon && /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    provider.icon && /* @__PURE__ */ jsx(
       provider.icon,
       {
         className: cn("size-4 shrink-0", classNames == null ? void 0 : classNames.icon)
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex min-w-0 flex-col", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-sm", children: provider.name }),
+    /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 flex-col", children: [
+      /* @__PURE__ */ jsx("div", { className: "text-sm", children: provider.name }),
       accountInfo
     ] })
   ] });
@@ -8388,7 +8390,7 @@ function ProvidersCard({
     localization: contextLocalization,
     social,
     genericOAuth
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   if (!skipHook) {
     const result = useListAccounts();
@@ -8396,7 +8398,7 @@ function ProvidersCard({
     isPending = result.isPending;
     refetch = result.refetch;
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     SettingsCard,
     {
       className,
@@ -8404,13 +8406,13 @@ function ProvidersCard({
       title: localization.PROVIDERS,
       description: localization.PROVIDERS_DESCRIPTION,
       isPending,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: isPending ? (_a = social == null ? void 0 : social.providers) == null ? void 0 : _a.map((provider) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: isPending ? (_a = social == null ? void 0 : social.providers) == null ? void 0 : _a.map((provider) => /* @__PURE__ */ jsx(
         SettingsCellSkeleton,
         {
           classNames
         },
         provider
-      )) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+      )) : /* @__PURE__ */ jsxs(Fragment, { children: [
         accounts == null ? void 0 : accounts.map((account) => {
           var _a2;
           const socialProvider = socialProviders.find(
@@ -8421,7 +8423,7 @@ function ProvidersCard({
           );
           const provider = socialProvider || genericOAuthProvider;
           if (!provider) return null;
-          return /* @__PURE__ */ jsxRuntimeExports.jsx(
+          return /* @__PURE__ */ jsx(
             ProviderCell,
             {
               classNames,
@@ -8438,7 +8440,7 @@ function ProvidersCard({
             (socialProvider2) => socialProvider2.provider === provider
           );
           if (!socialProvider) return null;
-          return /* @__PURE__ */ jsxRuntimeExports.jsx(
+          return /* @__PURE__ */ jsx(
             ProviderCell,
             {
               classNames,
@@ -8448,7 +8450,7 @@ function ProvidersCard({
             provider
           );
         }),
-        (_c = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _c.map((provider) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (_c = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _c.map((provider) => /* @__PURE__ */ jsx(
           ProviderCell,
           {
             classNames,
@@ -8468,9 +8470,9 @@ function ProvidersCard({
 function InputFieldSkeleton({
   classNames
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-1.5", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: cn("h-4 w-32", classNames == null ? void 0 : classNames.skeleton) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: cn("h-9 w-full", classNames == null ? void 0 : classNames.skeleton) })
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-1.5", children: [
+    /* @__PURE__ */ jsx(Skeleton, { className: cn("h-4 w-32", classNames == null ? void 0 : classNames.skeleton) }),
+    /* @__PURE__ */ jsx(Skeleton, { className: cn("h-9 w-full", classNames == null ? void 0 : classNames.skeleton) })
   ] });
 }
 function ChangePasswordCard({
@@ -8493,7 +8495,7 @@ function ChangePasswordCard({
     viewPaths,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const confirmPasswordEnabled = credentials == null ? void 0 : credentials.confirmPassword;
   const contextPasswordValidation = credentials == null ? void 0 : credentials.passwordValidation;
   localization = { ...contextLocalization, ...localization };
@@ -8603,12 +8605,12 @@ function ChangePasswordCard({
     (acc) => acc.providerId === "credential"
   );
   if (!isPending && !credentialsLinked) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...setPasswordForm, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(Form, { ...setPasswordForm, children: /* @__PURE__ */ jsx(
       "form",
       {
         method: "POST",
         onSubmit: setPasswordForm.handleSubmit(setPassword),
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(
           SettingsCard,
           {
             title: localization.SET_PASSWORD,
@@ -8617,7 +8619,7 @@ function ChangePasswordCard({
             isPending,
             className,
             classNames,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mx-auto w-full max-w-sm", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            children: /* @__PURE__ */ jsx("div", { className: "mx-auto w-full max-w-sm", children: /* @__PURE__ */ jsx(
               Captcha,
               {
                 ref: captchaRef,
@@ -8630,7 +8632,7 @@ function ChangePasswordCard({
       }
     ) });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsx("form", { method: "POST", onSubmit: form.handleSubmit(changePassword), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsx("form", { method: "POST", onSubmit: form.handleSubmit(changePassword), children: /* @__PURE__ */ jsx(
     SettingsCard,
     {
       className,
@@ -8640,34 +8642,34 @@ function ChangePasswordCard({
       instructions: localization.CHANGE_PASSWORD_INSTRUCTIONS,
       isPending,
       title: localization.CHANGE_PASSWORD,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(
         CardContent,
         {
           className: cn("grid gap-6", classNames == null ? void 0 : classNames.content),
-          children: isPending || !accounts ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(InputFieldSkeleton, { classNames }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(InputFieldSkeleton, { classNames }),
-            confirmPasswordEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          children: isPending || !accounts ? /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(InputFieldSkeleton, { classNames }),
+            /* @__PURE__ */ jsx(InputFieldSkeleton, { classNames }),
+            confirmPasswordEnabled && /* @__PURE__ */ jsx(
               InputFieldSkeleton,
               {
                 classNames
               }
             )
-          ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+            /* @__PURE__ */ jsx(
               FormField,
               {
                 control: form.control,
                 name: "currentPassword",
-                render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                  /* @__PURE__ */ jsx(
                     FormLabel,
                     {
                       className: classNames == null ? void 0 : classNames.label,
                       children: localization.CURRENT_PASSWORD
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                     PasswordInput,
                     {
                       className: classNames == null ? void 0 : classNames.input,
@@ -8677,7 +8679,7 @@ function ChangePasswordCard({
                       ...field
                     }
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(
                     FormMessage,
                     {
                       className: classNames == null ? void 0 : classNames.error
@@ -8686,20 +8688,20 @@ function ChangePasswordCard({
                 ] })
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsx(
               FormField,
               {
                 control: form.control,
                 name: "newPassword",
-                render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                  /* @__PURE__ */ jsx(
                     FormLabel,
                     {
                       className: classNames == null ? void 0 : classNames.label,
                       children: localization.NEW_PASSWORD
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                     PasswordInput,
                     {
                       className: classNames == null ? void 0 : classNames.input,
@@ -8710,7 +8712,7 @@ function ChangePasswordCard({
                       ...field
                     }
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(
                     FormMessage,
                     {
                       className: classNames == null ? void 0 : classNames.error
@@ -8719,20 +8721,20 @@ function ChangePasswordCard({
                 ] })
               }
             ),
-            confirmPasswordEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            confirmPasswordEnabled && /* @__PURE__ */ jsx(
               FormField,
               {
                 control: form.control,
                 name: "confirmPassword",
-                render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                  /* @__PURE__ */ jsx(
                     FormLabel,
                     {
                       className: classNames == null ? void 0 : classNames.label,
                       children: localization.CONFIRM_PASSWORD
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                     PasswordInput,
                     {
                       className: classNames == null ? void 0 : classNames.input,
@@ -8743,7 +8745,7 @@ function ChangePasswordCard({
                       ...field
                     }
                   ) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(
                     FormMessage,
                     {
                       className: classNames == null ? void 0 : classNames.error
@@ -8775,11 +8777,11 @@ function SessionCell({
     navigate,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: sessionData } = useSession();
   const isCurrentSession = session.id === ((_a = sessionData == null ? void 0 : sessionData.session) == null ? void 0 : _a.id);
-  const [isLoading, setIsLoading] = reactExports.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const handleRevoke = async () => {
     setIsLoading(true);
     if (isCurrentSession) {
@@ -8803,7 +8805,7 @@ function SessionCell({
   };
   const parsed = session.userAgent ? Bowser.parse(session.userAgent) : null;
   const isMobile = (parsed == null ? void 0 : parsed.platform.type) === "mobile";
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -8812,12 +8814,12 @@ function SessionCell({
         classNames == null ? void 0 : classNames.cell
       ),
       children: [
-        isMobile ? /* @__PURE__ */ jsxRuntimeExports.jsx(Smartphone, { className: cn("size-4", classNames == null ? void 0 : classNames.icon) }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Laptop, { className: cn("size-4", classNames == null ? void 0 : classNames.icon) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-semibold text-sm", children: isCurrentSession ? localization.CURRENT_SESSION : session == null ? void 0 : session.ipAddress }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-muted-foreground text-xs", children: ((_b = session.userAgent) == null ? void 0 : _b.includes("tauri-plugin-http")) ? localization.APP : (parsed == null ? void 0 : parsed.os.name) && (parsed == null ? void 0 : parsed.browser.name) ? `${parsed.os.name}, ${parsed.browser.name}` : (parsed == null ? void 0 : parsed.os.name) || (parsed == null ? void 0 : parsed.browser.name) || session.userAgent || localization.UNKNOWN })
+        isMobile ? /* @__PURE__ */ jsx(Smartphone, { className: cn("size-4", classNames == null ? void 0 : classNames.icon) }) : /* @__PURE__ */ jsx(Laptop, { className: cn("size-4", classNames == null ? void 0 : classNames.icon) }),
+        /* @__PURE__ */ jsxs("div", { className: "flex flex-col", children: [
+          /* @__PURE__ */ jsx("span", { className: "font-semibold text-sm", children: isCurrentSession ? localization.CURRENT_SESSION : session == null ? void 0 : session.ipAddress }),
+          /* @__PURE__ */ jsx("span", { className: "text-muted-foreground text-xs", children: ((_b = session.userAgent) == null ? void 0 : _b.includes("tauri-plugin-http")) ? localization.APP : (parsed == null ? void 0 : parsed.os.name) && (parsed == null ? void 0 : parsed.browser.name) ? `${parsed.os.name}, ${parsed.browser.name}` : (parsed == null ? void 0 : parsed.os.name) || (parsed == null ? void 0 : parsed.browser.name) || session.userAgent || localization.UNKNOWN })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(
           Button,
           {
             className: cn(
@@ -8830,7 +8832,7 @@ function SessionCell({
             variant: "outline",
             onClick: handleRevoke,
             children: [
-              isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+              isLoading && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
               isCurrentSession ? localization.SIGN_OUT : localization.REVOKE
             ]
           }
@@ -8847,10 +8849,10 @@ function SessionsCard({
   const {
     hooks: { useListSessions },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: sessions, isPending, refetch } = useListSessions();
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     SettingsCard,
     {
       className,
@@ -8858,13 +8860,13 @@ function SessionsCard({
       description: localization.SESSIONS_DESCRIPTION,
       isPending,
       title: localization.SESSIONS,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: isPending ? /* @__PURE__ */ jsx(
         SettingsCellSkeleton,
         {
           classNames
         },
         "skeleton"
-      ) : sessions == null ? void 0 : sessions.map((session) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ) : sessions == null ? void 0 : sessions.map((session) => /* @__PURE__ */ jsx(
         SessionCell,
         {
           classNames,
@@ -8884,29 +8886,29 @@ function BackupCodesDialog({
   ...props
 }) {
   var _a, _b, _c;
-  const { localization } = reactExports.useContext(AuthUIContext);
-  const [copied, setCopied] = reactExports.useState(false);
+  const { localization } = useContext(AuthUIContext);
+  const [copied, setCopied] = useState(false);
   const handleCopy = () => {
     const codeText = backupCodes.join("\n");
     navigator.clipboard.writeText(codeText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2e3);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       onOpenAutoFocus: (e) => e.preventDefault(),
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.BACKUP_CODES
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -8917,7 +8919,7 @@ function BackupCodesDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 gap-2", children: backupCodes.map((code, index) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx("div", { className: "grid grid-cols-2 gap-2", children: backupCodes.map((code, index) => /* @__PURE__ */ jsx(
           "div",
           {
             className: "rounded-md bg-muted p-2 text-center font-mono text-sm",
@@ -8925,8 +8927,8 @@ function BackupCodesDialog({
           },
           index
         )) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -8937,16 +8939,16 @@ function BackupCodesDialog({
                 classNames == null ? void 0 : classNames.button,
                 classNames == null ? void 0 : classNames.outlineButton
               ),
-              children: copied ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: classNames == null ? void 0 : classNames.icon }),
+              children: copied ? /* @__PURE__ */ jsxs(Fragment, { children: [
+                /* @__PURE__ */ jsx(Check, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.COPIED_TO_CLIPBOARD
-              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Copy, { className: classNames == null ? void 0 : classNames.icon }),
+              ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+                /* @__PURE__ */ jsx(Copy, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.COPY_ALL_CODES
               ] })
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -8980,10 +8982,10 @@ function TwoFactorPasswordDialog({
     toast: toast2,
     twoFactor,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const [showBackupCodesDialog, setShowBackupCodesDialog] = reactExports.useState(false);
-  const [backupCodes, setBackupCodes] = reactExports.useState([]);
-  const [totpURI, setTotpURI] = reactExports.useState(null);
+  } = useContext(AuthUIContext);
+  const [showBackupCodesDialog, setShowBackupCodesDialog] = useState(false);
+  const [backupCodes, setBackupCodes] = useState([]);
+  const [totpURI, setTotpURI] = useState(null);
   const formSchema = object({
     password: string().min(1, { message: localization.PASSWORD_REQUIRED })
   });
@@ -9041,17 +9043,17 @@ function TwoFactorPasswordDialog({
       });
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
       DialogContent,
       {
         className: cn("sm:max-w-md", classNames == null ? void 0 : classNames.dialog),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.header, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(DialogTitle, { className: classNames == null ? void 0 : classNames.title, children: localization.TWO_FACTOR }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(DialogDescription, { className: classNames == null ? void 0 : classNames.description, children: isTwoFactorEnabled ? localization.TWO_FACTOR_DISABLE_INSTRUCTIONS : localization.TWO_FACTOR_ENABLE_INSTRUCTIONS })
+          /* @__PURE__ */ jsxs(DialogHeader, { className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.header, children: [
+            /* @__PURE__ */ jsx(DialogTitle, { className: classNames == null ? void 0 : classNames.title, children: localization.TWO_FACTOR }),
+            /* @__PURE__ */ jsx(DialogDescription, { className: classNames == null ? void 0 : classNames.description, children: isTwoFactorEnabled ? localization.TWO_FACTOR_DISABLE_INSTRUCTIONS : localization.TWO_FACTOR_ENABLE_INSTRUCTIONS })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
             "form",
             {
               method: "POST",
@@ -9060,20 +9062,20 @@ function TwoFactorPasswordDialog({
               ),
               className: "grid gap-4",
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(
                   FormField,
                   {
                     control: form.control,
                     name: "password",
-                    render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                      /* @__PURE__ */ jsx(
                         FormLabel,
                         {
                           className: classNames == null ? void 0 : classNames.label,
                           children: localization.PASSWORD
                         }
                       ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                         PasswordInput,
                         {
                           className: classNames == null ? void 0 : classNames.input,
@@ -9082,7 +9084,7 @@ function TwoFactorPasswordDialog({
                           ...field
                         }
                       ) }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      /* @__PURE__ */ jsx(
                         FormMessage,
                         {
                           className: classNames == null ? void 0 : classNames.error
@@ -9091,12 +9093,12 @@ function TwoFactorPasswordDialog({
                     ] })
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                /* @__PURE__ */ jsxs(
                   DialogFooter,
                   {
                     className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.footer,
                     children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      /* @__PURE__ */ jsx(
                         Button,
                         {
                           type: "button",
@@ -9109,7 +9111,7 @@ function TwoFactorPasswordDialog({
                           children: localization.CANCEL
                         }
                       ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      /* @__PURE__ */ jsxs(
                         Button,
                         {
                           type: "submit",
@@ -9119,7 +9121,7 @@ function TwoFactorPasswordDialog({
                             classNames == null ? void 0 : classNames.primaryButton
                           ),
                           children: [
-                            isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                            isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                             isTwoFactorEnabled ? localization.DISABLE_TWO_FACTOR : localization.ENABLE_TWO_FACTOR
                           ]
                         }
@@ -9133,7 +9135,7 @@ function TwoFactorPasswordDialog({
         ]
       }
     ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       BackupCodesDialog,
       {
         classNames,
@@ -9161,13 +9163,13 @@ function TwoFactorCard({
   const {
     localization: contextLocalization,
     hooks: { useSession }
-  } = reactExports.useContext(AuthUIContext);
-  const [showPasswordDialog, setShowPasswordDialog] = reactExports.useState(false);
+  } = useContext(AuthUIContext);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   localization = { ...contextLocalization, ...localization };
   const { data: sessionData, isPending } = useSession();
   const isTwoFactorEnabled = (_a = sessionData == null ? void 0 : sessionData.user) == null ? void 0 : _a.twoFactorEnabled;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs("div", { children: [
+    /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -9180,7 +9182,7 @@ function TwoFactorCard({
         action: () => setShowPasswordDialog(true)
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       TwoFactorPasswordDialog,
       {
         classNames,
@@ -9206,7 +9208,7 @@ function SecuritySettingsCards({
     social,
     genericOAuth,
     twoFactor
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { useListAccounts } = hooks;
   const {
@@ -9217,7 +9219,7 @@ function SecuritySettingsCards({
   const credentialsLinked = accounts == null ? void 0 : accounts.some(
     (acc) => acc.providerId === "credential"
   );
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -9226,7 +9228,7 @@ function SecuritySettingsCards({
         classNames == null ? void 0 : classNames.cards
       ),
       children: [
-        credentials && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        credentials && /* @__PURE__ */ jsx(
           ChangePasswordCard,
           {
             accounts,
@@ -9236,7 +9238,7 @@ function SecuritySettingsCards({
             skipHook: true
           }
         ),
-        (((_a = social == null ? void 0 : social.providers) == null ? void 0 : _a.length) || ((_b = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _b.length)) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (((_a = social == null ? void 0 : social.providers) == null ? void 0 : _a.length) || ((_b = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _b.length)) && /* @__PURE__ */ jsx(
           ProvidersCard,
           {
             accounts,
@@ -9247,28 +9249,28 @@ function SecuritySettingsCards({
             skipHook: true
           }
         ),
-        twoFactor && credentialsLinked && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        twoFactor && credentialsLinked && /* @__PURE__ */ jsx(
           TwoFactorCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
             localization
           }
         ),
-        passkey && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        passkey && /* @__PURE__ */ jsx(
           PasskeysCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
             localization
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           SessionsCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
             localization
           }
         ),
-        deleteUser && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        deleteUser && /* @__PURE__ */ jsx(
           DeleteAccountCard,
           {
             accounts,
@@ -9296,11 +9298,11 @@ function UserTeamCell({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: sessionData, refetch: refetchSession } = useSession();
   const isCurrentTeam = team.id === ((_a = sessionData == null ? void 0 : sessionData.session) == null ? void 0 : _a.activeTeamId);
-  const [isUpdating, setIsUpdating] = reactExports.useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const handleSetActiveTeam = async () => {
     try {
       setIsUpdating(true);
@@ -9327,7 +9329,7 @@ function UserTeamCell({
       setIsUpdating(false);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -9336,17 +9338,17 @@ function UserTeamCell({
         classNames == null ? void 0 : classNames.cell
       ),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Users,
           {
             className: cn("size-5 flex-shrink-0", classNames == null ? void 0 : classNames.icon)
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col truncate", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
+        /* @__PURE__ */ jsxs("div", { className: "flex flex-col truncate", children: [
+          /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
+          /* @__PURE__ */ jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(
           Button,
           {
             className: cn(
@@ -9359,7 +9361,7 @@ function UserTeamCell({
             variant: "outline",
             onClick: handleSetActiveTeam,
             children: [
-              isUpdating && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+              isUpdating && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
               isCurrentTeam ? localization.TEAM_ACTIVE : localization.TEAM_SET_ACTIVE
             ]
           }
@@ -9376,10 +9378,10 @@ function UserTeamsCard({
   const {
     hooks: { useListUserTeams },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { data: teams, isPending, refetch } = useListUserTeams();
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     SettingsCard,
     {
       className,
@@ -9387,7 +9389,7 @@ function UserTeamsCard({
       description: localization.USER_TEAMS_DESCRIPTION,
       isPending,
       title: localization.TEAMS,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: isPending ? /* @__PURE__ */ jsx(
         SettingsCellSkeleton,
         {
           classNames
@@ -9395,7 +9397,7 @@ function UserTeamsCard({
         "skeleton"
       ) : teams && teams.length > 0 ? teams.sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      ).map((team) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ).map((team) => /* @__PURE__ */ jsx(
         UserTeamCell,
         {
           classNames,
@@ -9404,7 +9406,7 @@ function UserTeamsCard({
           team
         },
         team.id
-      )) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: localization.NO_TEAMS_FOUND }) })
+      )) : /* @__PURE__ */ jsx("p", { className: "text-muted-foreground text-sm", children: localization.NO_TEAMS_FOUND }) })
     }
   );
 }
@@ -9426,13 +9428,13 @@ function AccountView({
     organization,
     account: accountOptions,
     Link
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   if (!accountOptions) {
     return null;
   }
   const { enabled: teamsEnabled } = teamOptions || {};
   useAuthenticate();
-  const localization = reactExports.useMemo(
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -9460,7 +9462,7 @@ function AccountView({
       label: localization.ORGANIZATIONS
     });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -9469,19 +9471,19 @@ function AccountView({
         classNames == null ? void 0 : classNames.base
       ),
       children: [
-        !hideNav && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between gap-2 md:hidden", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Label2, { className: "font-semibold text-base", children: (_a = navItems.find((i) => i.view === view)) == null ? void 0 : _a.label }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(Drawer, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(DrawerTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "outline", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Menu, {}) }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(DrawerContent, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(DrawerHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(DrawerTitle, { className: "hidden", children: localization.SETTINGS }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col px-4 pb-4", children: navItems.map((item) => {
+        !hideNav && /* @__PURE__ */ jsxs("div", { className: "flex justify-between gap-2 md:hidden", children: [
+          /* @__PURE__ */ jsx(Label2, { className: "font-semibold text-base", children: (_a = navItems.find((i) => i.view === view)) == null ? void 0 : _a.label }),
+          /* @__PURE__ */ jsxs(Drawer, { children: [
+            /* @__PURE__ */ jsx(DrawerTrigger, { asChild: true, children: /* @__PURE__ */ jsx(Button, { variant: "outline", children: /* @__PURE__ */ jsx(Menu, {}) }) }),
+            /* @__PURE__ */ jsxs(DrawerContent, { children: [
+              /* @__PURE__ */ jsx(DrawerHeader, { children: /* @__PURE__ */ jsx(DrawerTitle, { className: "hidden", children: localization.SETTINGS }) }),
+              /* @__PURE__ */ jsx("div", { className: "flex flex-col px-4 pb-4", children: navItems.map((item) => {
                 var _a2;
-                return /* @__PURE__ */ jsxRuntimeExports.jsx(
+                return /* @__PURE__ */ jsx(
                   Link,
                   {
                     href: `${accountOptions == null ? void 0 : accountOptions.basePath}/${accountOptions == null ? void 0 : accountOptions.viewPaths[item.view]}`,
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    children: /* @__PURE__ */ jsx(
                       Button,
                       {
                         size: "lg",
@@ -9501,7 +9503,7 @@ function AccountView({
             ] })
           ] })
         ] }),
-        !hideNav && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:block", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        !hideNav && /* @__PURE__ */ jsx("div", { className: "hidden md:block", children: /* @__PURE__ */ jsx(
           "div",
           {
             className: cn(
@@ -9510,11 +9512,11 @@ function AccountView({
             ),
             children: navItems.map((item) => {
               var _a2, _b2;
-              return /* @__PURE__ */ jsxRuntimeExports.jsx(
+              return /* @__PURE__ */ jsx(
                 Link,
                 {
                   href: `${accountOptions == null ? void 0 : accountOptions.basePath}/${accountOptions == null ? void 0 : accountOptions.viewPaths[item.view]}`,
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  children: /* @__PURE__ */ jsx(
                     Button,
                     {
                       size: "lg",
@@ -9534,43 +9536,43 @@ function AccountView({
             })
           }
         ) }),
-        view === "SETTINGS" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        view === "SETTINGS" && /* @__PURE__ */ jsx(
           AccountSettingsCards,
           {
             classNames,
             localization
           }
         ),
-        view === "SECURITY" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        view === "SECURITY" && /* @__PURE__ */ jsx(
           SecuritySettingsCards,
           {
             classNames,
             localization
           }
         ),
-        view === "TEAMS" && teamsEnabled && showTeams && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        view === "TEAMS" && teamsEnabled && showTeams && /* @__PURE__ */ jsx(
           UserTeamsCard,
           {
             classNames,
             localization
           }
         ),
-        view === "API_KEYS" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        view === "API_KEYS" && /* @__PURE__ */ jsx(
           ApiKeysCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
             localization
           }
         ),
-        view === "ORGANIZATIONS" && organization && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid w-full gap-4 md:gap-6", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        view === "ORGANIZATIONS" && organization && /* @__PURE__ */ jsxs("div", { className: "grid w-full gap-4 md:gap-6", children: [
+          /* @__PURE__ */ jsx(
             OrganizationsCard,
             {
               classNames: classNames == null ? void 0 : classNames.card,
               localization
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             UserInvitationsCard,
             {
               classNames: classNames == null ? void 0 : classNames.card,
@@ -9585,7 +9587,7 @@ function AccountView({
 function AccountSettingsPageInternal() {
   const { pageProps } = usePluginOverrides("account");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.accountSettings) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AccountView,
     {
       path: accountViewPaths.SETTINGS,
@@ -9601,7 +9603,7 @@ const accountSettingsPage_internalJCXCAIIM = /* @__PURE__ */ Object.freeze({
 function AccountSecurityPageInternal() {
   const { pageProps } = usePluginOverrides("account");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.accountSecurity) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AccountView,
     {
       path: accountViewPaths.SECURITY,
@@ -9617,7 +9619,7 @@ const accountSecurityPage_internalOLX2SDWX = /* @__PURE__ */ Object.freeze({
 function AccountApiKeysPageInternal() {
   const { pageProps } = usePluginOverrides("account");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.accountApiKeys) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AccountView,
     {
       path: accountViewPaths.API_KEYS,
@@ -9633,7 +9635,7 @@ const accountApiKeysPage_internalYQO3GVRR = /* @__PURE__ */ Object.freeze({
 function AccountOrganizationsPageInternal() {
   const { pageProps } = usePluginOverrides("account");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.accountOrganizations) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AccountView,
     {
       path: accountViewPaths.ORGANIZATIONS,
@@ -9649,7 +9651,7 @@ const accountOrganizationsPage_internalFMIBVMJQ = /* @__PURE__ */ Object.freeze(
 function AccountTeamsPageInternal() {
   const { pageProps } = usePluginOverrides("account");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.accountTeams) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AccountView,
     {
       path: accountViewPaths.TEAMS,
@@ -9668,7 +9670,7 @@ function Separator({
   decorative = true,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Root$1,
     {
       "data-slot": "separator",
@@ -9685,15 +9687,15 @@ function Separator({
 function useOnSuccessTransition({
   redirectTo: redirectToProp
 }) {
-  const { redirectTo: contextRedirectTo } = reactExports.useContext(AuthUIContext);
-  const [isPending, setIsPending] = reactExports.useState(false);
+  const { redirectTo: contextRedirectTo } = useContext(AuthUIContext);
+  const [isPending, setIsPending] = useState(false);
   const {
     navigate,
     hooks: { useSession },
     onSessionChange
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { refetch: refetchSession } = useSession();
-  const onSuccess = reactExports.useCallback(async () => {
+  const onSuccess = useCallback(async () => {
     setIsPending(true);
     await (refetchSession == null ? void 0 : refetchSession());
     if (onSessionChange) await onSessionChange();
@@ -9713,11 +9715,11 @@ function AuthCallback({ redirectTo }) {
   const {
     hooks: { useIsRestoring },
     persistClient
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const isRestoring = useIsRestoring == null ? void 0 : useIsRestoring();
-  const isRedirecting = reactExports.useRef(false);
+  const isRedirecting = useRef(false);
   const { onSuccess } = useOnSuccessTransition({ redirectTo });
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (isRedirecting.current) return;
     if (!persistClient) {
       isRedirecting.current = true;
@@ -9728,20 +9730,20 @@ function AuthCallback({ redirectTo }) {
     isRedirecting.current = true;
     onSuccess();
   }, [isRestoring, persistClient, onSuccess]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" });
+  return /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" });
 }
 function SignOut({ redirectTo }) {
-  const signingOut = reactExports.useRef(false);
-  const { authClient, basePath, viewPaths } = reactExports.useContext(AuthUIContext);
+  const signingOut = useRef(false);
+  const { authClient, basePath, viewPaths } = useContext(AuthUIContext);
   const { onSuccess } = useOnSuccessTransition({
     redirectTo: redirectTo || `${basePath}/${viewPaths.SIGN_IN}`
   });
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (signingOut.current) return;
     signingOut.current = true;
     authClient.signOut().finally(onSuccess);
   }, [authClient, onSuccess]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" });
+  return /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" });
 }
 function AcceptInvitationCard({
   className,
@@ -9753,14 +9755,14 @@ function AcceptInvitationCard({
     redirectTo,
     replace,
     toast: toast2
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const { data: sessionData } = useAuthenticate();
-  const [invitationId, setInvitationId] = reactExports.useState(null);
-  reactExports.useEffect(() => {
+  const [invitationId, setInvitationId] = useState(null);
+  useEffect(() => {
     const invitationIdParam = getSearchParam("invitationId");
     if (!invitationIdParam) {
       toast2({
@@ -9773,7 +9775,7 @@ function AcceptInvitationCard({
     setInvitationId(invitationIdParam);
   }, [localization.INVITATION_NOT_FOUND, toast2, replace, redirectTo]);
   if (!sessionData || !invitationId) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       AcceptInvitationSkeleton,
       {
         className,
@@ -9781,7 +9783,7 @@ function AcceptInvitationCard({
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     AcceptInvitationContent,
     {
       className,
@@ -9807,24 +9809,24 @@ function AcceptInvitationContent({
     replace,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
-  const [isRejecting, setIsRejecting] = reactExports.useState(false);
-  const [isAccepting, setIsAccepting] = reactExports.useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isAccepting, setIsAccepting] = useState(false);
   const isProcessing = isRejecting || isAccepting;
   const { data: invitation, isPending } = useInvitation({
     query: {
       id: invitationId
     }
   });
-  const getRedirectTo = reactExports.useCallback(
+  const getRedirectTo = useCallback(
     () => getSearchParam("redirectTo") || redirectTo,
     [redirectTo]
   );
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (isPending || !invitationId) return;
     if (!invitation) {
       toast2({
@@ -9906,15 +9908,15 @@ function AcceptInvitationContent({
   const roles = [...builtInRoles, ...(organization == null ? void 0 : organization.customRoles) || []];
   const roleLabel = ((_a = roles.find((r) => r.role === (invitation == null ? void 0 : invitation.role))) == null ? void 0 : _a.label) || (invitation == null ? void 0 : invitation.role);
   if (!invitation)
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       AcceptInvitationSkeleton,
       {
         className,
         classNames
       }
     );
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: cn("w-full max-w-sm", className, classNames == null ? void 0 : classNames.base), children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(Card, { className: cn("w-full max-w-sm", className, classNames == null ? void 0 : classNames.base), children: [
+    /* @__PURE__ */ jsxs(
       CardHeader,
       {
         className: cn(
@@ -9922,14 +9924,14 @@ function AcceptInvitationContent({
           classNames == null ? void 0 : classNames.header
         ),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             CardTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.ACCEPT_INVITATION
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             CardDescription,
             {
               className: cn(
@@ -9942,7 +9944,7 @@ function AcceptInvitationContent({
         ]
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsxs(
       CardContent,
       {
         className: cn(
@@ -9950,8 +9952,8 @@ function AcceptInvitationContent({
           classNames == null ? void 0 : classNames.content
         ),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: cn("flex-row items-center p-4"), children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(Card, { className: cn("flex-row items-center p-4"), children: [
+            /* @__PURE__ */ jsx(
               OrganizationCellView,
               {
                 organization: {
@@ -9964,10 +9966,10 @@ function AcceptInvitationContent({
                 localization
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "ml-auto text-muted-foreground text-sm", children: roleLabel })
+            /* @__PURE__ */ jsx("p", { className: "ml-auto text-muted-foreground text-sm", children: roleLabel })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsxs(
               Button,
               {
                 variant: "outline",
@@ -9978,12 +9980,12 @@ function AcceptInvitationContent({
                 onClick: rejectInvitation,
                 disabled: isProcessing,
                 children: [
-                  isRejecting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(X, {}),
+                  isRejecting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsx(X, {}),
                   localization.REJECT
                 ]
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               Button,
               {
                 className: cn(
@@ -9993,7 +9995,7 @@ function AcceptInvitationContent({
                 onClick: acceptInvitation,
                 disabled: isProcessing,
                 children: [
-                  isAccepting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Check, {}),
+                  isAccepting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsx(Check, {}),
                   localization.ACCEPT
                 ]
               }
@@ -10009,13 +10011,13 @@ var AcceptInvitationSkeleton = ({
   classNames,
   localization
 }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: cn("w-full max-w-sm", className, classNames == null ? void 0 : classNames.base), children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(Card, { className: cn("w-full max-w-sm", className, classNames == null ? void 0 : classNames.base), children: [
+    /* @__PURE__ */ jsxs(
       CardHeader,
       {
         className: cn("justify-items-center", classNames == null ? void 0 : classNames.header),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             Skeleton,
             {
               className: cn(
@@ -10024,7 +10026,7 @@ var AcceptInvitationSkeleton = ({
               )
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             Skeleton,
             {
               className: cn(
@@ -10036,7 +10038,7 @@ var AcceptInvitationSkeleton = ({
         ]
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsxs(
       CardContent,
       {
         className: cn(
@@ -10044,19 +10046,19 @@ var AcceptInvitationSkeleton = ({
           classNames == null ? void 0 : classNames.content
         ),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: cn("flex-row items-center p-4"), children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(Card, { className: cn("flex-row items-center p-4"), children: [
+            /* @__PURE__ */ jsx(
               OrganizationCellView,
               {
                 isPending: true,
                 localization
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "mt-0.5 ml-auto h-4 w-full max-w-14 shrink-2" })
+            /* @__PURE__ */ jsx(Skeleton, { className: "mt-0.5 ml-auto h-4 w-full max-w-14 shrink-2" })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-9 w-full" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-9 w-full" })
+          /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+            /* @__PURE__ */ jsx(Skeleton, { className: "h-9 w-full" }),
+            /* @__PURE__ */ jsx(Skeleton, { className: "h-9 w-full" })
           ] })
         ]
       }
@@ -10083,7 +10085,7 @@ function ForgotPasswordForm({
     toast: toast2,
     viewPaths,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const formSchema = object({
     email: string().email({
@@ -10099,7 +10101,7 @@ function ForgotPasswordForm({
     }
   });
   isSubmitting = isSubmitting || form.formState.isSubmitting;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting);
   }, [form.formState.isSubmitting, setIsSubmitting]);
   async function forgotPassword({ email }) {
@@ -10132,7 +10134,7 @@ function ForgotPasswordForm({
       resetCaptcha();
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
@@ -10140,14 +10142,14 @@ function ForgotPasswordForm({
       noValidate: isHydrated,
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "email",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Input,
                 {
                   className: classNames == null ? void 0 : classNames.input,
@@ -10157,11 +10159,11 @@ function ForgotPasswordForm({
                   ...field
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Captcha,
           {
             ref: captchaRef,
@@ -10169,7 +10171,7 @@ function ForgotPasswordForm({
             action: "/forget-password"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Button,
           {
             type: "submit",
@@ -10179,7 +10181,7 @@ function ForgotPasswordForm({
               classNames == null ? void 0 : classNames.button,
               classNames == null ? void 0 : classNames.primaryButton
             ),
-            children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : localization.FORGOT_PASSWORD_ACTION
+            children: isSubmitting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : localization.FORGOT_PASSWORD_ACTION
           }
         )
       ]
@@ -10209,13 +10211,13 @@ function MagicLinkForm({
     viewPaths,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
-  const getRedirectTo = reactExports.useCallback(
+  const getRedirectTo = useCallback(
     () => redirectToProp || getSearchParam("redirectTo") || contextRedirectTo,
     [redirectToProp, contextRedirectTo]
   );
-  const getCallbackURL = reactExports.useCallback(
+  const getCallbackURL = useCallback(
     () => `${baseURL}${callbackURLProp || (persistClient ? `${basePath}/${viewPaths.CALLBACK}?redirectTo=${encodeURIComponent(getRedirectTo())}` : getRedirectTo())}`,
     [
       callbackURLProp,
@@ -10238,7 +10240,7 @@ function MagicLinkForm({
     }
   });
   isSubmitting = isSubmitting || form.formState.isSubmitting;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting);
   }, [form.formState.isSubmitting, setIsSubmitting]);
   async function sendMagicLink({ email }) {
@@ -10269,7 +10271,7 @@ function MagicLinkForm({
       resetCaptcha();
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
@@ -10277,14 +10279,14 @@ function MagicLinkForm({
       noValidate: isHydrated,
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "email",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Input,
                 {
                   className: classNames == null ? void 0 : classNames.input,
@@ -10294,11 +10296,11 @@ function MagicLinkForm({
                   ...field
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Captcha,
           {
             ref: captchaRef,
@@ -10306,7 +10308,7 @@ function MagicLinkForm({
             action: "/sign-in/magic-link"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Button,
           {
             type: "submit",
@@ -10316,7 +10318,7 @@ function MagicLinkForm({
               classNames == null ? void 0 : classNames.button,
               classNames == null ? void 0 : classNames.primaryButton
             ),
-            children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : localization.MAGIC_LINK_ACTION
+            children: isSubmitting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : localization.MAGIC_LINK_ACTION
           }
         )
       ]
@@ -10336,7 +10338,7 @@ function RecoverAccountForm({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { onSuccess, isPending: transitionPending } = useOnSuccessTransition({
     redirectTo
@@ -10351,7 +10353,7 @@ function RecoverAccountForm({
     }
   });
   isSubmitting = isSubmitting || form.formState.isSubmitting || transitionPending;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting || transitionPending);
   }, [form.formState.isSubmitting, transitionPending, setIsSubmitting]);
   async function verifyBackupCode({ code }) {
@@ -10373,21 +10375,21 @@ function RecoverAccountForm({
       form.reset();
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
       onSubmit: form.handleSubmit(verifyBackupCode),
       className: cn("grid gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "code",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.BACKUP_CODE }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.BACKUP_CODE }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Input,
                 {
                   placeholder: localization.BACKUP_CODE_PLACEHOLDER,
@@ -10397,11 +10399,11 @@ function RecoverAccountForm({
                   ...field
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Button,
           {
             type: "submit",
@@ -10410,7 +10412,7 @@ function RecoverAccountForm({
               classNames == null ? void 0 : classNames.button,
               classNames == null ? void 0 : classNames.primaryButton
             ),
-            children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : localization.RECOVER_ACCOUNT_ACTION
+            children: isSubmitting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : localization.RECOVER_ACCOUNT_ACTION
           }
         )
       ]
@@ -10423,7 +10425,7 @@ function ResetPasswordForm({
   localization,
   passwordValidation
 }) {
-  const tokenChecked = reactExports.useRef(false);
+  const tokenChecked = useRef(false);
   const {
     authClient,
     basePath,
@@ -10433,7 +10435,7 @@ function ResetPasswordForm({
     navigate,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const confirmPasswordEnabled = credentials == null ? void 0 : credentials.confirmPassword;
   const contextPasswordValidation = credentials == null ? void 0 : credentials.passwordValidation;
   localization = { ...contextLocalization, ...localization };
@@ -10466,7 +10468,7 @@ function ResetPasswordForm({
     }
   });
   const isSubmitting = form.formState.isSubmitting;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (tokenChecked.current) return;
     tokenChecked.current = true;
     const searchParams = new URLSearchParams(window.location.search);
@@ -10506,21 +10508,21 @@ function ResetPasswordForm({
       form.reset();
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
       onSubmit: form.handleSubmit(resetPassword),
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "newPassword",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.NEW_PASSWORD }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.NEW_PASSWORD }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 PasswordInput,
                 {
                   autoComplete: "new-password",
@@ -10530,18 +10532,18 @@ function ResetPasswordForm({
                   ...field
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        confirmPasswordEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        confirmPasswordEnabled && /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "confirmPassword",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.CONFIRM_PASSWORD }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.CONFIRM_PASSWORD }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 PasswordInput,
                 {
                   autoComplete: "new-password",
@@ -10551,11 +10553,11 @@ function ResetPasswordForm({
                   ...field
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Button,
           {
             type: "submit",
@@ -10565,7 +10567,7 @@ function ResetPasswordForm({
               classNames == null ? void 0 : classNames.button,
               classNames == null ? void 0 : classNames.primaryButton
             ),
-            children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : localization.RESET_PASSWORD_ACTION
+            children: isSubmitting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : localization.RESET_PASSWORD_ACTION
           }
         )
       ]
@@ -10597,7 +10599,7 @@ function SignInForm({
     Link,
     localizeErrors,
     emailVerification
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const rememberMeEnabled = credentials == null ? void 0 : credentials.rememberMe;
   const usernameEnabled = credentials == null ? void 0 : credentials.username;
   const contextPasswordValidation = credentials == null ? void 0 : credentials.passwordValidation;
@@ -10624,7 +10626,7 @@ function SignInForm({
     }
   });
   isSubmitting = isSubmitting || form.formState.isSubmitting || transitionPending;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting || transitionPending);
   }, [form.formState.isSubmitting, transitionPending, setIsSubmitting]);
   async function signIn({
@@ -10685,7 +10687,7 @@ function SignInForm({
       }
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
@@ -10693,14 +10695,14 @@ function SignInForm({
       noValidate: isHydrated,
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "email",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: usernameEnabled ? localization.USERNAME : localization.EMAIL }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: usernameEnabled ? localization.USERNAME : localization.EMAIL }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Input,
                 {
                   autoComplete: usernameEnabled ? "username" : "email",
@@ -10711,19 +10713,19 @@ function SignInForm({
                   ...field
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "password",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.PASSWORD }),
-                (credentials == null ? void 0 : credentials.forgotPassword) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
+                /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.PASSWORD }),
+                (credentials == null ? void 0 : credentials.forgotPassword) && /* @__PURE__ */ jsx(
                   Link,
                   {
                     className: cn(
@@ -10735,7 +10737,7 @@ function SignInForm({
                   }
                 )
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 PasswordInput,
                 {
                   autoComplete: "current-password",
@@ -10745,17 +10747,17 @@ function SignInForm({
                   ...field
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        rememberMeEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        rememberMeEnabled && /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "rememberMe",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { className: "flex", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { className: "flex", children: [
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Checkbox,
                 {
                   checked: field.value,
@@ -10763,11 +10765,11 @@ function SignInForm({
                   disabled: isSubmitting
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { children: localization.REMEMBER_ME })
+              /* @__PURE__ */ jsx(FormLabel, { children: localization.REMEMBER_ME })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Captcha,
           {
             ref: captchaRef,
@@ -10775,7 +10777,7 @@ function SignInForm({
             action: "/sign-in/email"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Button,
           {
             type: "submit",
@@ -10785,7 +10787,7 @@ function SignInForm({
               classNames == null ? void 0 : classNames.button,
               classNames == null ? void 0 : classNames.primaryButton
             ),
-            children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : localization.SIGN_IN_ACTION
+            children: isSubmitting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : localization.SIGN_IN_ACTION
           }
         )
       ]
@@ -10824,7 +10826,7 @@ function SignUpForm({
     avatar,
     localizeErrors,
     emailVerification
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const confirmPasswordEnabled = credentials == null ? void 0 : credentials.confirmPassword;
   const usernameEnabled = credentials == null ? void 0 : credentials.username;
   const usernameRequired = (credentials == null ? void 0 : credentials.usernameRequired) ?? true;
@@ -10832,14 +10834,14 @@ function SignUpForm({
   const signUpFields = signUpOptions == null ? void 0 : signUpOptions.fields;
   localization = { ...contextLocalization, ...localization };
   passwordValidation = { ...contextPasswordValidation, ...passwordValidation };
-  const fileInputRef = reactExports.useRef(null);
-  const [avatarImage, setAvatarImage] = reactExports.useState(null);
-  const [uploadingAvatar, setUploadingAvatar] = reactExports.useState(false);
-  const getRedirectTo = reactExports.useCallback(
+  const fileInputRef = useRef(null);
+  const [avatarImage, setAvatarImage] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const getRedirectTo = useCallback(
     () => redirectTo || getSearchParam("redirectTo") || contextRedirectTo,
     [redirectTo, contextRedirectTo]
   );
-  const getCallbackURL = reactExports.useCallback(
+  const getCallbackURL = useCallback(
     () => `${baseURL}${callbackURL || (persistClient ? `${basePath}/${viewPaths.CALLBACK}?redirectTo=${encodeURIComponent(getRedirectTo())}` : getRedirectTo())}`,
     [
       callbackURL,
@@ -10938,7 +10940,7 @@ function SignUpForm({
     defaultValues
   });
   isSubmitting = isSubmitting || form.formState.isSubmitting || transitionPending;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting || transitionPending);
   }, [form.formState.isSubmitting, transitionPending, setIsSubmitting]);
   const handleAvatarChange = async (file) => {
@@ -11060,7 +11062,7 @@ function SignUpForm({
       resetCaptcha();
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
@@ -11068,8 +11070,8 @@ function SignUpForm({
       noValidate: isHydrated,
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        (signUpFields == null ? void 0 : signUpFields.includes("image")) && avatar && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (signUpFields == null ? void 0 : signUpFields.includes("image")) && avatar && /* @__PURE__ */ jsxs(Fragment, { children: [
+          /* @__PURE__ */ jsx(
             "input",
             {
               ref: fileInputRef,
@@ -11085,23 +11087,23 @@ function SignUpForm({
               }
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "image",
-              render: () => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { children: localization.AVATAR }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-4", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: () => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(FormLabel, { children: localization.AVATAR }),
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4", children: [
+                  /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+                    /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
                       Button,
                       {
                         className: "size-fit rounded-full",
                         size: "icon",
                         variant: "ghost",
                         type: "button",
-                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        children: /* @__PURE__ */ jsx(
                           UserAvatar,
                           {
                             isPending: uploadingAvatar,
@@ -11120,31 +11122,31 @@ function SignUpForm({
                         )
                       }
                     ) }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    /* @__PURE__ */ jsxs(
                       DropdownMenuContent,
                       {
                         align: "start",
                         onCloseAutoFocus: (e) => e.preventDefault(),
                         children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                          /* @__PURE__ */ jsxs(
                             DropdownMenuItem,
                             {
                               onClick: openFileDialog,
                               disabled: uploadingAvatar,
                               children: [
-                                /* @__PURE__ */ jsxRuntimeExports.jsx(CloudUpload, {}),
+                                /* @__PURE__ */ jsx(CloudUpload, {}),
                                 localization.UPLOAD_AVATAR
                               ]
                             }
                           ),
-                          avatarImage && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                          avatarImage && /* @__PURE__ */ jsxs(
                             DropdownMenuItem,
                             {
                               onClick: handleDeleteAvatar,
                               disabled: uploadingAvatar,
                               variant: "destructive",
                               children: [
-                                /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, {}),
+                                /* @__PURE__ */ jsx(Trash2, {}),
                                 localization.DELETE_AVATAR
                               ]
                             }
@@ -11153,7 +11155,7 @@ function SignUpForm({
                       }
                     )
                   ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     Button,
                     {
                       type: "button",
@@ -11161,28 +11163,28 @@ function SignUpForm({
                       onClick: openFileDialog,
                       disabled: uploadingAvatar,
                       children: [
-                        uploadingAvatar && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                        uploadingAvatar && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                         localization.UPLOAD
                       ]
                     }
                   )
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                /* @__PURE__ */ jsx(FormMessage, {})
               ] })
             }
           )
         ] }),
-        (signUpFields == null ? void 0 : signUpFields.includes("name")) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (signUpFields == null ? void 0 : signUpFields.includes("name")) && /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "name",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: [
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsxs(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: [
                 localization.NAME,
-                !nameRequired && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ml-1 text-muted-foreground", children: localization.OPTIONAL_BRACKETS })
+                !nameRequired && /* @__PURE__ */ jsx("span", { className: "ml-1 text-muted-foreground", children: localization.OPTIONAL_BRACKETS })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Input,
                 {
                   autoComplete: "name",
@@ -11193,21 +11195,21 @@ function SignUpForm({
                   value: field.value
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        usernameEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        usernameEnabled && /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "username",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: [
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsxs(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: [
                 localization.USERNAME,
-                !usernameRequired && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "ml-1 text-muted-foreground", children: localization.OPTIONAL_BRACKETS })
+                !usernameRequired && /* @__PURE__ */ jsx("span", { className: "ml-1 text-muted-foreground", children: localization.OPTIONAL_BRACKETS })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Input,
                 {
                   autoComplete: "username",
@@ -11218,18 +11220,18 @@ function SignUpForm({
                   value: field.value
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "email",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Input,
                 {
                   autoComplete: "email",
@@ -11241,18 +11243,18 @@ function SignUpForm({
                   value: field.value
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "password",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.PASSWORD }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.PASSWORD }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 PasswordInput,
                 {
                   autoComplete: "new-password",
@@ -11264,18 +11266,18 @@ function SignUpForm({
                   value: field.value
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        confirmPasswordEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        confirmPasswordEnabled && /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "confirmPassword",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.CONFIRM_PASSWORD }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.CONFIRM_PASSWORD }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 PasswordInput,
                 {
                   autoComplete: "new-password",
@@ -11287,7 +11289,7 @@ function SignUpForm({
                   value: field.value
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
@@ -11297,13 +11299,13 @@ function SignUpForm({
             console.error(`Additional field ${field} not found`);
             return null;
           }
-          return additionalField.type === "boolean" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          return additionalField.type === "boolean" ? /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: field,
-              render: ({ field: formField }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { className: "flex", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field: formField }) => /* @__PURE__ */ jsxs(FormItem, { className: "flex", children: [
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   Checkbox,
                   {
                     checked: formField.value,
@@ -11311,14 +11313,14 @@ function SignUpForm({
                     disabled: isSubmitting
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(
                   FormLabel,
                   {
                     className: classNames == null ? void 0 : classNames.label,
                     children: additionalField.label
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(
                   FormMessage,
                   {
                     className: classNames == null ? void 0 : classNames.error
@@ -11327,20 +11329,20 @@ function SignUpForm({
               ] })
             },
             field
-          ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+          ) : /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: field,
-              render: ({ field: formField }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field: formField }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(
                   FormLabel,
                   {
                     className: classNames == null ? void 0 : classNames.label,
                     children: additionalField.label
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: additionalField.type === "number" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(FormControl, { children: additionalField.type === "number" ? /* @__PURE__ */ jsx(
                   Input,
                   {
                     className: classNames == null ? void 0 : classNames.input,
@@ -11350,7 +11352,7 @@ function SignUpForm({
                     ...formField,
                     value: formField.value
                   }
-                ) : additionalField.multiline ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                ) : additionalField.multiline ? /* @__PURE__ */ jsx(
                   Textarea,
                   {
                     className: classNames == null ? void 0 : classNames.input,
@@ -11359,7 +11361,7 @@ function SignUpForm({
                     ...formField,
                     value: formField.value
                   }
-                ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+                ) : /* @__PURE__ */ jsx(
                   Input,
                   {
                     className: classNames == null ? void 0 : classNames.input,
@@ -11370,7 +11372,7 @@ function SignUpForm({
                     value: formField.value
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(
                   FormMessage,
                   {
                     className: classNames == null ? void 0 : classNames.error
@@ -11381,7 +11383,7 @@ function SignUpForm({
             field
           );
         }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Captcha,
           {
             ref: captchaRef,
@@ -11389,7 +11391,7 @@ function SignUpForm({
             action: "/sign-up/email"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Button,
           {
             type: "submit",
@@ -11399,7 +11401,7 @@ function SignUpForm({
               classNames == null ? void 0 : classNames.button,
               classNames == null ? void 0 : classNames.primaryButton
             ),
-            children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : localization.SIGN_UP_ACTION
+            children: isSubmitting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : localization.SIGN_UP_ACTION
           }
         )
       ]
@@ -11411,7 +11413,7 @@ function InputOTP({
   containerClassName,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Lt,
     {
       "data-slot": "input-otp",
@@ -11425,7 +11427,7 @@ function InputOTP({
   );
 }
 function InputOTPGroup({ className, ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       "data-slot": "input-otp-group",
@@ -11439,9 +11441,9 @@ function InputOTPSlot({
   className,
   ...props
 }) {
-  const inputOTPContext = reactExports.useContext(jt);
+  const inputOTPContext = React.useContext(jt);
   const { char, hasFakeCaret, isActive } = (inputOTPContext == null ? void 0 : inputOTPContext.slots[index]) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       "data-slot": "input-otp-slot",
@@ -11453,56 +11455,56 @@ function InputOTPSlot({
       ...props,
       children: [
         char,
-        hasFakeCaret && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "pointer-events-none absolute inset-0 flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "animate-caret-blink bg-foreground h-4 w-px duration-1000" }) })
+        hasFakeCaret && /* @__PURE__ */ jsx("div", { className: "pointer-events-none absolute inset-0 flex items-center justify-center", children: /* @__PURE__ */ jsx("div", { className: "animate-caret-blink bg-foreground h-4 w-px duration-1000" }) })
       ]
     }
   );
 }
 function InputOTPSeparator({ ...props }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { "data-slot": "input-otp-separator", role: "separator", ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, {}) });
+  return /* @__PURE__ */ jsx("div", { "data-slot": "input-otp-separator", role: "separator", ...props, children: /* @__PURE__ */ jsx(Minus, {}) });
 }
 function OTPInputGroup({
   otpSeparators = 0
 }) {
   if (otpSeparators === 0) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(InputOTPGroup, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 0 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 1 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 2 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 3 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 4 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 5 })
+    return /* @__PURE__ */ jsxs(InputOTPGroup, { children: [
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 0 }),
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 1 }),
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 2 }),
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 3 }),
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 4 }),
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 5 })
     ] });
   }
   if (otpSeparators === 1) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(InputOTPGroup, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 0 }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 1 }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 2 })
+    return /* @__PURE__ */ jsxs(Fragment, { children: [
+      /* @__PURE__ */ jsxs(InputOTPGroup, { children: [
+        /* @__PURE__ */ jsx(InputOTPSlot, { index: 0 }),
+        /* @__PURE__ */ jsx(InputOTPSlot, { index: 1 }),
+        /* @__PURE__ */ jsx(InputOTPSlot, { index: 2 })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSeparator, {}),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(InputOTPGroup, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 3 }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 4 }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 5 })
+      /* @__PURE__ */ jsx(InputOTPSeparator, {}),
+      /* @__PURE__ */ jsxs(InputOTPGroup, { children: [
+        /* @__PURE__ */ jsx(InputOTPSlot, { index: 3 }),
+        /* @__PURE__ */ jsx(InputOTPSlot, { index: 4 }),
+        /* @__PURE__ */ jsx(InputOTPSlot, { index: 5 })
       ] })
     ] });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(InputOTPGroup, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 0 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 1 })
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsxs(InputOTPGroup, { children: [
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 0 }),
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 1 })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSeparator, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(InputOTPGroup, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 2 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 3 })
+    /* @__PURE__ */ jsx(InputOTPSeparator, {}),
+    /* @__PURE__ */ jsxs(InputOTPGroup, { children: [
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 2 }),
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 3 })
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSeparator, {}),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(InputOTPGroup, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 4 }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(InputOTPSlot, { index: 5 })
+    /* @__PURE__ */ jsx(InputOTPSeparator, {}),
+    /* @__PURE__ */ jsxs(InputOTPGroup, { children: [
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 4 }),
+      /* @__PURE__ */ jsx(InputOTPSlot, { index: 5 })
     ] })
   ] });
 }
@@ -11518,7 +11520,7 @@ function TwoFactorForm({
   var _a;
   const isHydrated = useIsHydrated();
   const totpURI = isHydrated ? getSearchParam("totpURI") : null;
-  const initialSendRef = reactExports.useRef(false);
+  const initialSendRef = useRef(false);
   const {
     authClient,
     basePath,
@@ -11529,18 +11531,18 @@ function TwoFactorForm({
     toast: toast2,
     Link,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { onSuccess, isPending: transitionPending } = useOnSuccessTransition({
     redirectTo
   });
   const { data: sessionData } = useSession();
   const isTwoFactorEnabled = (_a = sessionData == null ? void 0 : sessionData.user) == null ? void 0 : _a.twoFactorEnabled;
-  const [method, setMethod] = reactExports.useState(
+  const [method, setMethod] = useState(
     (twoFactor == null ? void 0 : twoFactor.length) === 1 ? twoFactor[0] : null
   );
-  const [isSendingOtp, setIsSendingOtp] = reactExports.useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = reactExports.useState(0);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const formSchema = object({
     code: string().min(1, {
       message: `${localization.ONE_TIME_PASSWORD} ${localization.IS_REQUIRED}`
@@ -11556,16 +11558,16 @@ function TwoFactorForm({
     }
   });
   isSubmitting = isSubmitting || form.formState.isSubmitting || transitionPending;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting || transitionPending);
   }, [form.formState.isSubmitting, transitionPending, setIsSubmitting]);
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (method === "otp" && cooldownSeconds <= 0 && !initialSendRef.current) {
       initialSendRef.current = true;
       sendOtp();
     }
   }, [method]);
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (cooldownSeconds <= 0) return;
     const timer = setTimeout(() => {
       setCooldownSeconds((prev) => prev - 1);
@@ -11626,16 +11628,16 @@ function TwoFactorForm({
       form.reset();
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
       onSubmit: form.handleSubmit(verifyCode),
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        (twoFactor == null ? void 0 : twoFactor.includes("totp")) && totpURI && method === "totp" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Label2, { className: classNames == null ? void 0 : classNames.label, children: localization.TWO_FACTOR_TOTP_LABEL }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (twoFactor == null ? void 0 : twoFactor.includes("totp")) && totpURI && method === "totp" && /* @__PURE__ */ jsxs("div", { className: "space-y-3", children: [
+          /* @__PURE__ */ jsx(Label2, { className: classNames == null ? void 0 : classNames.label, children: localization.TWO_FACTOR_TOTP_LABEL }),
+          /* @__PURE__ */ jsx(
             QRCode,
             {
               className: cn(
@@ -11646,22 +11648,22 @@ function TwoFactorForm({
             }
           )
         ] }),
-        method !== null && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        method !== null && /* @__PURE__ */ jsxs(Fragment, { children: [
+          /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "code",
-              render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
+                  /* @__PURE__ */ jsx(
                     FormLabel,
                     {
                       className: classNames == null ? void 0 : classNames.label,
                       children: localization.ONE_TIME_PASSWORD
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  /* @__PURE__ */ jsx(
                     Link,
                     {
                       className: cn(
@@ -11673,7 +11675,7 @@ function TwoFactorForm({
                     }
                   )
                 ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   InputOTP,
                   {
                     ...field,
@@ -11689,7 +11691,7 @@ function TwoFactorForm({
                     containerClassName: classNames == null ? void 0 : classNames.otpInputContainer,
                     className: classNames == null ? void 0 : classNames.otpInput,
                     disabled: isSubmitting,
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    children: /* @__PURE__ */ jsx(
                       OTPInputGroup,
                       {
                         otpSeparators
@@ -11697,7 +11699,7 @@ function TwoFactorForm({
                     )
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(
                   FormMessage,
                   {
                     className: classNames == null ? void 0 : classNames.error
@@ -11706,13 +11708,13 @@ function TwoFactorForm({
               ] })
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "trustDevice",
-              render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { className: "flex", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { className: "flex", children: [
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   Checkbox,
                   {
                     checked: field.value,
@@ -11721,13 +11723,13 @@ function TwoFactorForm({
                     className: classNames == null ? void 0 : classNames.checkbox
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.TRUST_DEVICE })
+                /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.TRUST_DEVICE })
               ] })
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4", children: [
-          method !== null && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs("div", { className: "grid gap-4", children: [
+          method !== null && /* @__PURE__ */ jsxs(
             Button,
             {
               type: "submit",
@@ -11737,12 +11739,12 @@ function TwoFactorForm({
                 classNames == null ? void 0 : classNames.primaryButton
               ),
               children: [
-                isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.TWO_FACTOR_ACTION
               ]
             }
           ),
-          method === "otp" && (twoFactor == null ? void 0 : twoFactor.includes("otp")) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          method === "otp" && (twoFactor == null ? void 0 : twoFactor.includes("otp")) && /* @__PURE__ */ jsxs(
             Button,
             {
               type: "button",
@@ -11754,13 +11756,13 @@ function TwoFactorForm({
                 classNames == null ? void 0 : classNames.outlineButton
               ),
               children: [
-                isSendingOtp ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { className: classNames == null ? void 0 : classNames.icon }),
+                isSendingOtp ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsx(Send, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.RESEND_CODE,
                 cooldownSeconds > 0 && ` (${cooldownSeconds})`
               ]
             }
           ),
-          method !== "otp" && (twoFactor == null ? void 0 : twoFactor.includes("otp")) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          method !== "otp" && (twoFactor == null ? void 0 : twoFactor.includes("otp")) && /* @__PURE__ */ jsxs(
             Button,
             {
               type: "button",
@@ -11772,12 +11774,12 @@ function TwoFactorForm({
               onClick: () => setMethod("otp"),
               disabled: isSubmitting,
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(Send, { className: classNames == null ? void 0 : classNames.icon }),
+                /* @__PURE__ */ jsx(Send, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.SEND_VERIFICATION_CODE
               ]
             }
           ),
-          method !== "totp" && (twoFactor == null ? void 0 : twoFactor.includes("totp")) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          method !== "totp" && (twoFactor == null ? void 0 : twoFactor.includes("totp")) && /* @__PURE__ */ jsxs(
             Button,
             {
               type: "button",
@@ -11789,7 +11791,7 @@ function TwoFactorForm({
               onClick: () => setMethod("totp"),
               disabled: isSubmitting,
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(QrCode, { className: classNames == null ? void 0 : classNames.icon }),
+                /* @__PURE__ */ jsx(QrCode, { className: classNames == null ? void 0 : classNames.icon }),
                 localization.CONTINUE_WITH_AUTHENTICATOR
               ]
             }
@@ -11800,11 +11802,11 @@ function TwoFactorForm({
   ) });
 }
 function EmailOTPForm(props) {
-  const [email, setEmail] = reactExports.useState();
+  const [email, setEmail] = useState();
   if (!email) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(EmailForm, { ...props, setEmail });
+    return /* @__PURE__ */ jsx(EmailForm, { ...props, setEmail });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(OTPForm, { ...props, email });
+  return /* @__PURE__ */ jsx(OTPForm, { ...props, email });
 }
 function EmailForm({
   className,
@@ -11821,7 +11823,7 @@ function EmailForm({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const formSchema = object({
     email: string().email({
@@ -11835,7 +11837,7 @@ function EmailForm({
     }
   });
   isSubmitting = isSubmitting || form.formState.isSubmitting;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting);
   }, [form.formState.isSubmitting, setIsSubmitting]);
   async function sendEmailOTP({ email }) {
@@ -11865,7 +11867,7 @@ function EmailForm({
       });
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
@@ -11873,14 +11875,14 @@ function EmailForm({
       noValidate: isHydrated,
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "email",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 Input,
                 {
                   className: classNames == null ? void 0 : classNames.input,
@@ -11890,11 +11892,11 @@ function EmailForm({
                   ...field
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Captcha,
           {
             ref: captchaRef,
@@ -11902,7 +11904,7 @@ function EmailForm({
             action: "/email-otp/send-verification-otp"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Button,
           {
             type: "submit",
@@ -11912,7 +11914,7 @@ function EmailForm({
               classNames == null ? void 0 : classNames.button,
               classNames == null ? void 0 : classNames.primaryButton
             ),
-            children: isSubmitting ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : localization.EMAIL_OTP_SEND_ACTION
+            children: isSubmitting ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : localization.EMAIL_OTP_SEND_ACTION
           }
         )
       ]
@@ -11934,7 +11936,7 @@ function OTPForm({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { onSuccess, isPending: transitionPending } = useOnSuccessTransition({
     redirectTo
@@ -11953,7 +11955,7 @@ function OTPForm({
     }
   });
   isSubmitting = isSubmitting || form.formState.isSubmitting || transitionPending;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting || transitionPending);
   }, [form.formState.isSubmitting, transitionPending, setIsSubmitting]);
   async function verifyCode({ code }) {
@@ -11976,21 +11978,21 @@ function OTPForm({
       form.reset();
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
       onSubmit: form.handleSubmit(verifyCode),
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "code",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL_OTP }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL_OTP }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 InputOTP,
                 {
                   ...field,
@@ -12004,7 +12006,7 @@ function OTPForm({
                   containerClassName: classNames == null ? void 0 : classNames.otpInputContainer,
                   className: classNames == null ? void 0 : classNames.otpInput,
                   disabled: isSubmitting,
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  children: /* @__PURE__ */ jsx(
                     OTPInputGroup,
                     {
                       otpSeparators
@@ -12012,11 +12014,11 @@ function OTPForm({
                   )
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid gap-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsx("div", { className: "grid gap-4", children: /* @__PURE__ */ jsxs(
           Button,
           {
             type: "submit",
@@ -12026,7 +12028,7 @@ function OTPForm({
               classNames == null ? void 0 : classNames.primaryButton
             ),
             children: [
-              isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+              isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
               localization.EMAIL_OTP_VERIFY_ACTION
             ]
           }
@@ -12046,8 +12048,8 @@ function EmailVerificationForm({
   redirectTo,
   setIsSubmitting
 }) {
-  const [resendDisabled, setResendDisabled] = reactExports.useState(true);
-  const [countdown, setCountdown] = reactExports.useState(30);
+  const [resendDisabled, setResendDisabled] = useState(true);
+  const [countdown, setCountdown] = useState(30);
   const {
     authClient,
     localization: contextLocalization,
@@ -12056,7 +12058,7 @@ function EmailVerificationForm({
     navigate,
     basePath,
     viewPaths
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const email = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("email") || "" : "";
   const { onSuccess, isPending: transitionPending } = useOnSuccessTransition({
@@ -12076,10 +12078,10 @@ function EmailVerificationForm({
     }
   });
   const currentIsSubmitting = isSubmitting || form.formState.isSubmitting || transitionPending;
-  reactExports.useEffect(() => {
+  useEffect(() => {
     setIsSubmitting == null ? void 0 : setIsSubmitting(form.formState.isSubmitting || transitionPending);
   }, [form.formState.isSubmitting, transitionPending, setIsSubmitting]);
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1e3);
       return () => clearTimeout(timer);
@@ -12145,26 +12147,26 @@ function EmailVerificationForm({
     }
   }
   if (!email) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: cn("grid w-full gap-6", className), children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-semibold text-destructive text-lg", children: "Invalid Request" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: localization.EMAIL_REQUIRED || "Email address is required" })
+    return /* @__PURE__ */ jsx("div", { className: cn("grid w-full gap-6", className), children: /* @__PURE__ */ jsxs("div", { className: "text-center", children: [
+      /* @__PURE__ */ jsx("h2", { className: "font-semibold text-destructive text-lg", children: "Invalid Request" }),
+      /* @__PURE__ */ jsx("p", { className: "text-muted-foreground text-sm", children: localization.EMAIL_REQUIRED || "Email address is required" })
     ] }) });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
     "form",
     {
       method: "POST",
       onSubmit: form.handleSubmit(verifyCode),
       className: cn("grid w-full gap-6", className, classNames == null ? void 0 : classNames.base),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           FormField,
           {
             control: form.control,
             name: "code",
-            render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL_OTP }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+              /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL_OTP }),
+              /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                 InputOTP,
                 {
                   ...field,
@@ -12178,7 +12180,7 @@ function EmailVerificationForm({
                   containerClassName: classNames == null ? void 0 : classNames.otpInputContainer,
                   className: classNames == null ? void 0 : classNames.otpInput,
                   disabled: currentIsSubmitting,
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  children: /* @__PURE__ */ jsx(
                     OTPInputGroup,
                     {
                       otpSeparators
@@ -12186,12 +12188,12 @@ function EmailVerificationForm({
                   )
                 }
               ) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
+              /* @__PURE__ */ jsx(FormMessage, { className: classNames == null ? void 0 : classNames.error })
             ] })
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs("div", { className: "grid gap-4", children: [
+          /* @__PURE__ */ jsxs(
             Button,
             {
               type: "submit",
@@ -12201,12 +12203,12 @@ function EmailVerificationForm({
                 classNames == null ? void 0 : classNames.primaryButton
               ),
               children: [
-                currentIsSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                currentIsSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.EMAIL_OTP_VERIFY_ACTION
               ]
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -12217,7 +12219,7 @@ function EmailVerificationForm({
               children: resendDisabled ? `${localization.RESEND_VERIFICATION_EMAIL} (${countdown}s)` : localization.RESEND_VERIFICATION_EMAIL
             }
           ),
-          onCancel && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          onCancel && /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -12255,17 +12257,17 @@ function AuthForm({
     twoFactor: twoFactorEnabled,
     viewPaths,
     replace
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const signUpEnabled = !!signUp;
   localization = { ...contextLocalization, ...localization };
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (pathname && !getViewByPath(viewPaths, pathname)) {
       console.error(`Invalid auth view: ${pathname}`);
       replace(`${basePath}/${viewPaths.SIGN_IN}${window.location.search}`);
     }
   }, [pathname, viewPaths, basePath, replace]);
   view = view || getViewByPath(viewPaths, pathname) || "SIGN_IN";
-  reactExports.useEffect(() => {
+  useEffect(() => {
     let isInvalidView = false;
     if (view === "MAGIC_LINK" && (!magicLink || !credentials && !emailOTP)) {
       isInvalidView = true;
@@ -12302,10 +12304,10 @@ function AuthForm({
     magicLink,
     twoFactorEnabled
   ]);
-  if (view === "SIGN_OUT") return /* @__PURE__ */ jsxRuntimeExports.jsx(SignOut, { redirectTo });
-  if (view === "CALLBACK") return /* @__PURE__ */ jsxRuntimeExports.jsx(AuthCallback, { redirectTo });
+  if (view === "SIGN_OUT") return /* @__PURE__ */ jsx(SignOut, { redirectTo });
+  if (view === "CALLBACK") return /* @__PURE__ */ jsx(AuthCallback, { redirectTo });
   if (view === "SIGN_IN") {
-    return credentials ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return credentials ? /* @__PURE__ */ jsx(
       SignInForm,
       {
         className,
@@ -12316,7 +12318,7 @@ function AuthForm({
         setIsSubmitting,
         callbackURL
       }
-    ) : magicLink ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+    ) : magicLink ? /* @__PURE__ */ jsx(
       MagicLinkForm,
       {
         className,
@@ -12327,7 +12329,7 @@ function AuthForm({
         isSubmitting,
         setIsSubmitting
       }
-    ) : emailOTP ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+    ) : emailOTP ? /* @__PURE__ */ jsx(
       EmailOTPForm,
       {
         className,
@@ -12341,7 +12343,7 @@ function AuthForm({
     ) : null;
   }
   if (view === "TWO_FACTOR") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       TwoFactorForm,
       {
         className,
@@ -12355,7 +12357,7 @@ function AuthForm({
     );
   }
   if (view === "RECOVER_ACCOUNT") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       RecoverAccountForm,
       {
         className,
@@ -12368,7 +12370,7 @@ function AuthForm({
     );
   }
   if (view === "MAGIC_LINK") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       MagicLinkForm,
       {
         className,
@@ -12382,7 +12384,7 @@ function AuthForm({
     );
   }
   if (view === "EMAIL_OTP") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       EmailOTPForm,
       {
         className,
@@ -12396,7 +12398,7 @@ function AuthForm({
     );
   }
   if (view === "EMAIL_VERIFICATION") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       EmailVerificationForm,
       {
         className,
@@ -12411,7 +12413,7 @@ function AuthForm({
     );
   }
   if (view === "FORGOT_PASSWORD") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       ForgotPasswordForm,
       {
         className,
@@ -12423,7 +12425,7 @@ function AuthForm({
     );
   }
   if (view === "RESET_PASSWORD") {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       ResetPasswordForm,
       {
         className,
@@ -12433,7 +12435,7 @@ function AuthForm({
     );
   }
   if (view === "SIGN_UP") {
-    return signUpEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return signUpEnabled && /* @__PURE__ */ jsx(
       SignUpForm,
       {
         className,
@@ -12454,8 +12456,8 @@ function EmailOTPButton({
   view
 }) {
   var _a, _b, _c, _d;
-  const { viewPaths, navigate, basePath } = reactExports.useContext(AuthUIContext);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  const { viewPaths, navigate, basePath } = useContext(AuthUIContext);
+  return /* @__PURE__ */ jsxs(
     Button,
     {
       className: cn(
@@ -12470,7 +12472,7 @@ function EmailOTPButton({
         `${basePath}/${view === "EMAIL_OTP" ? viewPaths.SIGN_IN : viewPaths.EMAIL_OTP}${window.location.search}`
       ),
       children: [
-        view === "EMAIL_OTP" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: (_c = classNames == null ? void 0 : classNames.form) == null ? void 0 : _c.icon }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Mail, { className: (_d = classNames == null ? void 0 : classNames.form) == null ? void 0 : _d.icon }),
+        view === "EMAIL_OTP" ? /* @__PURE__ */ jsx(Lock, { className: (_c = classNames == null ? void 0 : classNames.form) == null ? void 0 : _c.icon }) : /* @__PURE__ */ jsx(Mail, { className: (_d = classNames == null ? void 0 : classNames.form) == null ? void 0 : _d.icon }),
         localization.SIGN_IN_WITH,
         " ",
         view === "EMAIL_OTP" ? localization.PASSWORD : localization.EMAIL_OTP
@@ -12485,8 +12487,8 @@ function MagicLinkButton({
   view
 }) {
   var _a, _b, _c, _d;
-  const { viewPaths, navigate, basePath, credentials } = reactExports.useContext(AuthUIContext);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  const { viewPaths, navigate, basePath, credentials } = useContext(AuthUIContext);
+  return /* @__PURE__ */ jsxs(
     Button,
     {
       className: cn(
@@ -12501,7 +12503,7 @@ function MagicLinkButton({
         `${basePath}/${view === "MAGIC_LINK" || !credentials ? viewPaths.SIGN_IN : viewPaths.MAGIC_LINK}${window.location.search}`
       ),
       children: [
-        view === "MAGIC_LINK" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: (_c = classNames == null ? void 0 : classNames.form) == null ? void 0 : _c.icon }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Mail, { className: (_d = classNames == null ? void 0 : classNames.form) == null ? void 0 : _d.icon }),
+        view === "MAGIC_LINK" ? /* @__PURE__ */ jsx(Lock, { className: (_c = classNames == null ? void 0 : classNames.form) == null ? void 0 : _c.icon }) : /* @__PURE__ */ jsx(Mail, { className: (_d = classNames == null ? void 0 : classNames.form) == null ? void 0 : _d.icon }),
         localization.SIGN_IN_WITH,
         " ",
         view === "MAGIC_LINK" ? localization.PASSWORD : localization.MAGIC_LINK
@@ -12515,14 +12517,14 @@ function OneTap({ localization, redirectTo }) {
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const oneTapFetched = reactExports.useRef(false);
-  localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const oneTapFetched = useRef(false);
+  localization = useMemo(
     () => ({ ...contextLocalization, ...localization }),
     [contextLocalization, localization]
   );
   const { onSuccess } = useOnSuccessTransition({ redirectTo });
-  reactExports.useEffect(() => {
+  useEffect(() => {
     if (oneTapFetched.current) return;
     oneTapFetched.current = true;
     try {
@@ -12558,7 +12560,7 @@ function PasskeyButton({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   const { onSuccess } = useOnSuccessTransition({ redirectTo });
   const signInPassKey = async () => {
@@ -12592,7 +12594,7 @@ function PasskeyButton({
       setIsSubmitting == null ? void 0 : setIsSubmitting(false);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Button,
     {
       className: cn(
@@ -12607,7 +12609,7 @@ function PasskeyButton({
       variant: "secondary",
       onClick: signInPassKey,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FingerprintPattern, {}),
+        /* @__PURE__ */ jsx(FingerprintPattern, {}),
         localization.SIGN_IN_WITH,
         " ",
         localization.PASSKEY
@@ -12639,12 +12641,12 @@ function ProviderButton({
     genericOAuth,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const getRedirectTo = reactExports.useCallback(
+  } = useContext(AuthUIContext);
+  const getRedirectTo = useCallback(
     () => redirectToProp || getSearchParam("redirectTo") || contextRedirectTo,
     [redirectToProp, contextRedirectTo]
   );
-  const getCallbackURL = reactExports.useCallback(
+  const getCallbackURL = useCallback(
     () => `${baseURL}${callbackURLProp || (persistClient ? `${basePath}/${viewPaths.CALLBACK}?redirectTo=${encodeURIComponent(getRedirectTo())}` : getRedirectTo())}`,
     [
       callbackURLProp,
@@ -12699,7 +12701,7 @@ function ProviderButton({
       setIsSubmitting(false);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Button,
     {
       className: cn(
@@ -12713,7 +12715,7 @@ function ProviderButton({
       variant: "outline",
       onClick: doSignInSocial,
       children: [
-        provider.icon && /* @__PURE__ */ jsxRuntimeExports.jsx(provider.icon, { className: (_d = classNames == null ? void 0 : classNames.form) == null ? void 0 : _d.icon }),
+        provider.icon && /* @__PURE__ */ jsx(provider.icon, { className: (_d = classNames == null ? void 0 : classNames.form) == null ? void 0 : _d.icon }),
         socialLayout === "grid" && provider.name,
         socialLayout === "vertical" && `${localization.SIGN_IN_WITH} ${provider.name}`
       ]
@@ -12749,7 +12751,7 @@ function AuthView({
     genericOAuth,
     viewPaths,
     Link
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
   let socialLayout = socialLayoutProp;
   if (socialLayout === "auto") {
@@ -12757,8 +12759,8 @@ function AuthView({
   }
   const path = pathProp ?? (pathname == null ? void 0 : pathname.split("/").pop());
   const view = viewProp || getViewByPath(viewPaths, path) || "SIGN_IN";
-  const [isSubmitting, setIsSubmitting] = reactExports.useState(false);
-  reactExports.useEffect(() => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  useEffect(() => {
     const handlePageHide = () => setIsSubmitting(false);
     window.addEventListener("pagehide", handlePageHide);
     return () => {
@@ -12766,10 +12768,10 @@ function AuthView({
       window.removeEventListener("pagehide", handlePageHide);
     };
   }, []);
-  if (view === "CALLBACK") return /* @__PURE__ */ jsxRuntimeExports.jsx(AuthCallback, { redirectTo });
-  if (view === "SIGN_OUT") return /* @__PURE__ */ jsxRuntimeExports.jsx(SignOut, { redirectTo });
+  if (view === "CALLBACK") return /* @__PURE__ */ jsx(AuthCallback, { redirectTo });
+  if (view === "SIGN_OUT") return /* @__PURE__ */ jsx(SignOut, { redirectTo });
   if (view === "ACCEPT_INVITATION")
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       AcceptInvitationCard,
       {
         className,
@@ -12777,9 +12779,9 @@ function AuthView({
       }
     );
   const description = !credentials && !magicLink && !emailOTP ? localization.DISABLED_CREDENTIALS_DESCRIPTION : localization[`${view}_DESCRIPTION`];
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: cn("w-full max-w-sm", className, classNames == null ? void 0 : classNames.base), children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { className: classNames == null ? void 0 : classNames.header, children: cardHeader ? cardHeader : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Card, { className: cn("w-full max-w-sm", className, classNames == null ? void 0 : classNames.base), children: [
+    /* @__PURE__ */ jsx(CardHeader, { className: classNames == null ? void 0 : classNames.header, children: cardHeader ? cardHeader : /* @__PURE__ */ jsxs(Fragment, { children: [
+      /* @__PURE__ */ jsx(
         CardTitle,
         {
           className: cn(
@@ -12789,7 +12791,7 @@ function AuthView({
           children: localization[view]
         }
       ),
-      description && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      description && /* @__PURE__ */ jsx(
         CardDescription,
         {
           className: cn(
@@ -12800,18 +12802,18 @@ function AuthView({
         }
       )
     ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(CardContent, { className: cn("grid gap-6", classNames == null ? void 0 : classNames.content), children: [
+    /* @__PURE__ */ jsxs(CardContent, { className: cn("grid gap-6", classNames == null ? void 0 : classNames.content), children: [
       oneTap && ["SIGN_IN", "SIGN_UP", "MAGIC_LINK", "EMAIL_OTP"].includes(
         view
-      ) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ) && /* @__PURE__ */ jsx(
         OneTap,
         {
           localization,
           redirectTo
         }
       ),
-      (credentials || magicLink || emailOTP) && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+      (credentials || magicLink || emailOTP) && /* @__PURE__ */ jsxs("div", { className: "grid gap-4", children: [
+        /* @__PURE__ */ jsx(
           AuthForm,
           {
             classNames: classNames == null ? void 0 : classNames.form,
@@ -12830,7 +12832,7 @@ function AuthView({
           "SIGN_IN",
           "MAGIC_LINK",
           "EMAIL_OTP"
-        ].includes(view) || emailOTP && view === "EMAIL_OTP") && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ].includes(view) || emailOTP && view === "EMAIL_OTP") && /* @__PURE__ */ jsx(
           MagicLinkButton,
           {
             classNames,
@@ -12847,7 +12849,7 @@ function AuthView({
           "EMAIL_OTP"
         ].includes(view) || magicLink && ["SIGN_IN", "MAGIC_LINK"].includes(
           view
-        )) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        )) && /* @__PURE__ */ jsx(
           EmailOTPButton,
           {
             classNames,
@@ -12857,8 +12859,8 @@ function AuthView({
           }
         )
       ] }),
-      view !== "RESET_PASSWORD" && view !== "EMAIL_VERIFICATION" && (((_a = social == null ? void 0 : social.providers) == null ? void 0 : _a.length) || ((_b = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _b.length) || view === "SIGN_IN" && passkey) && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-        (credentials || magicLink || emailOTP) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      view !== "RESET_PASSWORD" && view !== "EMAIL_VERIFICATION" && (((_a = social == null ? void 0 : social.providers) == null ? void 0 : _a.length) || ((_b = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _b.length) || view === "SIGN_IN" && passkey) && /* @__PURE__ */ jsxs(Fragment, { children: [
+        (credentials || magicLink || emailOTP) && /* @__PURE__ */ jsxs(
           "div",
           {
             className: cn(
@@ -12866,7 +12868,7 @@ function AuthView({
               classNames == null ? void 0 : classNames.continueWith
             ),
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(
                 Separator,
                 {
                   className: cn(
@@ -12875,8 +12877,8 @@ function AuthView({
                   )
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "flex-shrink-0 text-muted-foreground text-sm", children: localization.OR_CONTINUE_WITH }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx("span", { className: "flex-shrink-0 text-muted-foreground text-sm", children: localization.OR_CONTINUE_WITH }),
+              /* @__PURE__ */ jsx(
                 Separator,
                 {
                   className: cn(
@@ -12888,8 +12890,8 @@ function AuthView({
             ]
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-4", children: [
-          (((_c = social == null ? void 0 : social.providers) == null ? void 0 : _c.length) || ((_d = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _d.length)) && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs("div", { className: "grid gap-4", children: [
+          (((_c = social == null ? void 0 : social.providers) == null ? void 0 : _c.length) || ((_d = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _d.length)) && /* @__PURE__ */ jsxs(
             "div",
             {
               className: cn(
@@ -12904,7 +12906,7 @@ function AuthView({
                     (socialProvider2) => socialProvider2.provider === provider
                   );
                   if (!socialProvider) return null;
-                  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  return /* @__PURE__ */ jsx(
                     ProviderButton,
                     {
                       classNames,
@@ -12920,7 +12922,7 @@ function AuthView({
                   );
                 }),
                 (_f = genericOAuth == null ? void 0 : genericOAuth.providers) == null ? void 0 : _f.map(
-                  (provider) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  (provider) => /* @__PURE__ */ jsx(
                     ProviderButton,
                     {
                       classNames,
@@ -12946,7 +12948,7 @@ function AuthView({
             "RECOVER_ACCOUNT",
             "TWO_FACTOR",
             "FORGOT_PASSWORD"
-          ].includes(view) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          ].includes(view) && /* @__PURE__ */ jsx(
             PasskeyButton,
             {
               classNames,
@@ -12959,8 +12961,8 @@ function AuthView({
         ] })
       ] })
     ] }),
-    cardFooter && /* @__PURE__ */ jsxRuntimeExports.jsx(CardFooter, { className: classNames == null ? void 0 : classNames.footer, children: cardFooter }),
-    credentials && signUp && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    cardFooter && /* @__PURE__ */ jsx(CardFooter, { className: classNames == null ? void 0 : classNames.footer, children: cardFooter }),
+    credentials && signUp && /* @__PURE__ */ jsxs(
       CardFooter,
       {
         className: cn(
@@ -12968,8 +12970,8 @@ function AuthView({
           classNames == null ? void 0 : classNames.footer
         ),
         children: [
-          view === "SIGN_IN" || view === "MAGIC_LINK" || view === "EMAIL_OTP" ? localization.DONT_HAVE_AN_ACCOUNT : view === "SIGN_UP" ? localization.ALREADY_HAVE_AN_ACCOUNT : /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "size-3" }),
-          view === "SIGN_IN" || view === "MAGIC_LINK" || view === "EMAIL_OTP" || view === "SIGN_UP" ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          view === "SIGN_IN" || view === "MAGIC_LINK" || view === "EMAIL_OTP" ? localization.DONT_HAVE_AN_ACCOUNT : view === "SIGN_UP" ? localization.ALREADY_HAVE_AN_ACCOUNT : /* @__PURE__ */ jsx(ArrowLeft, { className: "size-3" }),
+          view === "SIGN_IN" || view === "MAGIC_LINK" || view === "EMAIL_OTP" || view === "SIGN_UP" ? /* @__PURE__ */ jsx(
             Link,
             {
               className: cn(
@@ -12977,7 +12979,7 @@ function AuthView({
                 classNames == null ? void 0 : classNames.footerLink
               ),
               href: `${basePath}/${viewPaths[view === "SIGN_IN" || view === "MAGIC_LINK" || view === "EMAIL_OTP" ? "SIGN_UP" : "SIGN_IN"]}${isHydrated ? window.location.search : ""}`,
-              children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              children: /* @__PURE__ */ jsx(
                 Button,
                 {
                   variant: "link",
@@ -12990,7 +12992,7 @@ function AuthView({
                 }
               )
             }
-          ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+          ) : /* @__PURE__ */ jsx(
             Button,
             {
               variant: "link",
@@ -13011,7 +13013,7 @@ function AuthView({
 function SignInPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.signIn) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.SIGN_IN,
@@ -13027,7 +13029,7 @@ const signInPage_internalHHDVE5SC = /* @__PURE__ */ Object.freeze({
 function SignUpPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.signUp) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.SIGN_UP,
@@ -13043,7 +13045,7 @@ const signUpPage_internalRSSBE43R = /* @__PURE__ */ Object.freeze({
 function ForgotPasswordPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.forgotPassword) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.FORGOT_PASSWORD,
@@ -13059,7 +13061,7 @@ const forgotPasswordPage_internalETDVCAUC = /* @__PURE__ */ Object.freeze({
 function ResetPasswordPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.resetPassword) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.RESET_PASSWORD,
@@ -13075,7 +13077,7 @@ const resetPasswordPage_internalGOVT5BCU = /* @__PURE__ */ Object.freeze({
 function MagicLinkPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.magicLink) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.MAGIC_LINK,
@@ -13091,7 +13093,7 @@ const magicLinkPage_internalCIV4B5FS = /* @__PURE__ */ Object.freeze({
 function EmailOtpPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.emailOtp) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.EMAIL_OTP,
@@ -13107,7 +13109,7 @@ const emailOtpPage_internalFPZRJQUL = /* @__PURE__ */ Object.freeze({
 function TwoFactorPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.twoFactor) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.TWO_FACTOR,
@@ -13123,7 +13125,7 @@ const twoFactorPage_internalSEG5Q42X = /* @__PURE__ */ Object.freeze({
 function RecoverAccountPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.recoverAccount) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.RECOVER_ACCOUNT,
@@ -13139,7 +13141,7 @@ const recoverAccountPage_internalSZ6YMTCT = /* @__PURE__ */ Object.freeze({
 function CallbackPageInternal() {
   var _a;
   const { pageProps } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(AuthCallback, { redirectTo: (_a = pageProps == null ? void 0 : pageProps.callback) == null ? void 0 : _a.redirectTo }) });
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(AuthCallback, { redirectTo: (_a = pageProps == null ? void 0 : pageProps.callback) == null ? void 0 : _a.redirectTo }) });
 }
 const callbackPage_internalI5U7VSTZ = /* @__PURE__ */ Object.freeze({
   __proto__: null,
@@ -13148,7 +13150,7 @@ const callbackPage_internalI5U7VSTZ = /* @__PURE__ */ Object.freeze({
 function SignOutPageInternal() {
   var _a;
   const { pageProps } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(SignOut, { redirectTo: (_a = pageProps == null ? void 0 : pageProps.signOut) == null ? void 0 : _a.redirectTo }) });
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(SignOut, { redirectTo: (_a = pageProps == null ? void 0 : pageProps.signOut) == null ? void 0 : _a.redirectTo }) });
 }
 const signOutPage_internal4E5FNQKY = /* @__PURE__ */ Object.freeze({
   __proto__: null,
@@ -13157,7 +13159,7 @@ const signOutPage_internal4E5FNQKY = /* @__PURE__ */ Object.freeze({
 function AcceptInvitationPageInternal() {
   var _a;
   const { pageProps } = usePluginOverrides("auth");
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AcceptInvitationCard,
     {
       className: (_a = pageProps == null ? void 0 : pageProps.acceptInvitation) == null ? void 0 : _a.className
@@ -13171,7 +13173,7 @@ const acceptInvitationPage_internal5RS4QNQO = /* @__PURE__ */ Object.freeze({
 function EmailVerificationPageInternal() {
   const { pageProps } = usePluginOverrides("auth");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.emailVerification) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     AuthView,
     {
       path: authViewPaths.EMAIL_VERIFICATION,
@@ -13198,8 +13200,8 @@ function CreateTeamDialog({
     localization: contextLocalization,
     localizeErrors,
     toast: toast2
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -13243,16 +13245,16 @@ function CreateTeamDialog({
       });
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogContent, { className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(DialogContent, { className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content, children: [
+    /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+      /* @__PURE__ */ jsx(
         DialogTitle,
         {
           className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
           children: localization.CREATE_TEAM
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         DialogDescription,
         {
           className: cn(
@@ -13263,33 +13265,33 @@ function CreateTeamDialog({
         }
       )
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
       "form",
       {
         method: "POST",
         onSubmit: form.handleSubmit(onSubmit),
         className: "space-y-6",
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "name",
-              render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { children: localization.TEAM_NAME }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(FormLabel, { children: localization.TEAM_NAME }),
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   Input,
                   {
                     placeholder: localization.TEAM_NAME_PLACEHOLDER,
                     ...field
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                /* @__PURE__ */ jsx(FormMessage, {})
               ] })
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+            /* @__PURE__ */ jsx(
               Button,
               {
                 type: "button",
@@ -13302,7 +13304,7 @@ function CreateTeamDialog({
                 children: localization.CANCEL
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               Button,
               {
                 type: "submit",
@@ -13312,7 +13314,7 @@ function CreateTeamDialog({
                 ),
                 disabled: isSubmitting || !organizationId,
                 children: [
-                  isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                  isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                   localization.CREATE_TEAM
                 ]
               }
@@ -13339,8 +13341,8 @@ function DeleteOrganizationDialog({
     navigate,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -13383,20 +13385,20 @@ function DeleteOrganizationDialog({
       });
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: cn("sm:max-w-md", (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization == null ? void 0 : localization.DELETE_ORGANIZATION
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -13407,31 +13409,31 @@ function DeleteOrganizationDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: cn("my-2 flex-row p-4", classNames == null ? void 0 : classNames.cell), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(Card, { className: cn("my-2 flex-row p-4", classNames == null ? void 0 : classNames.cell), children: /* @__PURE__ */ jsx(
           OrganizationCellView,
           {
             organization,
             localization
           }
         ) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
           "form",
           {
             method: "POST",
             onSubmit: form.handleSubmit(deleteOrganization),
             className: "grid gap-6",
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(
                 FormField,
                 {
                   control: form.control,
                   name: "slug",
-                  render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: [
+                  render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                    /* @__PURE__ */ jsxs(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: [
                       localization == null ? void 0 : localization.DELETE_ORGANIZATION_INSTRUCTIONS,
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold", children: organization.slug })
+                      /* @__PURE__ */ jsx("span", { className: "font-bold", children: organization.slug })
                     ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                       Input,
                       {
                         placeholder: organization.slug,
@@ -13440,7 +13442,7 @@ function DeleteOrganizationDialog({
                         ...field
                       }
                     ) }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    /* @__PURE__ */ jsx(
                       FormMessage,
                       {
                         className: classNames == null ? void 0 : classNames.error
@@ -13449,8 +13451,8 @@ function DeleteOrganizationDialog({
                   ] })
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+                /* @__PURE__ */ jsx(
                   Button,
                   {
                     type: "button",
@@ -13463,7 +13465,7 @@ function DeleteOrganizationDialog({
                     children: localization.CANCEL
                   }
                 ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                /* @__PURE__ */ jsxs(
                   Button,
                   {
                     className: cn(
@@ -13474,7 +13476,7 @@ function DeleteOrganizationDialog({
                     variant: "destructive",
                     type: "submit",
                     children: [
-                      isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                      isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                       localization == null ? void 0 : localization.DELETE_ORGANIZATION
                     ]
                   }
@@ -13494,14 +13496,14 @@ function DeleteOrganizationCard({
   slug,
   ...props
 }) {
-  const { localization: contextLocalization } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  const { localization: contextLocalization } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const { data: organization } = useCurrentOrganization({ slug });
   if (!organization)
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -13513,7 +13515,7 @@ function DeleteOrganizationCard({
         variant: "destructive"
       }
     );
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     DeleteOrganizationForm,
     {
       className,
@@ -13533,8 +13535,8 @@ function DeleteOrganizationForm({
   const {
     localization: contextLocalization,
     hooks: { useHasPermission }
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -13544,10 +13546,10 @@ function DeleteOrganizationForm({
       organization: ["delete"]
     }
   });
-  const [showDialog, setShowDialog] = reactExports.useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   if (!(hasPermission == null ? void 0 : hasPermission.success)) return null;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -13560,7 +13562,7 @@ function DeleteOrganizationForm({
         action: () => setShowDialog(true)
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       DeleteOrganizationDialog,
       {
         classNames,
@@ -13586,15 +13588,15 @@ function DeleteTeamDialog({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({
       ...contextLocalization,
       ...localizationProp
     }),
     [contextLocalization, localizationProp]
   );
-  const [isDeleting, setIsDeleting] = reactExports.useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const handleDelete = async () => {
     try {
       setIsDeleting(true);
@@ -13622,21 +13624,21 @@ function DeleteTeamDialog({
       setIsDeleting(false);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       onOpenAutoFocus: (e) => e.preventDefault(),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.DELETE_TEAM
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -13647,7 +13649,7 @@ function DeleteTeamDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(
           Card,
           {
             className: cn(
@@ -13655,21 +13657,21 @@ function DeleteTeamDialog({
               classNames == null ? void 0 : classNames.cell
             ),
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(
                 Users,
                 {
                   className: cn("size-5 flex-shrink-0", classNames == null ? void 0 : classNames.icon)
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col truncate", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
+              /* @__PURE__ */ jsxs("div", { className: "flex flex-col truncate", children: [
+                /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
+                /* @__PURE__ */ jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
               ] })
             ]
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               className: cn(
@@ -13683,7 +13685,7 @@ function DeleteTeamDialog({
               children: localization.CANCEL
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             Button,
             {
               className: cn(
@@ -13695,7 +13697,7 @@ function DeleteTeamDialog({
               type: "button",
               variant: "destructive",
               children: [
-                isDeleting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                isDeleting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.DELETE
               ]
             }
@@ -13719,13 +13721,13 @@ function InvitationCell({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const { lang } = useLang();
-  const [isLoading, setIsLoading] = reactExports.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const builtInRoles = [
     { role: "owner", label: localization.OWNER },
     { role: "admin", label: localization.ADMIN },
@@ -13760,7 +13762,7 @@ function InvitationCell({
     }
     setIsLoading(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -13769,8 +13771,8 @@ function InvitationCell({
         classNames == null ? void 0 : classNames.cell
       ),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-1 items-center gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs("div", { className: "flex flex-1 items-center gap-2", children: [
+          /* @__PURE__ */ jsx(
             UserAvatar,
             {
               className: "my-0.5",
@@ -13778,18 +13780,18 @@ function InvitationCell({
               localization
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid flex-1 text-left leading-tight", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate font-semibold text-sm", children: invitation.email }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate text-muted-foreground text-xs", children: [
+          /* @__PURE__ */ jsxs("div", { className: "grid flex-1 text-left leading-tight", children: [
+            /* @__PURE__ */ jsx("span", { className: "truncate font-semibold text-sm", children: invitation.email }),
+            /* @__PURE__ */ jsxs("span", { className: "truncate text-muted-foreground text-xs", children: [
               localization.EXPIRES,
               " ",
               invitation.expiresAt.toLocaleDateString(lang ?? "en")
             ] })
           ] })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate text-sm opacity-70", children: role == null ? void 0 : role.label }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx("span", { className: "truncate text-sm opacity-70", children: role == null ? void 0 : role.label }),
+        /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+          /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
             Button,
             {
               className: cn(
@@ -13801,21 +13803,21 @@ function InvitationCell({
               size: "icon",
               type: "button",
               variant: "outline",
-              children: isLoading ? /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
+              children: isLoading ? /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }) : /* @__PURE__ */ jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
             }
           ) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DropdownMenuContent,
             {
               onCloseAutoFocus: (e) => e.preventDefault(),
-              children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              children: /* @__PURE__ */ jsxs(
                 DropdownMenuItem,
                 {
                   onClick: handleCancelInvitation,
                   disabled: isLoading,
                   variant: "destructive",
                   children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: classNames == null ? void 0 : classNames.icon }),
+                    /* @__PURE__ */ jsx(X, { className: classNames == null ? void 0 : classNames.icon }),
                     localization.CANCEL_INVITATION
                   ]
                 }
@@ -13838,15 +13840,15 @@ function OrganizationInvitationsCard({
   const {
     localization: contextLocalization,
     organization: organizationOptions
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const slug = slugProp || (organizationOptions == null ? void 0 : organizationOptions.slug);
   const { data: organization } = useCurrentOrganization({ slug });
   if (!organization) return null;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     OrganizationInvitationsContent,
     {
       className,
@@ -13868,8 +13870,8 @@ function OrganizationInvitationsContent({
   const {
     hooks: { useListInvitations },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -13879,8 +13881,8 @@ function OrganizationInvitationsContent({
   const pendingInvitations = invitations == null ? void 0 : invitations.filter(
     (invitation) => invitation.status === "pending"
   );
-  if (!(pendingInvitations == null ? void 0 : pendingInvitations.length)) return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: emptyState });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  if (!(pendingInvitations == null ? void 0 : pendingInvitations.length)) return /* @__PURE__ */ jsx(Fragment, { children: emptyState });
+  return /* @__PURE__ */ jsx(
     SettingsCard,
     {
       className,
@@ -13888,7 +13890,7 @@ function OrganizationInvitationsContent({
       title: localization.PENDING_INVITATIONS,
       description: localization.PENDING_INVITATIONS_DESCRIPTION,
       ...props,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: pendingInvitations.map((invitation) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: pendingInvitations.map((invitation) => /* @__PURE__ */ jsx(
         InvitationCell,
         {
           classNames,
@@ -13908,14 +13910,14 @@ function OrganizationLogoCard({
   slug,
   ...props
 }) {
-  const { localization: contextLocalization } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  const { localization: contextLocalization } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const { data: organization } = useCurrentOrganization({ slug });
   if (!organization) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    return /* @__PURE__ */ jsxs(
       Card,
       {
         className: cn(
@@ -13925,8 +13927,8 @@ function OrganizationLogoCard({
         ),
         ...props,
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs("div", { className: "flex justify-between", children: [
+            /* @__PURE__ */ jsx(
               SettingsCardHeader,
               {
                 className: "grow self-start",
@@ -13936,7 +13938,7 @@ function OrganizationLogoCard({
                 classNames
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+            /* @__PURE__ */ jsx(
               Button,
               {
                 type: "button",
@@ -13944,7 +13946,7 @@ function OrganizationLogoCard({
                 size: "icon",
                 variant: "ghost",
                 disabled: true,
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                children: /* @__PURE__ */ jsx(
                   OrganizationLogo,
                   {
                     isPending: true,
@@ -13956,7 +13958,7 @@ function OrganizationLogoCard({
               }
             )
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             SettingsCardFooter,
             {
               className: "!py-5",
@@ -13969,7 +13971,7 @@ function OrganizationLogoCard({
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     OrganizationLogoForm,
     {
       className,
@@ -13994,8 +13996,8 @@ function OrganizationLogoForm({
     mutators: { updateOrganization },
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...authLocalization2, ...localizationProp }),
     [authLocalization2, localizationProp]
   );
@@ -14009,8 +14011,8 @@ function OrganizationLogoForm({
     }
   });
   const isPending = permissionPending;
-  const fileInputRef = reactExports.useRef(null);
-  const [loading, setLoading] = reactExports.useState(false);
+  const fileInputRef = useRef(null);
+  const [loading, setLoading] = useState(false);
   const handleLogoChange = async (file) => {
     if (!(organizationOptions == null ? void 0 : organizationOptions.logo) || !(hasPermission == null ? void 0 : hasPermission.success)) return;
     setLoading(true);
@@ -14077,7 +14079,7 @@ function OrganizationLogoForm({
     var _a;
     (_a = fileInputRef.current) == null ? void 0 : _a.click();
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -14087,7 +14089,7 @@ function OrganizationLogoForm({
       ),
       ...props,
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           "input",
           {
             ref: fileInputRef,
@@ -14103,8 +14105,8 @@ function OrganizationLogoForm({
             }
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs("div", { className: "flex justify-between", children: [
+          /* @__PURE__ */ jsx(
             SettingsCardHeader,
             {
               className: "grow self-start",
@@ -14114,8 +14116,8 @@ function OrganizationLogoForm({
               classNames
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
               Button,
               {
                 type: "button",
@@ -14123,7 +14125,7 @@ function OrganizationLogoForm({
                 size: "icon",
                 variant: "ghost",
                 disabled: !(hasPermission == null ? void 0 : hasPermission.success),
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                children: /* @__PURE__ */ jsx(
                   OrganizationLogo,
                   {
                     isPending: isPending || loading,
@@ -14136,31 +14138,31 @@ function OrganizationLogoForm({
                 )
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               DropdownMenuContent,
               {
                 align: "end",
                 onCloseAutoFocus: (e) => e.preventDefault(),
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     DropdownMenuItem,
                     {
                       onClick: openFileDialog,
                       disabled: loading || !(hasPermission == null ? void 0 : hasPermission.success),
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(CloudUpload, {}),
+                        /* @__PURE__ */ jsx(CloudUpload, {}),
                         localization.UPLOAD_LOGO
                       ]
                     }
                   ),
-                  organization.logo && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  organization.logo && /* @__PURE__ */ jsxs(
                     DropdownMenuItem,
                     {
                       onClick: handleDeleteLogo,
                       disabled: loading || !(hasPermission == null ? void 0 : hasPermission.success),
                       variant: "destructive",
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, {}),
+                        /* @__PURE__ */ jsx(Trash2, {}),
                         localization.DELETE_LOGO
                       ]
                     }
@@ -14170,7 +14172,7 @@ function OrganizationLogoForm({
             )
           ] })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           SettingsCardFooter,
           {
             className: "!py-5",
@@ -14200,9 +14202,9 @@ function InviteMemberDialog({
     toast: toast2,
     organization: organizationOptions,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { enabled: teamsEnabled } = teamOptions || {};
-  const localization = reactExports.useMemo(
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -14276,16 +14278,16 @@ function InviteMemberDialog({
       });
     }
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogContent, { className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(DialogContent, { className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content, children: [
+    /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+      /* @__PURE__ */ jsx(
         DialogTitle,
         {
           className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
           children: localization.INVITE_MEMBER
         }
       ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+      /* @__PURE__ */ jsx(
         DialogDescription,
         {
           className: cn(
@@ -14296,21 +14298,21 @@ function InviteMemberDialog({
         }
       )
     ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsxs(
       "form",
       {
         method: "POST",
         onSubmit: form.handleSubmit(onSubmit),
         className: "space-y-6",
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "email",
-              render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(FormLabel, { className: classNames == null ? void 0 : classNames.label, children: localization.EMAIL }),
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   Input,
                   {
                     placeholder: localization.EMAIL_PLACEHOLDER,
@@ -14319,32 +14321,32 @@ function InviteMemberDialog({
                     className: classNames == null ? void 0 : classNames.input
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                /* @__PURE__ */ jsx(FormMessage, {})
               ] })
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-2 gap-2", children: [
+            /* @__PURE__ */ jsx(
               FormField,
               {
                 control: form.control,
                 name: "role",
-                render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                  /* @__PURE__ */ jsx(
                     FormLabel,
                     {
                       className: classNames == null ? void 0 : classNames.label,
                       children: localization.ROLE
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     Select,
                     {
                       onValueChange: field.onChange,
                       defaultValue: field.value,
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(SelectTrigger, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(SelectValue, {}) }) }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectContent, { children: availableRoles.map((role) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(SelectTrigger, { children: /* @__PURE__ */ jsx(SelectValue, {}) }) }),
+                        /* @__PURE__ */ jsx(SelectContent, { children: availableRoles.map((role) => /* @__PURE__ */ jsx(
                           SelectItem,
                           {
                             value: role.role,
@@ -14355,36 +14357,36 @@ function InviteMemberDialog({
                       ]
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                  /* @__PURE__ */ jsx(FormMessage, {})
                 ] })
               }
             ),
-            teamsEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+            teamsEnabled && /* @__PURE__ */ jsx(
               FormField,
               {
                 control: form.control,
                 name: "teamId",
-                render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                  /* @__PURE__ */ jsx(
                     FormLabel,
                     {
                       className: classNames == null ? void 0 : classNames.label,
                       children: localization.TEAM
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     Select,
                     {
                       onValueChange: field.onChange,
                       defaultValue: field.value,
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(SelectTrigger, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(SelectTrigger, { children: /* @__PURE__ */ jsx(
                           SelectValue,
                           {
                             placeholder: localization.SELECT_TEAMS
                           }
                         ) }) }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(SelectContent, { children: teams == null ? void 0 : teams.map((team) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        /* @__PURE__ */ jsx(SelectContent, { children: teams == null ? void 0 : teams.map((team) => /* @__PURE__ */ jsx(
                           SelectItem,
                           {
                             value: team.id,
@@ -14395,13 +14397,13 @@ function InviteMemberDialog({
                       ]
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(FormMessage, {})
+                  /* @__PURE__ */ jsx(FormMessage, {})
                 ] })
               }
             )
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+            /* @__PURE__ */ jsx(
               Button,
               {
                 type: "button",
@@ -14414,7 +14416,7 @@ function InviteMemberDialog({
                 children: localization.CANCEL
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               Button,
               {
                 type: "submit",
@@ -14424,7 +14426,7 @@ function InviteMemberDialog({
                 ),
                 disabled: isSubmitting,
                 children: [
-                  isSubmitting && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                  isSubmitting && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                   localization.SEND_INVITATION
                 ]
               }
@@ -14449,15 +14451,15 @@ function RemoveMemberDialog({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const { refetch } = useListMembers({
     query: { organizationId: member.organizationId }
   });
-  const [isRemoving, setIsRemoving] = reactExports.useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const removeMember = async () => {
     setIsRemoving(true);
     try {
@@ -14484,21 +14486,21 @@ function RemoveMemberDialog({
     }
     setIsRemoving(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       onOpenAutoFocus: (e) => e.preventDefault(),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.REMOVE_MEMBER
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -14509,7 +14511,7 @@ function RemoveMemberDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           MemberCell,
           {
             className: classNames == null ? void 0 : classNames.cell,
@@ -14518,8 +14520,8 @@ function RemoveMemberDialog({
             hideActions: true
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -14533,7 +14535,7 @@ function RemoveMemberDialog({
               children: localization.CANCEL
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             Button,
             {
               type: "button",
@@ -14545,7 +14547,7 @@ function RemoveMemberDialog({
               ),
               disabled: isRemoving,
               children: [
-                isRemoving && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                isRemoving && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.REMOVE_MEMBER
               ]
             }
@@ -14570,8 +14572,8 @@ function UpdateMemberRoleDialog({
     organization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -14580,8 +14582,8 @@ function UpdateMemberRoleDialog({
   });
   const members = data == null ? void 0 : data.members;
   const { data: sessionData } = useSession();
-  const [isUpdating, setIsUpdating] = reactExports.useState(false);
-  const [selectedRole, setSelectedRole] = reactExports.useState(member.role);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(member.role);
   const builtInRoles = [
     { role: "owner", label: localization.OWNER },
     { role: "admin", label: localization.ADMIN },
@@ -14639,21 +14641,21 @@ function UpdateMemberRoleDialog({
     }
     setIsUpdating(false);
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.content,
       onOpenAutoFocus: (e) => e.preventDefault(),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.UPDATE_ROLE
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -14664,8 +14666,8 @@ function UpdateMemberRoleDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-6 py-4", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs("div", { className: "grid gap-6 py-4", children: [
+          /* @__PURE__ */ jsx(
             MemberCell,
             {
               className: classNames == null ? void 0 : classNames.cell,
@@ -14674,25 +14676,25 @@ function UpdateMemberRoleDialog({
               hideActions: true
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             Select,
             {
               value: selectedRole,
               onValueChange: setSelectedRole,
               children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(SelectTrigger, { className: "w-full", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(SelectTrigger, { className: "w-full", children: /* @__PURE__ */ jsx(
                   SelectValue,
                   {
                     placeholder: localization.SELECT_ROLE
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(SelectContent, { children: availableRoles.map((role) => /* @__PURE__ */ jsxRuntimeExports.jsx(SelectItem, { value: role.role, children: role.label }, role.role)) })
+                /* @__PURE__ */ jsx(SelectContent, { children: availableRoles.map((role) => /* @__PURE__ */ jsx(SelectItem, { value: role.role, children: role.label }, role.role)) })
               ]
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_d = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _d.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_d = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _d.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               type: "button",
@@ -14706,7 +14708,7 @@ function UpdateMemberRoleDialog({
               children: localization.CANCEL
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             Button,
             {
               type: "button",
@@ -14717,7 +14719,7 @@ function UpdateMemberRoleDialog({
               ),
               disabled: isUpdating,
               children: [
-                isUpdating && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                isUpdating && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.UPDATE_ROLE
               ]
             }
@@ -14741,9 +14743,9 @@ function UpdateMemberTeamCell({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   localization = { ...contextLocalization, ...localization };
-  const [isUpdating, setIsUpdating] = reactExports.useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const handleAddRemoveTeam = async () => {
     try {
       setIsUpdating(true);
@@ -14782,7 +14784,7 @@ function UpdateMemberTeamCell({
       setIsUpdating(false);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     Card,
     {
       className: cn(
@@ -14791,17 +14793,17 @@ function UpdateMemberTeamCell({
         classNames == null ? void 0 : classNames.cell
       ),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           Users,
           {
             className: cn("size-5 flex-shrink-0", classNames == null ? void 0 : classNames.icon)
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col truncate", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
+        /* @__PURE__ */ jsxs("div", { className: "flex flex-col truncate", children: [
+          /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
+          /* @__PURE__ */ jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(
           Button,
           {
             className: cn(
@@ -14814,7 +14816,7 @@ function UpdateMemberTeamCell({
             variant: "outline",
             onClick: handleAddRemoveTeam,
             children: [
-              isUpdating && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+              isUpdating && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
               added ? localization.REMOVE : localization.ADD
             ]
           }
@@ -14834,8 +14836,8 @@ function UpdateMemberTeamsDialog({
   const {
     hooks: { useListTeams, useListUserTeams },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -14851,21 +14853,21 @@ function UpdateMemberTeamsDialog({
     organizationId: member.organizationId
   });
   const isPending = memberTeamsPending || orgTeamsPending;
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       onOpenAutoFocus: (e) => e.preventDefault(),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.UPDATE_TEAMS
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -14876,8 +14878,8 @@ function UpdateMemberTeamsDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid gap-6 py-4", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs("div", { className: "grid gap-6 py-4", children: [
+          /* @__PURE__ */ jsx(
             MemberCell,
             {
               className: classNames == null ? void 0 : classNames.cell,
@@ -14886,13 +14888,13 @@ function UpdateMemberTeamsDialog({
               hideActions: true
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "gap-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(CardHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardTitle, { children: localization.TEAMS }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(Card, { className: "gap-2", children: [
+            /* @__PURE__ */ jsx(CardHeader, { children: /* @__PURE__ */ jsx(CardTitle, { children: localization.TEAMS }) }),
+            /* @__PURE__ */ jsx(
               CardContent,
               {
                 className: cn("grid gap-4", classNames == null ? void 0 : classNames.content),
-                children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                children: isPending ? /* @__PURE__ */ jsx(
                   SettingsCellSkeleton,
                   {
                     classNames
@@ -14900,7 +14902,7 @@ function UpdateMemberTeamsDialog({
                   "skeleton"
                 ) : orgTeams && orgTeams.length > 0 ? orgTeams.sort(
                   (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-                ).map((team) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                ).map((team) => /* @__PURE__ */ jsx(
                   UpdateMemberTeamCell,
                   {
                     classNames,
@@ -14911,12 +14913,12 @@ function UpdateMemberTeamsDialog({
                     team
                   },
                   team.id
-                )) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: localization.NO_TEAMS_FOUND })
+                )) : /* @__PURE__ */ jsx("p", { className: "text-muted-foreground text-sm", children: localization.NO_TEAMS_FOUND })
               }
             )
           ] })
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: /* @__PURE__ */ jsx(
           Button,
           {
             type: "button",
@@ -14951,14 +14953,14 @@ function MemberCell({
       useHasPermission
     },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { enabled: teamsEnabled } = teamOptions || {};
   const localization = { ...contextLocalization, ...localizationProp };
   const { data: sessionData } = useSession();
-  const [removeDialogOpen, setRemoveDialogOpen] = reactExports.useState(false);
-  const [leaveDialogOpen, setLeaveDialogOpen] = reactExports.useState(false);
-  const [updateRoleDialogOpen, setUpdateRoleDialogOpen] = reactExports.useState(false);
-  const [updateTeamsDialogOpen, setUpdateTeamsDialogOpen] = reactExports.useState(false);
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+  const [leaveDialogOpen, setLeaveDialogOpen] = useState(false);
+  const [updateRoleDialogOpen, setUpdateRoleDialogOpen] = useState(false);
+  const [updateTeamsDialogOpen, setUpdateTeamsDialogOpen] = useState(false);
   const builtInRoles = [
     { role: "owner", label: localization.OWNER },
     { role: "admin", label: localization.ADMIN },
@@ -14985,8 +14987,8 @@ function MemberCell({
     organizationId: member.organizationId,
     permissions: { member: ["update"] }
   });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsxs(
       Card,
       {
         className: cn(
@@ -14995,7 +14997,7 @@ function MemberCell({
           classNames == null ? void 0 : classNames.cell
         ),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             UserView,
             {
               user: member.user,
@@ -15003,9 +15005,9 @@ function MemberCell({
               className: "flex-1"
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs opacity-70", children: role == null ? void 0 : role.label }),
-          !hideActions && (isSelf || member.role !== "owner" || myRole === "owner") && /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx("span", { className: "text-xs opacity-70", children: role == null ? void 0 : role.label }),
+          !hideActions && (isSelf || member.role !== "owner" || myRole === "owner") && /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
               Button,
               {
                 className: cn(
@@ -15016,7 +15018,7 @@ function MemberCell({
                 size: "icon",
                 type: "button",
                 variant: "outline",
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                children: /* @__PURE__ */ jsx(
                   Ellipsis,
                   {
                     className: classNames == null ? void 0 : classNames.icon
@@ -15024,18 +15026,18 @@ function MemberCell({
                 )
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               DropdownMenuContent,
               {
                 onCloseAutoFocus: (e) => e.preventDefault(),
                 children: [
-                  (hasPermissionToUpdateMember == null ? void 0 : hasPermissionToUpdateMember.success) && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  (hasPermissionToUpdateMember == null ? void 0 : hasPermissionToUpdateMember.success) && /* @__PURE__ */ jsxs(Fragment, { children: [
+                    /* @__PURE__ */ jsxs(
                       DropdownMenuItem,
                       {
                         onClick: () => setUpdateRoleDialogOpen(true),
                         children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          /* @__PURE__ */ jsx(
                             UserCog,
                             {
                               className: classNames == null ? void 0 : classNames.icon
@@ -15045,14 +15047,14 @@ function MemberCell({
                         ]
                       }
                     ),
-                    teamsEnabled && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    teamsEnabled && /* @__PURE__ */ jsxs(
                       DropdownMenuItem,
                       {
                         onClick: () => setUpdateTeamsDialogOpen(
                           true
                         ),
                         children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          /* @__PURE__ */ jsx(
                             Users,
                             {
                               className: classNames == null ? void 0 : classNames.icon
@@ -15063,13 +15065,13 @@ function MemberCell({
                       }
                     )
                   ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     DropdownMenuItem,
                     {
                       onClick: () => isSelf ? setLeaveDialogOpen(true) : setRemoveDialogOpen(true),
                       variant: "destructive",
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(UserX, { className: classNames == null ? void 0 : classNames.icon }),
+                        /* @__PURE__ */ jsx(UserX, { className: classNames == null ? void 0 : classNames.icon }),
                         isSelf ? localization == null ? void 0 : localization.LEAVE_ORGANIZATION : localization == null ? void 0 : localization.REMOVE_MEMBER
                       ]
                     }
@@ -15081,7 +15083,7 @@ function MemberCell({
         ]
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       RemoveMemberDialog,
       {
         open: removeDialogOpen,
@@ -15091,7 +15093,7 @@ function MemberCell({
         localization
       }
     ),
-    organization && /* @__PURE__ */ jsxRuntimeExports.jsx(
+    organization && /* @__PURE__ */ jsx(
       LeaveOrganizationDialog,
       {
         open: leaveDialogOpen,
@@ -15101,7 +15103,7 @@ function MemberCell({
         localization
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       UpdateMemberRoleDialog,
       {
         open: updateRoleDialogOpen,
@@ -15111,7 +15113,7 @@ function MemberCell({
         localization
       }
     ),
-    teamsEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+    teamsEnabled && /* @__PURE__ */ jsx(
       UpdateMemberTeamsDialog,
       {
         open: updateTeamsDialogOpen,
@@ -15133,15 +15135,15 @@ function OrganizationMembersCard({
   const {
     localization: contextLocalization,
     organization: organizationOptions
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const slug = slugProp || (organizationOptions == null ? void 0 : organizationOptions.slug);
   const { data: organization } = useCurrentOrganization({ slug });
   if (!organization) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -15155,7 +15157,7 @@ function OrganizationMembersCard({
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     OrganizationMembersContent,
     {
       className,
@@ -15176,8 +15178,8 @@ function OrganizationMembersContent({
   const {
     hooks: { useHasPermission, useListMembers },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -15201,9 +15203,9 @@ function OrganizationMembersContent({
     query: { organizationId: organization.id }
   });
   const members = data == null ? void 0 : data.members;
-  const [inviteDialogOpen, setInviteDialogOpen] = reactExports.useState(false);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -15216,13 +15218,13 @@ function OrganizationMembersContent({
         isPending,
         disabled: !(hasPermissionInvite == null ? void 0 : hasPermissionInvite.success),
         ...props,
-        children: !isPending && members && members.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: !isPending && members && members.length > 0 && /* @__PURE__ */ jsx(
           CardContent,
           {
             className: cn("grid gap-4", classNames == null ? void 0 : classNames.content),
             children: members.sort(
               (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-            ).map((member) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+            ).map((member) => /* @__PURE__ */ jsx(
               MemberCell,
               {
                 classNames,
@@ -15236,7 +15238,7 @@ function OrganizationMembersContent({
         )
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       InviteMemberDialog,
       {
         open: inviteDialogOpen,
@@ -15255,14 +15257,14 @@ function OrganizationNameCard({
   slug,
   ...props
 }) {
-  const { localization: contextLocalization } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  const { localization: contextLocalization } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const { data: organization } = useCurrentOrganization({ slug });
   if (!organization) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -15273,7 +15275,7 @@ function OrganizationNameCard({
         isPending: true,
         title: localization.ORGANIZATION_NAME,
         ...props,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: /* @__PURE__ */ jsx(
           Skeleton,
           {
             className: cn("h-9 w-full", classNames == null ? void 0 : classNames.skeleton)
@@ -15282,7 +15284,7 @@ function OrganizationNameCard({
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     OrganizationNameForm,
     {
       className,
@@ -15307,7 +15309,7 @@ function OrganizationNameForm({
     optimistic,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const localization = { ...contextLocalization, ...localizationProp };
   const { data: hasPermission, isPending: permissionPending } = useHasPermission({
     organizationId: organization.id,
@@ -15360,12 +15362,12 @@ function OrganizationNameForm({
       });
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsx(
     "form",
     {
       method: "POST",
       onSubmit: form.handleSubmit(updateOrganizationName),
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(
         SettingsCard,
         {
           className,
@@ -15378,7 +15380,7 @@ function OrganizationNameForm({
           optimistic,
           disabled: !(hasPermission == null ? void 0 : hasPermission.success),
           ...props,
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          children: /* @__PURE__ */ jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: isPending ? /* @__PURE__ */ jsx(
             Skeleton,
             {
               className: cn(
@@ -15386,13 +15388,13 @@ function OrganizationNameForm({
                 classNames == null ? void 0 : classNames.skeleton
               )
             }
-          ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+          ) : /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "name",
-              render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   Input,
                   {
                     className: classNames == null ? void 0 : classNames.input,
@@ -15401,7 +15403,7 @@ function OrganizationNameForm({
                     ...field
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(
                   FormMessage,
                   {
                     className: classNames == null ? void 0 : classNames.error
@@ -15425,15 +15427,15 @@ function OrganizationSlugCard({
   const {
     localization: contextLocalization,
     organization: organizationOptions
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
   const slug = slugProp || (organizationOptions == null ? void 0 : organizationOptions.slug);
   const { data: organization } = useCurrentOrganization({ slug });
   if (!organization) {
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       SettingsCard,
       {
         className,
@@ -15444,7 +15446,7 @@ function OrganizationSlugCard({
         title: localization.ORGANIZATION_SLUG,
         actionLabel: localization.SAVE,
         ...props,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: /* @__PURE__ */ jsx(
           Skeleton,
           {
             className: cn("h-9 w-full", classNames == null ? void 0 : classNames.skeleton)
@@ -15453,7 +15455,7 @@ function OrganizationSlugCard({
       }
     );
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     OrganizationSlugForm,
     {
       className,
@@ -15480,8 +15482,8 @@ function OrganizationSlugForm({
     organization: organizationOptions,
     replace,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -15542,12 +15544,12 @@ function OrganizationSlugForm({
       });
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Form, { ...form, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(Form, { ...form, children: /* @__PURE__ */ jsx(
     "form",
     {
       method: "POST",
       onSubmit: form.handleSubmit(updateOrganizationSlug),
-      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      children: /* @__PURE__ */ jsx(
         SettingsCard,
         {
           className,
@@ -15560,7 +15562,7 @@ function OrganizationSlugForm({
           optimistic,
           disabled: !(hasPermission == null ? void 0 : hasPermission.success),
           ...props,
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+          children: /* @__PURE__ */ jsx(CardContent, { className: classNames == null ? void 0 : classNames.content, children: isPending ? /* @__PURE__ */ jsx(
             Skeleton,
             {
               className: cn(
@@ -15568,13 +15570,13 @@ function OrganizationSlugForm({
                 classNames == null ? void 0 : classNames.skeleton
               )
             }
-          ) : /* @__PURE__ */ jsxRuntimeExports.jsx(
+          ) : /* @__PURE__ */ jsx(
             FormField,
             {
               control: form.control,
               name: "slug",
-              render: ({ field }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormItem, { children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FormControl, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              render: ({ field }) => /* @__PURE__ */ jsxs(FormItem, { children: [
+                /* @__PURE__ */ jsx(FormControl, { children: /* @__PURE__ */ jsx(
                   Input,
                   {
                     className: classNames == null ? void 0 : classNames.input,
@@ -15583,7 +15585,7 @@ function OrganizationSlugForm({
                     ...field
                   }
                 ) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                /* @__PURE__ */ jsx(
                   FormMessage,
                   {
                     className: classNames == null ? void 0 : classNames.error
@@ -15603,8 +15605,8 @@ function OrganizationSettingsCards({
   localization,
   slug
 }) {
-  const { organization: organizationOptions } = reactExports.useContext(AuthUIContext);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  const { organization: organizationOptions } = useContext(AuthUIContext);
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -15613,7 +15615,7 @@ function OrganizationSettingsCards({
         classNames == null ? void 0 : classNames.cards
       ),
       children: [
-        (organizationOptions == null ? void 0 : organizationOptions.logo) && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        (organizationOptions == null ? void 0 : organizationOptions.logo) && /* @__PURE__ */ jsx(
           OrganizationLogoCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
@@ -15621,7 +15623,7 @@ function OrganizationSettingsCards({
             slug
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           OrganizationNameCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
@@ -15629,7 +15631,7 @@ function OrganizationSettingsCards({
             slug
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           OrganizationSlugCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
@@ -15637,7 +15639,7 @@ function OrganizationSettingsCards({
             slug
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsx(
           DeleteOrganizationCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
@@ -15677,7 +15679,7 @@ function Field({
   orientation = "vertical",
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     "div",
     {
       role: "group",
@@ -15692,7 +15694,7 @@ function FieldLabel({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     Label2,
     {
       "data-slot": "field-label",
@@ -15720,16 +15722,16 @@ function UpdateTeamDialog({
     localization: contextLocalization,
     toast: toast2,
     localizeErrors
-  } = reactExports.useContext(AuthUIContext);
-  const localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  const localization = useMemo(
     () => ({
       ...contextLocalization,
       ...localizationProp
     }),
     [contextLocalization, localizationProp]
   );
-  const [isUpdating, setIsUpdating] = reactExports.useState(false);
-  const [name, setName] = reactExports.useState(team.name);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [name, setName] = useState(team.name);
   const handleUpdate = async () => {
     try {
       setIsUpdating(true);
@@ -15757,21 +15759,21 @@ function UpdateTeamDialog({
       setIsUpdating(false);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsx(Dialog, { onOpenChange, ...props, children: /* @__PURE__ */ jsxs(
     DialogContent,
     {
       className: (_a = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _a.content,
       onOpenAutoFocus: (e) => e.preventDefault(),
       children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogHeader, { className: (_b = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _b.header, children: [
+          /* @__PURE__ */ jsx(
             DialogTitle,
             {
               className: cn("text-lg md:text-xl", classNames == null ? void 0 : classNames.title),
               children: localization.UPDATE_TEAM
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             DialogDescription,
             {
               className: cn(
@@ -15782,7 +15784,7 @@ function UpdateTeamDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        /* @__PURE__ */ jsxs(
           Card,
           {
             className: cn(
@@ -15790,22 +15792,22 @@ function UpdateTeamDialog({
               classNames == null ? void 0 : classNames.cell
             ),
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(
                 Users,
                 {
                   className: cn("size-5 flex-shrink-0", classNames == null ? void 0 : classNames.icon)
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col truncate", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
+              /* @__PURE__ */ jsxs("div", { className: "flex flex-col truncate", children: [
+                /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
+                /* @__PURE__ */ jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
               ] })
             ]
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(Field, { className: "grid gap-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(FieldLabel, { htmlFor: "name", children: localization.TEAM_NAME }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(Field, { className: "grid gap-2", children: [
+          /* @__PURE__ */ jsx(FieldLabel, { htmlFor: "name", children: localization.TEAM_NAME }),
+          /* @__PURE__ */ jsx(
             Input,
             {
               id: "name",
@@ -15816,8 +15818,8 @@ function UpdateTeamDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        /* @__PURE__ */ jsxs(DialogFooter, { className: (_c = classNames == null ? void 0 : classNames.dialog) == null ? void 0 : _c.footer, children: [
+          /* @__PURE__ */ jsx(
             Button,
             {
               className: cn(
@@ -15831,7 +15833,7 @@ function UpdateTeamDialog({
               children: localization.CANCEL
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          /* @__PURE__ */ jsxs(
             Button,
             {
               className: cn(
@@ -15842,7 +15844,7 @@ function UpdateTeamDialog({
               onClick: handleUpdate,
               type: "button",
               children: [
-                isUpdating && /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderCircle, { className: "animate-spin" }),
+                isUpdating && /* @__PURE__ */ jsx(LoaderCircle, { className: "animate-spin" }),
                 localization.UPDATE
               ]
             }
@@ -15861,10 +15863,10 @@ function TeamCell({
   canUpdate,
   refetch
 }) {
-  const [showDeleteDialog, setShowDeleteDialog] = reactExports.useState(false);
-  const [showUpdateDialog, setShowUpdateDialog] = reactExports.useState(false);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsxs(
       Card,
       {
         className: cn(
@@ -15873,18 +15875,18 @@ function TeamCell({
           classNames == null ? void 0 : classNames.cell
         ),
         children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsx(
             Users,
             {
               className: cn("size-5 flex-shrink-0", classNames == null ? void 0 : classNames.icon)
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col truncate", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
+          /* @__PURE__ */ jsxs("div", { className: "flex flex-col truncate", children: [
+            /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2", children: /* @__PURE__ */ jsx("span", { className: "truncate font-semibold text-sm", children: team.name }) }),
+            /* @__PURE__ */ jsx("div", { className: "truncate text-muted-foreground text-xs", children: localization == null ? void 0 : localization.TEAM })
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(DropdownMenu, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          /* @__PURE__ */ jsxs(DropdownMenu, { children: [
+            /* @__PURE__ */ jsx(DropdownMenuTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
               Button,
               {
                 className: cn(
@@ -15895,37 +15897,37 @@ function TeamCell({
                 size: "icon",
                 type: "button",
                 variant: "outline",
-                children: /* @__PURE__ */ jsxRuntimeExports.jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
+                children: /* @__PURE__ */ jsx(Ellipsis, { className: classNames == null ? void 0 : classNames.icon })
               }
             ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            /* @__PURE__ */ jsxs(
               DropdownMenuContent,
               {
                 onCloseAutoFocus: (e) => e.preventDefault(),
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     DropdownMenuItem,
                     {
                       disabled: !canUpdate,
                       onSelect: () => setShowUpdateDialog(true),
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(SquarePen, { className: classNames == null ? void 0 : classNames.icon }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                        /* @__PURE__ */ jsx(SquarePen, { className: classNames == null ? void 0 : classNames.icon }),
+                        /* @__PURE__ */ jsxs("span", { children: [
                           " ",
                           localization == null ? void 0 : localization.UPDATE_TEAM
                         ] })
                       ]
                     }
                   ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  /* @__PURE__ */ jsxs(
                     DropdownMenuItem,
                     {
                       disabled: !canDelete,
                       onClick: () => setShowDeleteDialog(true),
                       variant: "destructive",
                       children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Archive, { className: classNames == null ? void 0 : classNames.icon }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: localization == null ? void 0 : localization.DELETE_TEAM })
+                        /* @__PURE__ */ jsx(Archive, { className: classNames == null ? void 0 : classNames.icon }),
+                        /* @__PURE__ */ jsx("span", { children: localization == null ? void 0 : localization.DELETE_TEAM })
                       ]
                     }
                   )
@@ -15936,7 +15938,7 @@ function TeamCell({
         ]
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       UpdateTeamDialog,
       {
         classNames,
@@ -15947,7 +15949,7 @@ function TeamCell({
         team
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       DeleteTeamDialog,
       {
         classNames,
@@ -15970,13 +15972,13 @@ function TeamsCard({
   const {
     hooks: { useHasPermission, useListTeams },
     localization: contextLocalization
-  } = reactExports.useContext(AuthUIContext);
-  localization = reactExports.useMemo(
+  } = useContext(AuthUIContext);
+  localization = useMemo(
     () => ({ ...contextLocalization, ...localization }),
     [contextLocalization, localization]
   );
   const isHydrated = useIsHydrated();
-  const [createDialogOpen, setCreateDialogOpen] = reactExports.useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const { data: hasPermissionCreate, isPending: permissionCreatePending } = useHasPermission({
     organizationId,
     permissions: {
@@ -16003,8 +16005,8 @@ function TeamsCard({
     organizationId
   });
   const isPending = !isHydrated || permissionCreatePending || permissionUpdatePending || permissionDeletePending || teamsPending;
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx(
       SettingsCard,
       {
         action: () => setCreateDialogOpen(true),
@@ -16017,9 +16019,9 @@ function TeamsCard({
         isPending,
         title: localization.TEAMS,
         ...props,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: isPending ? /* @__PURE__ */ jsxRuntimeExports.jsx(SettingsCellSkeleton, {}) : teams && teams.length > 0 ? teams.sort(
+        children: /* @__PURE__ */ jsx(CardContent, { className: cn("grid gap-4", classNames == null ? void 0 : classNames.content), children: isPending ? /* @__PURE__ */ jsx(SettingsCellSkeleton, {}) : teams && teams.length > 0 ? teams.sort(
           (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        ).map((team) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ).map((team) => /* @__PURE__ */ jsx(
           TeamCell,
           {
             canDelete: !!(hasPermissionDelete == null ? void 0 : hasPermissionDelete.success),
@@ -16030,10 +16032,10 @@ function TeamsCard({
             team
           },
           team.id
-        )) : /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-muted-foreground text-sm", children: localization.NO_TEAMS_FOUND }) })
+        )) : /* @__PURE__ */ jsx("p", { className: "text-muted-foreground text-sm", children: localization.NO_TEAMS_FOUND }) })
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsx(
       CreateTeamDialog,
       {
         classNames,
@@ -16064,11 +16066,11 @@ function OrganizationView({
     account: accountOptions,
     Link,
     replace
-  } = reactExports.useContext(AuthUIContext);
+  } = useContext(AuthUIContext);
   const { slug: contextSlug, viewPaths, apiKey } = organizationOptions || {};
   const { enabled: teamsEnabled } = teamOptions || {};
   useAuthenticate();
-  const localization = reactExports.useMemo(
+  const localization = useMemo(
     () => ({ ...contextLocalization, ...localizationProp }),
     [contextLocalization, localizationProp]
   );
@@ -16096,7 +16098,7 @@ function OrganizationView({
       label: localization.API_KEYS
     });
   }
-  reactExports.useEffect(() => {
+  useEffect(() => {
     var _a2;
     if (organization || organizationPending || organizationRefetching)
       return;
@@ -16111,7 +16113,7 @@ function OrganizationView({
     (_a = accountOptions == null ? void 0 : accountOptions.viewPaths) == null ? void 0 : _a.ORGANIZATIONS,
     replace
   ]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -16120,19 +16122,19 @@ function OrganizationView({
         classNames == null ? void 0 : classNames.base
       ),
       children: [
-        !hideNav && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between gap-2 md:hidden", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Label2, { className: "font-semibold text-base", children: (_b = navItems.find((i) => i.view === view)) == null ? void 0 : _b.label }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(Drawer, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(DrawerTrigger, { asChild: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { variant: "outline", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Menu, {}) }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(DrawerContent, { children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(DrawerHeader, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(DrawerTitle, { className: "hidden", children: localization.ORGANIZATION }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col px-4 pb-4", children: navItems.map((item) => {
+        !hideNav && /* @__PURE__ */ jsxs("div", { className: "flex justify-between gap-2 md:hidden", children: [
+          /* @__PURE__ */ jsx(Label2, { className: "font-semibold text-base", children: (_b = navItems.find((i) => i.view === view)) == null ? void 0 : _b.label }),
+          /* @__PURE__ */ jsxs(Drawer, { children: [
+            /* @__PURE__ */ jsx(DrawerTrigger, { asChild: true, children: /* @__PURE__ */ jsx(Button, { variant: "outline", children: /* @__PURE__ */ jsx(Menu, {}) }) }),
+            /* @__PURE__ */ jsxs(DrawerContent, { children: [
+              /* @__PURE__ */ jsx(DrawerHeader, { children: /* @__PURE__ */ jsx(DrawerTitle, { className: "hidden", children: localization.ORGANIZATION }) }),
+              /* @__PURE__ */ jsx("div", { className: "flex flex-col px-4 pb-4", children: navItems.map((item) => {
                 var _a2;
-                return /* @__PURE__ */ jsxRuntimeExports.jsx(
+                return /* @__PURE__ */ jsx(
                   Link,
                   {
                     href: `${organizationOptions == null ? void 0 : organizationOptions.basePath}${(organizationOptions == null ? void 0 : organizationOptions.pathMode) === "slug" ? `/${slug}` : ""}/${organizationOptions == null ? void 0 : organizationOptions.viewPaths[item.view]}`,
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    children: /* @__PURE__ */ jsx(
                       Button,
                       {
                         size: "lg",
@@ -16152,7 +16154,7 @@ function OrganizationView({
             ] })
           ] })
         ] }),
-        !hideNav && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "hidden md:block", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        !hideNav && /* @__PURE__ */ jsx("div", { className: "hidden md:block", children: /* @__PURE__ */ jsx(
           "div",
           {
             className: cn(
@@ -16161,11 +16163,11 @@ function OrganizationView({
             ),
             children: navItems.map((item) => {
               var _a2, _b2;
-              return /* @__PURE__ */ jsxRuntimeExports.jsx(
+              return /* @__PURE__ */ jsx(
                 Link,
                 {
                   href: `${organizationOptions == null ? void 0 : organizationOptions.basePath}${(organizationOptions == null ? void 0 : organizationOptions.pathMode) === "slug" ? `/${slug}` : ""}/${organizationOptions == null ? void 0 : organizationOptions.viewPaths[item.view]}`,
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  children: /* @__PURE__ */ jsx(
                     Button,
                     {
                       size: "lg",
@@ -16185,7 +16187,7 @@ function OrganizationView({
             })
           }
         ) }),
-        view === "MEMBERS" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        view === "MEMBERS" && /* @__PURE__ */ jsxs(
           "div",
           {
             className: cn(
@@ -16194,7 +16196,7 @@ function OrganizationView({
               classNames == null ? void 0 : classNames.cards
             ),
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(
                 OrganizationMembersCard,
                 {
                   classNames: classNames == null ? void 0 : classNames.card,
@@ -16202,7 +16204,7 @@ function OrganizationView({
                   slug
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsx(
                 OrganizationInvitationsCard,
                 {
                   classNames: classNames == null ? void 0 : classNames.card,
@@ -16213,7 +16215,7 @@ function OrganizationView({
             ]
           }
         ),
-        view === "TEAMS" && (organization == null ? void 0 : organization.id) && teamsEnabled && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        view === "TEAMS" && (organization == null ? void 0 : organization.id) && teamsEnabled && /* @__PURE__ */ jsx(
           TeamsCard,
           {
             classNames,
@@ -16221,7 +16223,7 @@ function OrganizationView({
             organizationId: organization.id
           }
         ),
-        view === "API_KEYS" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        view === "API_KEYS" && /* @__PURE__ */ jsx(
           ApiKeysCard,
           {
             classNames: classNames == null ? void 0 : classNames.card,
@@ -16230,7 +16232,7 @@ function OrganizationView({
             organizationId: organization == null ? void 0 : organization.id
           }
         ),
-        view === "SETTINGS" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        view === "SETTINGS" && /* @__PURE__ */ jsx(
           OrganizationSettingsCards,
           {
             classNames,
@@ -16245,7 +16247,7 @@ function OrganizationView({
 function OrganizationSettingsPageInternal() {
   const { pageProps } = usePluginOverrides("organization");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.organizationSettings) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     OrganizationView,
     {
       path: organizationViewPaths.SETTINGS,
@@ -16261,7 +16263,7 @@ const organizationSettingsPage_internalXJOITES4 = /* @__PURE__ */ Object.freeze(
 function OrganizationMembersPageInternal() {
   const { pageProps } = usePluginOverrides("organization");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.organizationMembers) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     OrganizationView,
     {
       path: organizationViewPaths.MEMBERS,
@@ -16277,7 +16279,7 @@ const organizationMembersPage_internalQ3Y3KR6W = /* @__PURE__ */ Object.freeze({
 function OrganizationApiKeysPageInternal() {
   const { pageProps } = usePluginOverrides("organization");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.organizationApiKeys) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     OrganizationView,
     {
       path: organizationViewPaths.API_KEYS,
@@ -16293,7 +16295,7 @@ const organizationApiKeysPage_internalA7TOBTOI = /* @__PURE__ */ Object.freeze({
 function OrganizationTeamsPageInternal() {
   const { pageProps } = usePluginOverrides("organization");
   const { localization, ...rest } = (pageProps == null ? void 0 : pageProps.organizationTeams) ?? {};
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(BetterAuthPluginProvider, { children: /* @__PURE__ */ jsx(
     OrganizationView,
     {
       path: organizationViewPaths.TEAMS,

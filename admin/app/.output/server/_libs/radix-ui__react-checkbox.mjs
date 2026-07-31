@@ -1,4 +1,4 @@
-import { r as reactExports, j as jsxRuntimeExports } from "./react.mjs";
+import * as React from "react";
 import { u as useComposedRefs } from "./radix-ui__react-compose-refs.mjs";
 import { c as createContextScope } from "./radix-ui__react-context.mjs";
 import { c as composeEventHandlers } from "./radix-ui__primitive.mjs";
@@ -6,6 +6,7 @@ import { u as useControllableState } from "./@radix-ui/react-use-controllable-st
 import { u as useSize } from "./radix-ui__react-use-size.mjs";
 import { P as Presence } from "./radix-ui__react-presence.mjs";
 import { P as Primitive } from "./radix-ui__react-primitive.mjs";
+import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 var CHECKBOX_NAME = "Checkbox";
@@ -32,10 +33,10 @@ function CheckboxProvider(props) {
     onChange: onCheckedChange,
     caller: CHECKBOX_NAME
   });
-  const [control, setControl] = reactExports.useState(null);
-  const [bubbleInput, setBubbleInput] = reactExports.useState(null);
-  const hasConsumerStoppedPropagationRef = reactExports.useRef(false);
-  const [userInteractionCount, onUserInteraction] = reactExports.useReducer(
+  const [control, setControl] = React.useState(null);
+  const [bubbleInput, setBubbleInput] = React.useState(null);
+  const hasConsumerStoppedPropagationRef = React.useRef(false);
+  const [userInteractionCount, onUserInteraction] = React.useReducer(
     (count) => count + 1,
     0
   );
@@ -61,7 +62,7 @@ function CheckboxProvider(props) {
     bubbleInput,
     setBubbleInput
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsx(
     CheckboxProviderImpl,
     {
       scope: __scopeCheckbox,
@@ -72,7 +73,7 @@ function CheckboxProvider(props) {
 }
 __name(CheckboxProvider, "CheckboxProvider");
 var TRIGGER_NAME = "CheckboxTrigger";
-var CheckboxTrigger = /* @__PURE__ */ reactExports.forwardRef(
+var CheckboxTrigger = /* @__PURE__ */ React.forwardRef(
   /* @__PURE__ */ __name(function CheckboxTrigger2({ __scopeCheckbox, onKeyDown, onClick, ...checkboxProps }, forwardedRef) {
     const {
       control,
@@ -88,8 +89,8 @@ var CheckboxTrigger = /* @__PURE__ */ reactExports.forwardRef(
       bubbleInput
     } = useCheckboxContext(TRIGGER_NAME, __scopeCheckbox);
     const composedRefs = useComposedRefs(forwardedRef, setControl);
-    const initialCheckedStateRef = reactExports.useRef(checked);
-    reactExports.useEffect(() => {
+    const initialCheckedStateRef = React.useRef(checked);
+    React.useEffect(() => {
       const form = control?.form;
       if (form) {
         const reset = /* @__PURE__ */ __name(() => setChecked(initialCheckedStateRef.current), "reset");
@@ -97,7 +98,7 @@ var CheckboxTrigger = /* @__PURE__ */ reactExports.forwardRef(
         return () => form.removeEventListener("reset", reset);
       }
     }, [control, setChecked]);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       Primitive.button,
       {
         type: "button",
@@ -125,7 +126,7 @@ var CheckboxTrigger = /* @__PURE__ */ reactExports.forwardRef(
     );
   }, "CheckboxTrigger")
 );
-var Checkbox = /* @__PURE__ */ reactExports.forwardRef(
+var Checkbox = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function Checkbox2(props, forwardedRef) {
     const {
@@ -140,7 +141,7 @@ var Checkbox = /* @__PURE__ */ reactExports.forwardRef(
       form,
       ...checkboxProps
     } = props;
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       CheckboxProvider,
       {
         __scopeCheckbox,
@@ -152,8 +153,8 @@ var Checkbox = /* @__PURE__ */ reactExports.forwardRef(
         name,
         form,
         value,
-        internal_do_not_use_render: ({ isFormControl }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
+        internal_do_not_use_render: ({ isFormControl }) => /* @__PURE__ */ jsxs(Fragment, { children: [
+          /* @__PURE__ */ jsx(
             CheckboxTrigger,
             {
               ...checkboxProps,
@@ -161,7 +162,7 @@ var Checkbox = /* @__PURE__ */ reactExports.forwardRef(
               __scopeCheckbox
             }
           ),
-          isFormControl && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          isFormControl && /* @__PURE__ */ jsx(
             CheckboxBubbleInput,
             {
               __scopeCheckbox
@@ -173,16 +174,16 @@ var Checkbox = /* @__PURE__ */ reactExports.forwardRef(
   }, "Checkbox")
 );
 var INDICATOR_NAME = "CheckboxIndicator";
-var CheckboxIndicator = /* @__PURE__ */ reactExports.forwardRef(
+var CheckboxIndicator = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function CheckboxIndicator2(props, forwardedRef) {
     const { __scopeCheckbox, forceMount, ...indicatorProps } = props;
     const context = useCheckboxContext(INDICATOR_NAME, __scopeCheckbox);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    return /* @__PURE__ */ jsx(
       Presence,
       {
         present: forceMount || isIndeterminate(context.checked) || context.checked === true,
-        children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        children: /* @__PURE__ */ jsx(
           Primitive.span,
           {
             "data-state": getState(context.checked),
@@ -197,7 +198,7 @@ var CheckboxIndicator = /* @__PURE__ */ reactExports.forwardRef(
   }, "CheckboxIndicator")
 );
 var BUBBLE_INPUT_NAME = "CheckboxBubbleInput";
-var CheckboxBubbleInput = /* @__PURE__ */ reactExports.forwardRef(
+var CheckboxBubbleInput = /* @__PURE__ */ React.forwardRef(
   // blank line to reduce diff noise
   /* @__PURE__ */ __name(function CheckboxBubbleInput2({ __scopeCheckbox, onClick, ...props }, forwardedRef) {
     const {
@@ -216,10 +217,10 @@ var CheckboxBubbleInput = /* @__PURE__ */ reactExports.forwardRef(
     } = useCheckboxContext(BUBBLE_INPUT_NAME, __scopeCheckbox);
     const composedRefs = useComposedRefs(forwardedRef, setBubbleInput);
     const controlSize = useSize(control);
-    const shouldStopClickPropagationRef = reactExports.useRef(false);
-    const prevCheckedRef = reactExports.useRef(checked);
-    const prevUserInteractionCountRef = reactExports.useRef(userInteractionCount);
-    reactExports.useEffect(() => {
+    const shouldStopClickPropagationRef = React.useRef(false);
+    const prevCheckedRef = React.useRef(checked);
+    const prevUserInteractionCountRef = React.useRef(userInteractionCount);
+    React.useEffect(() => {
       const input = bubbleInput;
       if (!input) return;
       const inputProto = window.HTMLInputElement.prototype;
@@ -242,8 +243,8 @@ var CheckboxBubbleInput = /* @__PURE__ */ reactExports.forwardRef(
         shouldStopClickPropagationRef.current = false;
       }
     }, [bubbleInput, checked, hasConsumerStoppedPropagationRef, userInteractionCount]);
-    const defaultCheckedRef = reactExports.useRef(isIndeterminate(checked) ? false : checked);
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    const defaultCheckedRef = React.useRef(isIndeterminate(checked) ? false : checked);
+    return /* @__PURE__ */ jsx(
       Primitive.input,
       {
         type: "checkbox",

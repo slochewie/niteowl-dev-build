@@ -1,9 +1,9 @@
-import { r as reactExports } from "./react.mjs";
+import * as React from "react";
 import { u as useLayoutEffect2 } from "./@radix-ui/react-use-layout-effect+[...].mjs";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 function useStateMachine(initialState, machine) {
-  return reactExports.useReducer((state, event) => {
+  return React.useReducer((state, event) => {
     const nextState = machine[state][event];
     return nextState ?? state;
   }, initialState);
@@ -12,17 +12,17 @@ __name(useStateMachine, "useStateMachine");
 var Presence = /* @__PURE__ */ __name((props) => {
   const { present, children } = props;
   const presence = usePresence(present);
-  const child = typeof children === "function" ? children({ present: presence.isPresent }) : reactExports.Children.only(children);
+  const child = typeof children === "function" ? children({ present: presence.isPresent }) : React.Children.only(children);
   const ref = useStableComposedRefs(presence.ref, getElementRef(child));
   const forceMount = typeof children === "function";
-  return forceMount || presence.isPresent ? reactExports.cloneElement(child, { ref }) : null;
+  return forceMount || presence.isPresent ? React.cloneElement(child, { ref }) : null;
 }, "Presence");
 function usePresence(present) {
-  const [node, setNode] = reactExports.useState();
-  const stylesRef = reactExports.useRef(null);
-  const prevPresentRef = reactExports.useRef(present);
-  const prevAnimationNameRef = reactExports.useRef("none");
-  const mountAnimationNameRef = reactExports.useRef(void 0);
+  const [node, setNode] = React.useState();
+  const stylesRef = React.useRef(null);
+  const prevPresentRef = React.useRef(present);
+  const prevAnimationNameRef = React.useRef("none");
+  const mountAnimationNameRef = React.useRef(void 0);
   const initialState = present ? "mounted" : "unmounted";
   const [state, send] = useStateMachine(initialState, {
     mounted: {
@@ -37,7 +37,7 @@ function usePresence(present) {
       MOUNT: "mounted"
     }
   });
-  reactExports.useEffect(() => {
+  React.useEffect(() => {
     if (state === "mounted") {
       prevAnimationNameRef.current = mountAnimationNameRef.current ?? getAnimationName(stylesRef.current);
       mountAnimationNameRef.current = void 0;
@@ -108,7 +108,7 @@ function usePresence(present) {
   }, [node, send]);
   return {
     isPresent: ["mounted", "unmountSuspended"].includes(state),
-    ref: reactExports.useCallback((node2) => {
+    ref: React.useCallback((node2) => {
       if (node2) {
         const styles = getComputedStyle(node2);
         stylesRef.current = styles;
@@ -130,9 +130,9 @@ function setRef(ref, value) {
 }
 __name(setRef, "setRef");
 function useStableComposedRefs(...refs) {
-  const refsRef = reactExports.useRef(refs);
+  const refsRef = React.useRef(refs);
   refsRef.current = refs;
-  return reactExports.useCallback((node) => {
+  return React.useCallback((node) => {
     const currentRefs = refsRef.current;
     let hasCleanup = false;
     const cleanups = currentRefs.map((ref) => {
