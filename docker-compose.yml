@@ -81,9 +81,10 @@ services:
   admin:
     image: 'node:26-trixie'
     working_dir: /app
-    command:
-      - sleep
-      - infinity
+    command: ["sh", "-c", "npm run build && npm start"]
+#    command:
+#      - sleep
+#      - infinity
     stdin_open: true
     tty: true
     volumes:
@@ -106,6 +107,11 @@ services:
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
       BETTER_AUTH_URL: ${AUTH_URL}
       BETTER_AUTH_TRUSTED_ORIGINS: ${ADMIN_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 networks:
   niteowl-dev:
