@@ -15,3 +15,6 @@ redis/
 # Package locks (Optional: remove if you want to track versions)
 package-lock.json
 yarn.lock
+
+#
+admin-zip
