@@ -10,7 +10,8 @@ import { mediaBackendPlugin } from "@btst/stack/plugins/media/api"
 import { openApiBackendPlugin } from "@btst/stack/plugins/open-api/api"
 import { z } from "zod"
 // TODO: wire your Drizzle DB instance (drizzleDb)
-const drizzleDb = {} as never
+//const drizzleDb = {} as never
+import { drizzleDb } from "@/lib/db"
 
 export const myStack = stack({
 	basePath: "/api/data",
