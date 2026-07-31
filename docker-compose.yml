@@ -1,0 +1,112 @@
+name: niteowl-dev
+
+services:
+  postgres:
+    image: postgres:18
+#    container_name: niteowl-dev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    networks: [niteowl-dev]
+
+  redis:
+    image: redis:8-alpine
+#    container_name: niteowl-dev-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - ./redis:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [niteowl-dev]
+
+
+  node-upstream:
+    image: 'node:26-trixie'
+    working_dir: /app
+    command:
+      - sleep
+      - infinity
+    stdin_open: true
+    tty: true
+    volumes:
+      - './node-upstream/app:/app'
+    restart: unless-stopped
+    networks: [niteowl-dev]
+#    environment:
+#      - 'UID=${UID}'
+#      - 'GID=${GID}'
+
+  auth:
+    image: 'node:26-trixie'
+    working_dir: /app
+    command:
+      - sleep
+      - infinity
+    stdin_open: true
+    tty: true
+    volumes:
+      - './auth/app:/app'
+    restart: unless-stopped
+    networks: [niteowl-dev]
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: 3000
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${AUTH_URL}
+      BETTER_AUTH_TRUSTED_ORIGINS: ${ADMIN_URL}
+
+  admin:
+    image: 'node:26-trixie'
+    working_dir: /app
+    command:
+      - sleep
+      - infinity
+    stdin_open: true
+    tty: true
+    volumes:
+      - './admin/app:/app'
+    restart: unless-stopped
+    networks: [niteowl-dev]
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: 3000
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${AUTH_URL}
+      BETTER_AUTH_TRUSTED_ORIGINS: ${ADMIN_URL}
+
+networks:
+  niteowl-dev:
+    name: niteowl-dev
