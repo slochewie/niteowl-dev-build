@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-router"
 import { QueryClientProvider } from "@tanstack/react-query"
 
-import globalsCss from "@/styles/globals.css?url"
+import "@/styles/globals.css"
 import type { MyRouterContext } from "@/router"
 import { getOrCreateQueryClient } from "@/lib/query-client"
 
@@ -19,7 +19,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: "width=device-width, initial-scale=1",
       },
     ],
-    links: [{ rel: "stylesheet", href: globalsCss }],
   }),
   component: RootComponent,
 })

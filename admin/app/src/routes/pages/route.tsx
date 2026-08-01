@@ -1,4 +1,5 @@
 import { authClient } from "@/lib/auth-client"
+import { useEffect } from "react"
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router"
 import { Link as RouterLink } from "@tanstack/react-router"
 import { StackProvider } from "@btst/stack/context"
@@ -22,6 +23,11 @@ function getBaseURL() {
 }
 
 function BtstPagesLayout() {
+        useEffect(() => {
+          console.log("BTST pages hydrated")
+          document.documentElement.dataset.btstHydrated = "true"
+        }, [])
+
 	const navigate = useNavigate()
 	const queryClient = getOrCreateQueryClient()
 	const baseURL = getBaseURL()
@@ -84,7 +90,6 @@ function BtstPagesLayout() {
 						authClient,
 						navigate: (path: string) => navigate({ to: path }),
 						replace: (path: string) => navigate({ to: path, replace: true }),
-						onSessionChange: () => window.location.reload(),
 						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
 						basePath: "/pages/auth",
 						redirectTo: "/pages/account/settings",
@@ -93,7 +98,6 @@ function BtstPagesLayout() {
 						authClient,
 						navigate: (path: string) => navigate({ to: path }),
 						replace: (path: string) => navigate({ to: path, replace: true }),
-						onSessionChange: () => window.location.reload(),
 						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
 						basePath: "/pages/account",
 						account: { fields: ["image", "name"] },
@@ -102,7 +106,6 @@ function BtstPagesLayout() {
 						authClient,
 						navigate: (path: string) => navigate({ to: path }),
 						replace: (path: string) => navigate({ to: path, replace: true }),
-						onSessionChange: () => window.location.reload(),
 						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
 						basePath: "/pages/org",
 						organization: { basePath: "/pages/org" },

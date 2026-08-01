@@ -28,16 +28,14 @@ export default defineConfig({
     tailwindcss(),
     tsconfigPaths(),
     tanstackStart(),
-
     nitro({
       preset: "node-server",
       traceDeps: [
         "@btst/stack",
         "react",
         "react-dom",
-      ],
-    }),
-
+    ],
+}),
     viteReact(),
   ],
 })

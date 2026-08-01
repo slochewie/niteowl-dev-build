@@ -18,3 +18,8 @@ yarn.lock
 
 #
 admin-zip
+
+.output/
+.vite/
+.vite-temp/
+.nitro

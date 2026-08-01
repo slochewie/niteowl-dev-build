@@ -1,1 +1,0 @@
-import{R as s,g as r,n as u,a as i,j as e}from"./index-W4luTJFB.js";function c(){const o=s.useParams(),n=r(),a=u(o._splat),t=i(n).router.getRoute(a);return t?.PageComponent?e.jsx(t.PageComponent,{}):e.jsx("div",{children:"Route not found"})}export{c as component};
