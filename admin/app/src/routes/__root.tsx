@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -25,7 +26,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootComponent() {
   const queryClient = getOrCreateQueryClient()
-
+  useEffect(() => {
+    console.log("NiteOwl root hydrated")
+    document.documentElement.dataset.btstHydrated = "true"
+  }, [])
   return (
     <html lang="en" suppressHydrationWarning>
       <head>

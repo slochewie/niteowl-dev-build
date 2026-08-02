@@ -1,5 +1,9 @@
 import { createAuthClient } from "better-auth/react"
-import { organizationClient } from "better-auth/client/plugins"
+import {
+  adminClient,
+  organizationClient,
+  usernameClient,
+} from "better-auth/client/plugins"
 
 function getAuthBaseURL() {
   if (typeof window !== "undefined") {
@@ -24,6 +28,8 @@ export const authClient = createAuthClient({
   },
 
   plugins: [
+    adminClient(),
+    usernameClient(),
     organizationClient(),
   ],
 })

@@ -18,9 +18,9 @@
     "@shadcn/react": "^0.2.1",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query": "^5.101.4",
-    "@tanstack/react-router": "^1.0.0",
-    "@tanstack/react-router-ssr-query": "^1.0.0",
-    "@tanstack/react-start": "^1.0.0",
+    "@tanstack/react-router": "1.166.2",
+    "@tanstack/react-router-ssr-query": "1.166.2",
+    "@tanstack/react-start": "1.166.2",
     "@tanstack/react-table": "^8.21.3",
     "@vercel/blob": "^2.6.1",
     "better-auth": "^1.6.25",
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@btst/cli": "^2.2.2",
     "@tailwindcss/vite": "^4.3.3",
-    "@tanstack/router-cli": "^1.0.0",
+    "@tanstack/router-cli": "1.166.2",
     "@types/node": "^22",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
@@ -61,6 +61,8 @@
   "allowScripts": {
     "core-js@3.49.0": true,
     "better-sqlite3@12.11.1": true,
+    "esbuild@0.28.1": true,
+    "esbuild@0.18.20": true,
     "esbuild@0.25.12": true
   },
   "imports": {

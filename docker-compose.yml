@@ -94,7 +94,7 @@ services:
     ports:
       - "3030:3000"
     environment:
-      NODE_ENV: ${NODE_ENV}
+#      NODE_ENV: ${NODE_ENV}
       PORT: ${PORT}
       PGHOST: ${PGHOST}
       PGPORT: ${PGPORT}
