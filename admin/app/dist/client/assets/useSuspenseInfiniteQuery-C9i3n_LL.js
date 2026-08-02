@@ -1,1 +1,0 @@
-import{I as u}from"./infiniteQueryObserver-B__BY-KQ.js";import{u as s,d as n}from"./useBaseQuery-DeCK11jn.js";function a(r,e){return s({...r,enabled:!0,suspense:!0,throwOnError:n},u,e)}export{a as u};
