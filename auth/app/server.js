@@ -2,13 +2,23 @@ import express from "express";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth.js";
+import { env } from "./lib/env.js";
 
 const app = express();
-const port = Number(process.env.PORT ?? 3000);
+const port = env.port;
 
 app.use(
   cors({
-    origin: "http://192.168.111.27:3030",
+    origin(origin, callback) {
+      // Requests without an Origin header include health checks and
+      // server-to-server calls from other containers.
+      if (!origin || env.trustedOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    },
     credentials: true,
   }),
 );
