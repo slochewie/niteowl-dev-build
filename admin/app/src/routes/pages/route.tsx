@@ -1,7 +1,6 @@
-import { createFileRoute, Outlet, useNavigate, useLocation } from "@tanstack/react-router"
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router"
 import { Link as RouterLink } from "@tanstack/react-router"
 import { StackProvider } from "@btst/stack/context"
-import { ChatLayout } from "@btst/stack/plugins/ai-chat/client"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { getOrCreateQueryClient } from "@/lib/query-client"
 
@@ -24,119 +23,118 @@ function getBaseURL() {
 function BtstPagesLayout() {
 	const navigate = useNavigate()
 	const queryClient = getOrCreateQueryClient()
-	const hasApiKey = !!import.meta.env.VITE_HAS_OPENAI_KEY
-	const location = useLocation()
-	const showChatWidget = !location.pathname.startsWith("/pages/chat")
 	const baseURL = getBaseURL()
+
 	return (
 		<QueryClientProvider client={queryClient}>
 			<StackProvider
 				basePath="/pages"
 				overrides={
 					{
-					"blog": {
-						apiBaseURL: baseURL,
-						apiBasePath: "/api/data",
-						navigate: (path: string) => navigate({ to: path }),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-						uploadImage: async () => {
-							throw new Error("TODO: implement blog.uploadImage override in src/routes/pages/route.tsx")
+						blog: {
+							apiBaseURL: baseURL,
+							apiBasePath: "/api/data",
+							navigate: (path: string) => navigate({ to: path }),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
+							uploadImage: async () => {
+								throw new Error(
+									"TODO: implement blog.uploadImage override in src/routes/pages/route.tsx",
+								)
+							},
 						},
-					},
-					"ai-chat": {
-						apiBaseURL: baseURL,
-						apiBasePath: "/api/data",
-						mode: "public" as const,
-						navigate: (path: string) => navigate({ to: path }),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-					},
-					"cms": {
-						apiBaseURL: baseURL,
-						apiBasePath: "/api/data",
-						navigate: (path: string) => navigate({ to: path }),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-					},
-					"form-builder": {
-						apiBaseURL: baseURL,
-						apiBasePath: "/api/data",
-						navigate: (path: string) => navigate({ to: path }),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-					},
-					"ui-builder": {
-						apiBaseURL: baseURL,
-						apiBasePath: "/api/data",
-						navigate: (path: string) => navigate({ to: path }),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-					},
-					"kanban": {
-						apiBaseURL: baseURL,
-						apiBasePath: "/api/data",
-						navigate: (path: string) => navigate({ to: path }),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-						uploadImage: async () => {
-							throw new Error("TODO: implement kanban.uploadImage override in src/routes/pages/route.tsx")
+						cms: {
+							apiBaseURL: baseURL,
+							apiBasePath: "/api/data",
+							navigate: (path: string) => navigate({ to: path }),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
 						},
-						resolveUser: async () => null,
-						searchUsers: async () => [],
-					},
-					"comments": {
-						apiBaseURL: baseURL,
-						apiBasePath: "/api/data",
-					},
-					"media": {
-						apiBaseURL: baseURL,
-						apiBasePath: "/api/data",
-						queryClient,
-						navigate: (path: string) => navigate({ to: path }),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-					},
-					auth: {
-						authClient: undefined as any,
-						navigate: (path: string) => navigate({ to: path }),
-						replace: (path: string) => navigate({ to: path, replace: true }),
-						onSessionChange: () => window.location.reload(),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-						basePath: "/pages/auth",
-						redirectTo: "/pages/account/settings",
-					},
-					account: {
-						authClient: undefined as any,
-						navigate: (path: string) => navigate({ to: path }),
-						replace: (path: string) => navigate({ to: path, replace: true }),
-						onSessionChange: () => window.location.reload(),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-						basePath: "/pages/account",
-						account: { fields: ["image", "name"] },
-					},
-					organization: {
-						authClient: undefined as any,
-						navigate: (path: string) => navigate({ to: path }),
-						replace: (path: string) => navigate({ to: path, replace: true }),
-						onSessionChange: () => window.location.reload(),
-						Link: ({ href, to, ...props }: any) => <RouterLink to={href || to || "#"} {...props} />,
-						basePath: "/pages/org",
-						organization: { basePath: "/pages/org" },
-					},
+						"form-builder": {
+							apiBaseURL: baseURL,
+							apiBasePath: "/api/data",
+							navigate: (path: string) => navigate({ to: path }),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
+						},
+						"ui-builder": {
+							apiBaseURL: baseURL,
+							apiBasePath: "/api/data",
+							navigate: (path: string) => navigate({ to: path }),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
+						},
+						kanban: {
+							apiBaseURL: baseURL,
+							apiBasePath: "/api/data",
+							navigate: (path: string) => navigate({ to: path }),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
+							uploadImage: async () => {
+								throw new Error(
+									"TODO: implement kanban.uploadImage override in src/routes/pages/route.tsx",
+								)
+							},
+							resolveUser: async () => null,
+							searchUsers: async () => [],
+						},
+						comments: {
+							apiBaseURL: baseURL,
+							apiBasePath: "/api/data",
+						},
+						media: {
+							apiBaseURL: baseURL,
+							apiBasePath: "/api/data",
+							queryClient,
+							navigate: (path: string) => navigate({ to: path }),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
+						},
+						auth: {
+							authClient: undefined as any,
+							navigate: (path: string) => navigate({ to: path }),
+							replace: (path: string) =>
+								navigate({ to: path, replace: true }),
+							onSessionChange: () => window.location.reload(),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
+							basePath: "/pages/auth",
+							redirectTo: "/pages/account/settings",
+						},
+						account: {
+							authClient: undefined as any,
+							navigate: (path: string) => navigate({ to: path }),
+							replace: (path: string) =>
+								navigate({ to: path, replace: true }),
+							onSessionChange: () => window.location.reload(),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
+							basePath: "/pages/account",
+							account: { fields: ["image", "name"] },
+						},
+						organization: {
+							authClient: undefined as any,
+							navigate: (path: string) => navigate({ to: path }),
+							replace: (path: string) =>
+								navigate({ to: path, replace: true }),
+							onSessionChange: () => window.location.reload(),
+							Link: ({ href, to, ...props }: any) => (
+								<RouterLink to={href || to || "#"} {...props} />
+							),
+							basePath: "/pages/org",
+							organization: { basePath: "/pages/org" },
+						},
 					}
 				}
 			>
-				{!hasApiKey && (
-					<div className="bg-amber-50 border-b border-amber-200 px-4 py-2 text-center text-sm text-amber-800">
-						Add <code className="font-mono">OPENAI_API_KEY</code> to{" "}
-						<code className="font-mono">.env</code> to enable AI chat.
-					</div>
-				)}
-				{showChatWidget && (
-					<div className="fixed bottom-6 right-6 z-50">
-						<ChatLayout
-							apiBaseURL={baseURL}
-							apiBasePath="/api/data"
-							layout="widget"
-							widgetHeight="520px"
-							showSidebar={false}
-						/>
-					</div>
-				)}
 				<Outlet />
 			</StackProvider>
 		</QueryClientProvider>

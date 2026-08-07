@@ -73,10 +73,11 @@ services:
   admin:
     image: 'node:26-trixie'
     working_dir: /app
-#    command: ["sh", "-c", "npm run build && npm start"]
-    command:
-      - sleep
-      - infinity
+    command: ["sh", "-c", "npm run build && npm start"]
+#    command: ["npm", "start"]
+#    command:
+#      - sleep
+#      - infinity
     stdin_open: true
     tty: true
     volumes:
