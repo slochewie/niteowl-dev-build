@@ -9,22 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as PagesRouteRouteImport } from './routes/pages/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PreviewSlugRouteImport } from './routes/preview.$slug'
-import { Route as PagesSplatRouteImport } from './routes/pages/$'
+import { Route as PagesRouteRouteImport } from './routes/pages/route'
+import { Route as PublicChatRouteImport } from './routes/public-chat'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as FormDemoSlugRouteImport } from './routes/form-demo.$slug'
-import { Route as ApiSeedUiBuilderRouteImport } from './routes/api/seed-ui-builder'
-import { Route as ApiSeedKanbanRouteImport } from './routes/api/seed-kanban'
-import { Route as ApiSeedFormBuilderRouteImport } from './routes/api/seed-form-builder'
-import { Route as ApiSeedCmsRouteImport } from './routes/api/seed-cms'
-import { Route as ApiSeedBlogRouteImport } from './routes/api/seed-blog'
+import { Route as PagesSplatRouteImport } from './routes/pages/$'
+import { Route as PreviewSlugRouteImport } from './routes/preview.$slug'
 import { Route as ApiDataSplatRouteImport } from './routes/api/data/$'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PagesRouteRoute = PagesRouteRouteImport.update({
@@ -32,14 +28,19 @@ const PagesRouteRoute = PagesRouteRouteImport.update({
   path: '/pages',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const PublicChatRoute = PublicChatRouteImport.update({
+  id: '/public-chat',
+  path: '/public-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PreviewSlugRoute = PreviewSlugRouteImport.update({
-  id: '/preview/$slug',
-  path: '/preview/$slug',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FormDemoSlugRoute = FormDemoSlugRouteImport.update({
+  id: '/form-demo/$slug',
+  path: '/form-demo/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PagesSplatRoute = PagesSplatRouteImport.update({
@@ -47,34 +48,9 @@ const PagesSplatRoute = PagesSplatRouteImport.update({
   path: '/$',
   getParentRoute: () => PagesRouteRoute,
 } as any)
-const FormDemoSlugRoute = FormDemoSlugRouteImport.update({
-  id: '/form-demo/$slug',
-  path: '/form-demo/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSeedUiBuilderRoute = ApiSeedUiBuilderRouteImport.update({
-  id: '/api/seed-ui-builder',
-  path: '/api/seed-ui-builder',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSeedKanbanRoute = ApiSeedKanbanRouteImport.update({
-  id: '/api/seed-kanban',
-  path: '/api/seed-kanban',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSeedFormBuilderRoute = ApiSeedFormBuilderRouteImport.update({
-  id: '/api/seed-form-builder',
-  path: '/api/seed-form-builder',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSeedCmsRoute = ApiSeedCmsRouteImport.update({
-  id: '/api/seed-cms',
-  path: '/api/seed-cms',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSeedBlogRoute = ApiSeedBlogRouteImport.update({
-  id: '/api/seed-blog',
-  path: '/api/seed-blog',
+const PreviewSlugRoute = PreviewSlugRouteImport.update({
+  id: '/preview/$slug',
+  path: '/preview/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiDataSplatRoute = ApiDataSplatRouteImport.update({
@@ -86,12 +62,8 @@ const ApiDataSplatRoute = ApiDataSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/pages': typeof PagesRouteRouteWithChildren
+  '/public-chat': typeof PublicChatRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/api/seed-blog': typeof ApiSeedBlogRoute
-  '/api/seed-cms': typeof ApiSeedCmsRoute
-  '/api/seed-form-builder': typeof ApiSeedFormBuilderRoute
-  '/api/seed-kanban': typeof ApiSeedKanbanRoute
-  '/api/seed-ui-builder': typeof ApiSeedUiBuilderRoute
   '/form-demo/$slug': typeof FormDemoSlugRoute
   '/pages/$': typeof PagesSplatRoute
   '/preview/$slug': typeof PreviewSlugRoute
@@ -100,12 +72,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/pages': typeof PagesRouteRouteWithChildren
+  '/public-chat': typeof PublicChatRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/api/seed-blog': typeof ApiSeedBlogRoute
-  '/api/seed-cms': typeof ApiSeedCmsRoute
-  '/api/seed-form-builder': typeof ApiSeedFormBuilderRoute
-  '/api/seed-kanban': typeof ApiSeedKanbanRoute
-  '/api/seed-ui-builder': typeof ApiSeedUiBuilderRoute
   '/form-demo/$slug': typeof FormDemoSlugRoute
   '/pages/$': typeof PagesSplatRoute
   '/preview/$slug': typeof PreviewSlugRoute
@@ -115,12 +83,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/pages': typeof PagesRouteRouteWithChildren
+  '/public-chat': typeof PublicChatRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/api/seed-blog': typeof ApiSeedBlogRoute
-  '/api/seed-cms': typeof ApiSeedCmsRoute
-  '/api/seed-form-builder': typeof ApiSeedFormBuilderRoute
-  '/api/seed-kanban': typeof ApiSeedKanbanRoute
-  '/api/seed-ui-builder': typeof ApiSeedUiBuilderRoute
   '/form-demo/$slug': typeof FormDemoSlugRoute
   '/pages/$': typeof PagesSplatRoute
   '/preview/$slug': typeof PreviewSlugRoute
@@ -131,12 +95,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/pages'
+    | '/public-chat'
     | '/sitemap.xml'
-    | '/api/seed-blog'
-    | '/api/seed-cms'
-    | '/api/seed-form-builder'
-    | '/api/seed-kanban'
-    | '/api/seed-ui-builder'
     | '/form-demo/$slug'
     | '/pages/$'
     | '/preview/$slug'
@@ -145,12 +105,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/pages'
+    | '/public-chat'
     | '/sitemap.xml'
-    | '/api/seed-blog'
-    | '/api/seed-cms'
-    | '/api/seed-form-builder'
-    | '/api/seed-kanban'
-    | '/api/seed-ui-builder'
     | '/form-demo/$slug'
     | '/pages/$'
     | '/preview/$slug'
@@ -159,12 +115,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/pages'
+    | '/public-chat'
     | '/sitemap.xml'
-    | '/api/seed-blog'
-    | '/api/seed-cms'
-    | '/api/seed-form-builder'
-    | '/api/seed-kanban'
-    | '/api/seed-ui-builder'
     | '/form-demo/$slug'
     | '/pages/$'
     | '/preview/$slug'
@@ -174,12 +126,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PagesRouteRoute: typeof PagesRouteRouteWithChildren
+  PublicChatRoute: typeof PublicChatRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  ApiSeedBlogRoute: typeof ApiSeedBlogRoute
-  ApiSeedCmsRoute: typeof ApiSeedCmsRoute
-  ApiSeedFormBuilderRoute: typeof ApiSeedFormBuilderRoute
-  ApiSeedKanbanRoute: typeof ApiSeedKanbanRoute
-  ApiSeedUiBuilderRoute: typeof ApiSeedUiBuilderRoute
   FormDemoSlugRoute: typeof FormDemoSlugRoute
   PreviewSlugRoute: typeof PreviewSlugRoute
   ApiDataSplatRoute: typeof ApiDataSplatRoute
@@ -187,11 +135,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pages': {
@@ -201,18 +149,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PagesRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/public-chat': {
+      id: '/public-chat'
+      path: '/public-chat'
+      fullPath: '/public-chat'
+      preLoaderRoute: typeof PublicChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/preview/$slug': {
-      id: '/preview/$slug'
-      path: '/preview/$slug'
-      fullPath: '/preview/$slug'
-      preLoaderRoute: typeof PreviewSlugRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/form-demo/$slug': {
+      id: '/form-demo/$slug'
+      path: '/form-demo/$slug'
+      fullPath: '/form-demo/$slug'
+      preLoaderRoute: typeof FormDemoSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pages/$': {
@@ -222,46 +177,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PagesSplatRouteImport
       parentRoute: typeof PagesRouteRoute
     }
-    '/form-demo/$slug': {
-      id: '/form-demo/$slug'
-      path: '/form-demo/$slug'
-      fullPath: '/form-demo/$slug'
-      preLoaderRoute: typeof FormDemoSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/seed-ui-builder': {
-      id: '/api/seed-ui-builder'
-      path: '/api/seed-ui-builder'
-      fullPath: '/api/seed-ui-builder'
-      preLoaderRoute: typeof ApiSeedUiBuilderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/seed-kanban': {
-      id: '/api/seed-kanban'
-      path: '/api/seed-kanban'
-      fullPath: '/api/seed-kanban'
-      preLoaderRoute: typeof ApiSeedKanbanRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/seed-form-builder': {
-      id: '/api/seed-form-builder'
-      path: '/api/seed-form-builder'
-      fullPath: '/api/seed-form-builder'
-      preLoaderRoute: typeof ApiSeedFormBuilderRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/seed-cms': {
-      id: '/api/seed-cms'
-      path: '/api/seed-cms'
-      fullPath: '/api/seed-cms'
-      preLoaderRoute: typeof ApiSeedCmsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/seed-blog': {
-      id: '/api/seed-blog'
-      path: '/api/seed-blog'
-      fullPath: '/api/seed-blog'
-      preLoaderRoute: typeof ApiSeedBlogRouteImport
+    '/preview/$slug': {
+      id: '/preview/$slug'
+      path: '/preview/$slug'
+      fullPath: '/preview/$slug'
+      preLoaderRoute: typeof PreviewSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/data/$': {
@@ -289,12 +209,8 @@ const PagesRouteRouteWithChildren = PagesRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PagesRouteRoute: PagesRouteRouteWithChildren,
+  PublicChatRoute: PublicChatRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  ApiSeedBlogRoute: ApiSeedBlogRoute,
-  ApiSeedCmsRoute: ApiSeedCmsRoute,
-  ApiSeedFormBuilderRoute: ApiSeedFormBuilderRoute,
-  ApiSeedKanbanRoute: ApiSeedKanbanRoute,
-  ApiSeedUiBuilderRoute: ApiSeedUiBuilderRoute,
   FormDemoSlugRoute: FormDemoSlugRoute,
   PreviewSlugRoute: PreviewSlugRoute,
   ApiDataSplatRoute: ApiDataSplatRoute,

@@ -1,6 +1,7 @@
 import { createStackClient } from "@btst/stack/client"
 import { QueryClient } from "@tanstack/react-query"
 import { blogClientPlugin } from "@btst/stack/plugins/blog/client"
+// import { aiChatClientPlugin } from "@btst/stack/plugins/ai-chat/client"
 import { cmsClientPlugin } from "@btst/stack/plugins/cms/client"
 import { formBuilderClientPlugin } from "@btst/stack/plugins/form-builder/client"
 import { uiBuilderClientPlugin } from "@btst/stack/plugins/ui-builder/client"

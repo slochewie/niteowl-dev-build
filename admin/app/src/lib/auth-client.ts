@@ -3,6 +3,8 @@ import {
   adminClient,
   organizationClient,
   usernameClient,
+  apiKeyClient,
+  jwtClient,
 } from "better-auth/client/plugins"
 
 function getAuthBaseURL() {
@@ -29,7 +31,10 @@ export const authClient = createAuthClient({
 
   plugins: [
     adminClient(),
-    usernameClient(),
     organizationClient(),
+    usernameClient(),
+    apiKeyClient(),
+    jwtClient(),
+
   ],
 })

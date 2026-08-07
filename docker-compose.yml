@@ -43,8 +43,12 @@ services:
       - infinity
     stdin_open: true
     tty: true
+    ports:
+      - "3040:3000"
     volumes:
       - './node-upstream/app:/app'
+    env_file:
+      - .env
     restart: unless-stopped
     networks: [niteowl-dev]
 
@@ -63,28 +67,16 @@ services:
     networks: [niteowl-dev]
     ports:
       - "3031:3000"
-    environment:
-      NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT}
-      PGHOST: ${PGHOST}
-      PGPORT: ${PGPORT}
-      PGDATABASE: ${POSTGRES_DB}
-      PGUSER: ${POSTGRES_USER}
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL: ${AUTH_URL}
-      BETTER_AUTH_TRUSTED_ORIGINS: ${ADMIN_URL}
+    env_file:
+      - ./.env-better-auth
 
   admin:
     image: 'node:26-trixie'
     working_dir: /app
-    command: ["sh", "-c", "npm run build && npm start"]
-#    command:
-#      - sleep
-#      - infinity
+#    command: ["sh", "-c", "npm run build && npm start"]
+    command:
+      - sleep
+      - infinity
     stdin_open: true
     tty: true
     volumes:
@@ -93,22 +85,8 @@ services:
     networks: [niteowl-dev]
     ports:
       - "3030:3000"
-    environment:
-#      NODE_ENV: ${NODE_ENV}
-      PORT: ${PORT}
-      PGHOST: ${PGHOST}
-      PGPORT: ${PGPORT}
-      PGDATABASE: ${POSTGRES_DB}
-      PGUSER: ${POSTGRES_USER}
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
-      BETTER_AUTH_URL: ${AUTH_URL}
-      BETTER_AUTH_TRUSTED_ORIGINS: ${ADMIN_URL}
-      VITE_AUTH_BASE_URL: ${VITE_AUTH_BASE_URL}
-      AUTH_BASE_URL: ${AUTH_BASE_URL}
+    env_file:
+      - ./.env-btst
     depends_on:
       postgres:
         condition: service_healthy

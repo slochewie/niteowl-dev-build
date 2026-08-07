@@ -1,5 +1,7 @@
 # Environment variables
 *.env
+.env-btst
+.env-better-auth
 
 # Dependencies
 node_modules/
@@ -23,5 +25,9 @@ admin-zip
 .vite/
 .vite-temp/
 .nitro
+.vscode/
+.agents/
+.claude/
+
 
 admin/app/dist/server/assets/

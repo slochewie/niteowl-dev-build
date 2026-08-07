@@ -1,45 +1,84 @@
-import { useEffect } from "react"
 import {
-  createRootRouteWithContext,
   HeadContent,
-  Outlet,
   Scripts,
-} from "@tanstack/react-router"
-import { QueryClientProvider } from "@tanstack/react-query"
+  createRootRouteWithContext,
+} from '@tanstack/react-router'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import { TanStackDevtools } from '@tanstack/react-devtools'
 
-import "@/styles/globals.css"
-import type { MyRouterContext } from "@/router"
-import { getOrCreateQueryClient } from "@/lib/query-client"
+import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
+
+import { Toaster } from "@/components/ui/sonner"
+
+import appCss from '../styles.css?url'
+
+import type { QueryClient } from '@tanstack/react-query'
+import { QueryClientProvider } from "@tanstack/react-query";
+import { getOrCreateQueryClient } from "@/lib/query-client";
+import { PageAIContextProvider } from "@btst/stack/plugins/ai-chat/client/context";
+
+interface MyRouterContext {
+  queryClient: QueryClient
+}
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   head: () => ({
     meta: [
-      { charSet: "utf-8" },
       {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
+        charSet: 'utf-8',
+      },
+      {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
+      },
+      {
+        title: 'TanStack Start Starter',
+      },
+    ],
+    links: [
+      {
+        rel: 'stylesheet',
+        href: appCss,
       },
     ],
   }),
-  component: RootComponent,
+  shellComponent: RootDocument,
 })
 
-function RootComponent() {
-  const queryClient = getOrCreateQueryClient()
-  useEffect(() => {
-    console.log("NiteOwl root hydrated")
-    document.documentElement.dataset.btstHydrated = "true"
-  }, [])
+function RootDocument({ children }: { children: React.ReactNode }) {
+    const queryClient = getOrCreateQueryClient()
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <HeadContent />
-      </head>
+    	<PageAIContextProvider>
+    		<QueryClientProvider client={queryClient}>
+        			<html lang="en">
+              <head>
+                <HeadContent />
+              </head>
+              <body>
+                {children}
+                <TanStackDevtools
+                  config={{
+                    position: 'bottom-right',
+                  }}
+                  plugins={[
+                    {
+                      name: 'Tanstack Router',
+                      render: <TanStackRouterDevtoolsPanel />,
+                    },
+                    TanStackQueryDevtools,
+                  ]}
+                />
 
-      <body>
-        <Outlet />
-        <Scripts />
-      </body>
-    </html>
-  )
+                <Toaster
+                  richColors
+                  closeButton
+                  position="top-right"
+                />
+
+                <Scripts />
+              </body>
+            </html>
+        		</QueryClientProvider>
+    	</PageAIContextProvider>
+    )
 }
