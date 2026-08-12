@@ -10,6 +10,8 @@ node_modules/
 postgres/
 redis/
 
+migrated-user-passwords.csv
+
 # Logs and system files
 *.log
 *.DS_Store

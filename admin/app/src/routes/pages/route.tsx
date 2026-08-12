@@ -3,6 +3,7 @@ import { Link as RouterLink } from "@tanstack/react-router"
 import { StackProvider } from "@btst/stack/context"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { getOrCreateQueryClient } from "@/lib/query-client"
+import { authClient } from "@/lib/auth-client"
 
 export const Route = createFileRoute("/pages")({
 	component: BtstPagesLayout,
@@ -97,7 +98,7 @@ function BtstPagesLayout() {
 							),
 						},
 						auth: {
-							authClient: undefined as any,
+							authClient,
 							navigate: (path: string) => navigate({ to: path }),
 							replace: (path: string) =>
 								navigate({ to: path, replace: true }),
@@ -109,7 +110,7 @@ function BtstPagesLayout() {
 							redirectTo: "/pages/account/settings",
 						},
 						account: {
-							authClient: undefined as any,
+							authClient,
 							navigate: (path: string) => navigate({ to: path }),
 							replace: (path: string) =>
 								navigate({ to: path, replace: true }),
@@ -121,7 +122,7 @@ function BtstPagesLayout() {
 							account: { fields: ["image", "name"] },
 						},
 						organization: {
-							authClient: undefined as any,
+							authClient,
 							navigate: (path: string) => navigate({ to: path }),
 							replace: (path: string) =>
 								navigate({ to: path, replace: true }),

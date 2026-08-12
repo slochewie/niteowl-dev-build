@@ -10,59 +10,102 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProtectedRouteImport } from './routes/_protected'
-import { Route as ProtectedDashboardRouteImport } from './routes/_protected/dashboard'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
+import { Route as AuthPathRouteImport } from './routes/auth/$path'
+import { Route as SettingsPathRouteImport } from './routes/settings/$path'
+import { Route as OrganizationSlugPathRouteImport } from './routes/organization/$slug/$path'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProtectedRoute = ProtectedRouteImport.update({
-  id: '/_protected',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProtectedDashboardRoute = ProtectedDashboardRouteImport.update({
+const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => ProtectedRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSplatRoute = ApiSplatRouteImport.update({
   id: '/api/$',
   path: '/api/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthPathRoute = AuthPathRouteImport.update({
+  id: '/auth/$path',
+  path: '/auth/$path',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsPathRoute = SettingsPathRouteImport.update({
+  id: '/settings/$path',
+  path: '/settings/$path',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganizationSlugPathRoute = OrganizationSlugPathRouteImport.update({
+  id: '/organization/$slug/$path',
+  path: '/organization/$slug/$path',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof ProtectedDashboardRoute
+  '/dashboard': typeof DashboardRoute
   '/api/$': typeof ApiSplatRoute
+  '/auth/$path': typeof AuthPathRoute
+  '/settings/$path': typeof SettingsPathRoute
+  '/organization/$slug/$path': typeof OrganizationSlugPathRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof ProtectedDashboardRoute
+  '/dashboard': typeof DashboardRoute
   '/api/$': typeof ApiSplatRoute
+  '/auth/$path': typeof AuthPathRoute
+  '/settings/$path': typeof SettingsPathRoute
+  '/organization/$slug/$path': typeof OrganizationSlugPathRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_protected': typeof ProtectedRouteWithChildren
-  '/_protected/dashboard': typeof ProtectedDashboardRoute
+  '/dashboard': typeof DashboardRoute
   '/api/$': typeof ApiSplatRoute
+  '/auth/$path': typeof AuthPathRoute
+  '/settings/$path': typeof SettingsPathRoute
+  '/organization/$slug/$path': typeof OrganizationSlugPathRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/api/$'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/api/$'
+    | '/auth/$path'
+    | '/settings/$path'
+    | '/organization/$slug/$path'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/api/$'
-  id: '__root__' | '/' | '/_protected' | '/_protected/dashboard' | '/api/$'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/api/$'
+    | '/auth/$path'
+    | '/settings/$path'
+    | '/organization/$slug/$path'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/api/$'
+    | '/auth/$path'
+    | '/settings/$path'
+    | '/organization/$slug/$path'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ProtectedRoute: typeof ProtectedRouteWithChildren
+  DashboardRoute: typeof DashboardRoute
   ApiSplatRoute: typeof ApiSplatRoute
+  AuthPathRoute: typeof AuthPathRoute
+  SettingsPathRoute: typeof SettingsPathRoute
+  OrganizationSlugPathRoute: typeof OrganizationSlugPathRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -74,19 +117,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_protected': {
-      id: '/_protected'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof ProtectedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_protected/dashboard': {
-      id: '/_protected/dashboard'
+    '/dashboard': {
+      id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
-      preLoaderRoute: typeof ProtectedDashboardRouteImport
-      parentRoute: typeof ProtectedRoute
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/$': {
       id: '/api/$'
@@ -95,25 +131,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/$path': {
+      id: '/auth/$path'
+      path: '/auth/$path'
+      fullPath: '/auth/$path'
+      preLoaderRoute: typeof AuthPathRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/$path': {
+      id: '/settings/$path'
+      path: '/settings/$path'
+      fullPath: '/settings/$path'
+      preLoaderRoute: typeof SettingsPathRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organization/$slug/$path': {
+      id: '/organization/$slug/$path'
+      path: '/organization/$slug/$path'
+      fullPath: '/organization/$slug/$path'
+      preLoaderRoute: typeof OrganizationSlugPathRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
-interface ProtectedRouteChildren {
-  ProtectedDashboardRoute: typeof ProtectedDashboardRoute
-}
-
-const ProtectedRouteChildren: ProtectedRouteChildren = {
-  ProtectedDashboardRoute: ProtectedDashboardRoute,
-}
-
-const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
-  ProtectedRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ProtectedRoute: ProtectedRouteWithChildren,
+  DashboardRoute: DashboardRoute,
   ApiSplatRoute: ApiSplatRoute,
+  AuthPathRoute: AuthPathRoute,
+  SettingsPathRoute: SettingsPathRoute,
+  OrganizationSlugPathRoute: OrganizationSlugPathRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

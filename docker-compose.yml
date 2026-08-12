@@ -48,14 +48,16 @@ services:
     volumes:
       - './node-upstream/app:/app'
     env_file:
-      - .env
+#      - .env
+      - ./.env-better-auth
     restart: unless-stopped
     networks: [niteowl-dev]
 
   auth:
     image: 'node:26-trixie'
     working_dir: /app
-    command: ["npm", "start"]
+#    command: ["npm", "start"]
+    command: ["sh", "-c", "npm run build && npm start"]
 #    command:
 #      - sleep
 #      - infinity

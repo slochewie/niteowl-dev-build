@@ -5,10 +5,14 @@ import {
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Header } from "@/components/header"
+import { Providers } from "@/components/providers"
 import appCss from '../styles.css?url'
+
+//import { oauthProviderPlugin } from "@/lib/auth/oauth-provider-plugin"
 
 import type { QueryClient } from '@tanstack/react-query'
 
@@ -40,14 +44,25 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   shellComponent: RootDocument,
 })
 
+//const validAuthPathSegments = new Set([
+//  ...Object.values(viewPaths.auth),
+//  ...Object.values(oauthProviderPlugin().viewPaths.auth)
+//])
+
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
-      <body>
-        {children}
+      <body className="antialiased min-h-svh flex flex-col">
+        <TooltipProvider>
+        <Providers>
+          <Header />
+
+          {children}
+        </Providers>
+        </TooltipProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
