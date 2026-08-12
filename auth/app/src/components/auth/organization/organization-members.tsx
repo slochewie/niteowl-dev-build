@@ -65,15 +65,24 @@ export type OrganizationMembersProps = {
 }
 
 /**
- * Organization members table with title, invite control, and per-row actions.
+ * Organization members table with filtering, sorting, status,
+ * and permission-aware management controls.
+ *
+ * Users without member:update permission:
+ * - only see active members
+ * - do not see status filtering controls
+ * - cannot invite members
  */
 export function OrganizationMembers({
   className,
   ...props
 }: OrganizationMembersProps & ComponentProps<"div">) {
   const { authClient } = useAuth()
-  const { localization: organizationLocalization, roles } =
-    useAuthPlugin(organizationPlugin)
+
+  const {
+    localization: organizationLocalization,
+    roles
+  } = useAuthPlugin(organizationPlugin)
 
   const organizationAuthClient =
     authClient as OrganizationAuthClient
@@ -88,36 +97,56 @@ export function OrganizationMembers({
   const {
     data: membersData,
     isPending: membersPending
-  } = useListOrganizationMembers(organizationAuthClient)
+  } = useListOrganizationMembers(
+    organizationAuthClient
+  )
 
-  const { isPending: updatePermissionPending } =
-    useHasPermission(organizationAuthClient, {
+  const {
+    data: updatePermission,
+    isPending: updatePermissionPending
+  } = useHasPermission(
+    organizationAuthClient,
+    {
       permissions: {
         member: ["update"]
       }
-    })
+    }
+  )
 
-  const { isPending: deletePermissionPending } =
-    useHasPermission(organizationAuthClient, {
+  const {
+    isPending: deletePermissionPending
+  } = useHasPermission(
+    organizationAuthClient,
+    {
       permissions: {
         member: ["delete"]
       }
-    })
+    }
+  )
+
+  const canManageMembers =
+    updatePermission?.success === true
 
   const [memberStatus, setMemberStatus] =
     useState<Record<string, MemberStatus>>({})
 
-  const [statusPending, setStatusPending] = useState(false)
+  const [statusPending, setStatusPending] =
+    useState(false)
 
   const [sortDescriptor, setSortDescriptor] =
     useState<SortDescriptor>()
 
-  const [roleFilter, setRoleFilter] = useState("all")
+  const [roleFilter, setRoleFilter] =
+    useState("all")
+
   const [statusFilter, setStatusFilter] =
     useState<StatusFilter>("all")
 
-  const [search, setSearch] = useState("")
-  const [inviteOpen, setInviteOpen] = useState(false)
+  const [search, setSearch] =
+    useState("")
+
+  const [inviteOpen, setInviteOpen] =
+    useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -147,12 +176,18 @@ export function OrganizationMembers({
           )
         }
 
-        const data = (await response.json()) as {
-          users?: Record<string, MemberStatus>
-        }
+        const data =
+          (await response.json()) as {
+            users?: Record<
+              string,
+              MemberStatus
+            >
+          }
 
         if (!cancelled) {
-          setMemberStatus(data.users ?? {})
+          setMemberStatus(
+            data.users ?? {}
+          )
         }
       } catch (error) {
         console.error(error)
@@ -182,106 +217,155 @@ export function OrganizationMembers({
     statusPending
 
   const filteredMembers = useMemo(() => {
-    return membersData?.members.filter((member) => {
-      const status = memberStatus[member.userId]
-      const banned = status?.banned === true
+    return membersData?.members.filter(
+      (member) => {
+        const status =
+          memberStatus[member.userId]
 
-      const matchesRole =
-        roleFilter === "all" ||
-        member.role === roleFilter
+        const banned =
+          status?.banned === true
 
-      const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" && !banned) ||
-        (statusFilter === "banned" && banned)
+        /*
+         * Users without member:update permission
+         * never see banned/deactivated members.
+         */
+        if (
+          !canManageMembers &&
+          banned
+        ) {
+          return false
+        }
 
-      const searchValue = search.toLowerCase()
+        const matchesRole =
+          roleFilter === "all" ||
+          member.role === roleFilter
 
-      const matchesSearch =
-        member.user.name
-          .toLowerCase()
-          .includes(searchValue) ||
-        member.user.email
-          .toLowerCase()
-          .includes(searchValue)
+        /*
+         * Status filtering is only available to
+         * users who can manage members.
+         */
+        const matchesStatus =
+          !canManageMembers ||
+          statusFilter === "all" ||
+          (statusFilter === "active" &&
+            !banned) ||
+          (statusFilter === "banned" &&
+            banned)
 
-      return (
-        matchesRole &&
-        matchesStatus &&
-        matchesSearch
-      )
-    })
+        const searchValue =
+          search.toLowerCase()
+
+        const matchesSearch =
+          member.user.name
+            .toLowerCase()
+            .includes(searchValue) ||
+          member.user.email
+            .toLowerCase()
+            .includes(searchValue)
+
+        return (
+          matchesRole &&
+          matchesStatus &&
+          matchesSearch
+        )
+      }
+    )
   }, [
     search,
     membersData?.members,
     roleFilter,
     statusFilter,
-    memberStatus
+    memberStatus,
+    canManageMembers
   ])
 
   const sortedMembers = useMemo(() => {
-    if (!sortDescriptor || !filteredMembers) {
+    if (
+      !sortDescriptor ||
+      !filteredMembers
+    ) {
       return filteredMembers
     }
 
-    return [...filteredMembers].sort((a, b) => {
-      let first: string
-      let second: string
+    return [...filteredMembers].sort(
+      (a, b) => {
+        let first: string
+        let second: string
 
-      if (sortDescriptor.column === "user") {
-        first = a.user.name || a.user.email
-        second = b.user.name || b.user.email
-      } else if (sortDescriptor.column === "status") {
-        first =
-          memberStatus[a.userId]?.banned === true
-            ? "banned"
-            : "active"
+        if (
+          sortDescriptor.column ===
+          "user"
+        ) {
+          first =
+            a.user.name || a.user.email
 
-        second =
-          memberStatus[b.userId]?.banned === true
-            ? "banned"
-            : "active"
-      } else {
-        const col =
-          sortDescriptor.column as keyof Member
+          second =
+            b.user.name || b.user.email
+        } else if (
+          sortDescriptor.column ===
+          "status"
+        ) {
+          first =
+            memberStatus[a.userId]
+              ?.banned === true
+              ? "banned"
+              : "active"
 
-        first = String(a[col])
-        second = String(b[col])
+          second =
+            memberStatus[b.userId]
+              ?.banned === true
+              ? "banned"
+              : "active"
+        } else {
+          const col =
+            sortDescriptor.column as keyof Member
+
+          first = String(a[col])
+          second = String(b[col])
+        }
+
+        let cmp =
+          first.localeCompare(second)
+
+        if (
+          sortDescriptor.direction ===
+          "descending"
+        ) {
+          cmp *= -1
+        }
+
+        return cmp
       }
-
-      let cmp = first.localeCompare(second)
-
-      if (
-        sortDescriptor.direction ===
-        "descending"
-      ) {
-        cmp *= -1
-      }
-
-      return cmp
-    })
+    )
   }, [
     sortDescriptor,
     filteredMembers,
     memberStatus
   ])
 
-  const isOwner = membersData?.members.some(
-    (member) =>
-      member.role === "owner" &&
-      member.userId === session?.user.id
-  )
+  const isOwner =
+    membersData?.members.some(
+      (member) =>
+        member.role === "owner" &&
+        member.userId ===
+          session?.user.id
+    )
 
   function toggleSort(column: string) {
     setSortDescriptor((current) => {
-      if (current?.column !== column) {
+      if (
+        current?.column !== column
+      ) {
         return {
           column,
           direction: "ascending"
         }
       }
 
-      if (current.direction === "ascending") {
+      if (
+        current.direction ===
+        "ascending"
+      ) {
         return {
           column,
           direction: "descending"
@@ -302,17 +386,25 @@ export function OrganizationMembers({
     >
       <div className="flex items-end justify-between gap-3">
         <h3 className="truncate text-sm font-semibold">
-          {organizationLocalization.members}
+          {
+            organizationLocalization.members
+          }
         </h3>
 
-        <Button
-          className="shrink-0"
-          size="sm"
-          disabled={isPending}
-          onClick={() => setInviteOpen(true)}
-        >
-          {organizationLocalization.inviteMember}
-        </Button>
+        {canManageMembers && (
+          <Button
+            className="shrink-0"
+            size="sm"
+            disabled={isPending}
+            onClick={() =>
+              setInviteOpen(true)
+            }
+          >
+            {
+              organizationLocalization.inviteMember
+            }
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-col gap-4">
@@ -322,7 +414,9 @@ export function OrganizationMembers({
               type="search"
               value={search}
               onChange={(e) =>
-                setSearch(e.target.value)
+                setSearch(
+                  e.target.value
+                )
               }
               aria-label={
                 organizationLocalization.search
@@ -349,19 +443,28 @@ export function OrganizationMembers({
               disabled={isPending}
             >
               <Filter />
-              {organizationLocalization.role}
+
+              {
+                organizationLocalization.role
+              }
             </DropdownMenuTrigger>
 
             <DropdownMenuContent align="start">
               <DropdownMenuRadioGroup
                 value={roleFilter}
-                onValueChange={setRoleFilter}
+                onValueChange={
+                  setRoleFilter
+                }
               >
                 <DropdownMenuRadioItem value="all">
-                  {organizationLocalization.all}
+                  {
+                    organizationLocalization.all
+                  }
                 </DropdownMenuRadioItem>
 
-                {Object.entries(roles).map(
+                {Object.entries(
+                  roles
+                ).map(
                   ([role, label]) => (
                     <DropdownMenuRadioItem
                       key={role}
@@ -375,43 +478,47 @@ export function OrganizationMembers({
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              className={cn(
-                buttonVariants({
-                  size: "sm",
-                  variant: "outline"
-                })
-              )}
-              disabled={isPending}
-            >
-              <Filter />
-              Status
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="start">
-              <DropdownMenuRadioGroup
-                value={statusFilter}
-                onValueChange={(value) =>
-                  setStatusFilter(
-                    value as StatusFilter
-                  )
-                }
+          {canManageMembers && (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                className={cn(
+                  buttonVariants({
+                    size: "sm",
+                    variant: "outline"
+                  })
+                )}
+                disabled={isPending}
               >
-                <DropdownMenuRadioItem value="all">
-                  All
-                </DropdownMenuRadioItem>
+                <Filter />
+                Status
+              </DropdownMenuTrigger>
 
-                <DropdownMenuRadioItem value="active">
-                  Active
-                </DropdownMenuRadioItem>
+              <DropdownMenuContent align="start">
+                <DropdownMenuRadioGroup
+                  value={statusFilter}
+                  onValueChange={(
+                    value
+                  ) =>
+                    setStatusFilter(
+                      value as StatusFilter
+                    )
+                  }
+                >
+                  <DropdownMenuRadioItem value="all">
+                    All
+                  </DropdownMenuRadioItem>
 
-                <DropdownMenuRadioItem value="banned">
-                  Banned
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                  <DropdownMenuRadioItem value="active">
+                    Active
+                  </DropdownMenuRadioItem>
+
+                  <DropdownMenuRadioItem value="banned">
+                    Banned
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -420,10 +527,14 @@ export function OrganizationMembers({
               variant="secondary"
               className="w-fit gap-1"
             >
-              {organizationLocalization.role}:{" "}
+              {
+                organizationLocalization.role
+              }
+              :{" "}
               <span className="capitalize">
-                {roles?.[roleFilter] ??
-                  roleFilter}
+                {roles?.[
+                  roleFilter
+                ] ?? roleFilter}
               </span>
 
               <Button
@@ -432,7 +543,9 @@ export function OrganizationMembers({
                 }
                 className="size-4 rounded-sm text-muted-foreground"
                 onClick={() =>
-                  setRoleFilter("all")
+                  setRoleFilter(
+                    "all"
+                  )
                 }
                 size="icon-xs"
                 type="button"
@@ -443,30 +556,34 @@ export function OrganizationMembers({
             </Badge>
           )}
 
-          {statusFilter !== "all" && (
-            <Badge
-              variant="secondary"
-              className="w-fit gap-1"
-            >
-              Status:{" "}
-              <span className="capitalize">
-                {statusFilter}
-              </span>
-
-              <Button
-                aria-label="Clear status filter"
-                className="size-4 rounded-sm text-muted-foreground"
-                onClick={() =>
-                  setStatusFilter("all")
-                }
-                size="icon-xs"
-                type="button"
-                variant="ghost"
+          {canManageMembers &&
+            statusFilter !== "all" && (
+              <Badge
+                variant="secondary"
+                className="w-fit gap-1"
               >
-                <X className="size-3" />
-              </Button>
-            </Badge>
-          )}
+                Status:{" "}
+
+                <span className="capitalize">
+                  {statusFilter}
+                </span>
+
+                <Button
+                  aria-label="Clear status filter"
+                  className="size-4 rounded-sm text-muted-foreground"
+                  onClick={() =>
+                    setStatusFilter(
+                      "all"
+                    )
+                  }
+                  size="icon-xs"
+                  type="button"
+                  variant="ghost"
+                >
+                  <X className="size-3" />
+                </Button>
+              </Badge>
+            )}
         </div>
 
         <Card className="p-0">
@@ -488,7 +605,9 @@ export function OrganizationMembers({
                     toggleSort("user")
                   }
                 >
-                  {organizationLocalization.member}
+                  {
+                    organizationLocalization.member
+                  }
                 </SortableTableHead>
 
                 <SortableTableHead
@@ -502,7 +621,9 @@ export function OrganizationMembers({
                     toggleSort("role")
                   }
                 >
-                  {organizationLocalization.role}
+                  {
+                    organizationLocalization.role
+                  }
                 </SortableTableHead>
 
                 <SortableTableHead
@@ -513,14 +634,18 @@ export function OrganizationMembers({
                       : undefined
                   }
                   onClick={() =>
-                    toggleSort("status")
+                    toggleSort(
+                      "status"
+                    )
                   }
                 >
                   Status
                 </SortableTableHead>
 
                 <TableHead className="text-end">
-                  {organizationLocalization.actions}
+                  {
+                    organizationLocalization.actions
+                  }
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -530,37 +655,53 @@ export function OrganizationMembers({
                 <OrganizationMemberRowSkeleton />
               ) : (
                 !!activeOrganization &&
-                sortedMembers?.map((member) => {
-                  const status =
-                    memberStatus[member.userId]
+                sortedMembers?.map(
+                  (member) => {
+                    const status =
+                      memberStatus[
+                        member.userId
+                      ]
 
-                  return (
-                    <OrganizationMemberRow
-                      key={member.id}
-                      member={member}
-                      isOwner={isOwner}
-                      organization={
-                        activeOrganization
-                      }
-                      banned={
-                        status?.banned === true
-                      }
-                      banReason={
-                        status?.banReason ?? null
-                      }
-                    />
-                  )
-                })
+                    return (
+                      <OrganizationMemberRow
+                        key={
+                          member.id
+                        }
+                        member={
+                          member
+                        }
+                        isOwner={
+                          isOwner
+                        }
+                        organization={
+                          activeOrganization
+                        }
+                        banned={
+                          status?.banned ===
+                          true
+                        }
+                        banReason={
+                          status?.banReason ??
+                          null
+                        }
+                      />
+                    )
+                  }
+                )
               )}
             </TableBody>
           </Table>
         </Card>
       </div>
 
-      <InviteMemberDialog
-        open={inviteOpen}
-        onOpenChange={setInviteOpen}
-      />
+      {canManageMembers && (
+        <InviteMemberDialog
+          open={inviteOpen}
+          onOpenChange={
+            setInviteOpen
+          }
+        />
+      )}
     </div>
   )
 }
@@ -576,7 +717,9 @@ function SortableTableHead({
 }) {
   return (
     <TableHead
-      aria-sort={sortDirection ?? "none"}
+      aria-sort={
+        sortDirection ?? "none"
+      }
     >
       <Button
         className="h-auto w-full justify-start p-0 font-medium hover:bg-transparent"
@@ -591,7 +734,8 @@ function SortableTableHead({
           <ChevronUp
             className={cn(
               "size-3 transition-transform duration-100 ease-out",
-              sortDirection === "descending"
+              sortDirection ===
+                "descending"
                 ? "rotate-180"
                 : ""
             )}

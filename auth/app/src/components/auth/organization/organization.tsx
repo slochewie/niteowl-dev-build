@@ -4,9 +4,9 @@ import {
   useActiveOrganization,
   useAuth,
   useAuthenticate,
-  useAuthPlugin
+  useAuthPlugin,
+  useHasPermission
 } from "@better-auth-ui/react"
-import { OrganizationTeams } from "./organization-teams"
 import {
   Settings as SettingsIcon,
   User2 as UserIcon,
@@ -19,6 +19,7 @@ import { organizationPlugin } from "#/lib/auth/organization-plugin.tsx"
 import { cn } from "#/lib/utils.ts"
 import { OrganizationPeople } from "./organization-people"
 import { OrganizationSettings } from "./organization-settings"
+import { OrganizationTeams } from "./organization-teams"
 
 type LocalOrganizationView = OrganizationView | "teams"
 
@@ -30,8 +31,11 @@ export type OrganizationProps = {
 }
 
 /**
- * Organization management shell: tabs for profile / danger zone,
- * people (members / invitations), and teams.
+ * Organization shell.
+ *
+ * Members can view People and Teams.
+ * Organization Settings is only available to users with
+ * organization:update permission.
  */
 export function Organization({
   className,
@@ -40,10 +44,18 @@ export function Organization({
   view
 }: OrganizationProps) {
   if (!view && !path) {
-    throw new Error("[Better Auth UI] Either `view` or `path` must be provided")
+    throw new Error(
+      "[Better Auth UI] Either `view` or `path` must be provided"
+    )
   }
 
-  const { authClient, basePaths, localization, navigate } = useAuth()
+  const {
+    authClient,
+    basePaths,
+    localization,
+    navigate
+  } = useAuth()
+
   useAuthenticate(authClient)
 
   const {
@@ -53,42 +65,108 @@ export function Organization({
     slugPrefix
   } = useAuthPlugin(organizationPlugin)
 
-  const { data: activeOrganization, isPending } = useActiveOrganization(
+  const {
+    data: activeOrganization,
+    isPending: activeOrganizationPending
+  } = useActiveOrganization(
     authClient as OrganizationAuthClient
   )
 
+  const {
+    data: updatePermission,
+    isPending: updatePermissionPending
+  } = useHasPermission(
+    authClient as OrganizationAuthClient,
+    {
+      permissions: {
+        organization: ["update"]
+      }
+    }
+  )
+
+  const canManageOrganization =
+    updatePermission?.success === true
+
+  const currentView =
+    useMemo<LocalOrganizationView | undefined>(
+      () => {
+        if (view) return view
+
+        if (path === "teams") {
+          return "teams"
+        }
+
+        const match = Object.entries(
+          organizationViewPaths.organization
+        ).find(([, segment]) => segment === path)
+
+        return match?.[0] as
+          | OrganizationView
+          | undefined
+      },
+      [
+        view,
+        path,
+        organizationViewPaths.organization
+      ]
+    )
+
+  const organizationBasePath = slug
+    ? `${basePaths.organization}/${slugPrefix}${slug}`
+    : basePaths.organization
+
   useEffect(() => {
-    if (!isPending && !activeOrganization) {
+    if (
+      !activeOrganizationPending &&
+      !activeOrganization
+    ) {
       navigate({
         to: `${basePaths.settings}/${organizationViewPaths.settings?.organizations}`,
         replace: true
       })
     }
   }, [
+    activeOrganization,
+    activeOrganizationPending,
     basePaths.settings,
-    isPending,
     navigate,
-    organizationViewPaths.settings?.organizations,
-    activeOrganization
+    organizationViewPaths.settings?.organizations
   ])
 
-  const currentView = useMemo<LocalOrganizationView | undefined>(() => {
-    if (view) return view
-
-    if (path === "teams") {
-      return "teams"
+  useEffect(() => {
+    if (
+      activeOrganizationPending ||
+      updatePermissionPending ||
+      !activeOrganization
+    ) {
+      return
     }
 
-    const match = Object.entries(organizationViewPaths.organization).find(
-      ([, segment]) => segment === path
-    )
-
-    return match?.[0] as OrganizationView | undefined
-  }, [view, path, organizationViewPaths.organization])
+    if (
+      currentView === "settings" &&
+      !canManageOrganization
+    ) {
+      navigate({
+        to: `${organizationBasePath}/${organizationViewPaths.organization.people}`,
+        replace: true
+      })
+    }
+  }, [
+    activeOrganization,
+    activeOrganizationPending,
+    canManageOrganization,
+    currentView,
+    navigate,
+    organizationBasePath,
+    organizationViewPaths.organization.people,
+    updatePermissionPending
+  ])
 
   if (!currentView) {
     const validPaths = [
-      ...Object.values(organizationViewPaths.organization),
+      ...Object.values(
+        organizationViewPaths.organization
+      ),
       "teams"
     ].join(", ")
 
@@ -97,44 +175,65 @@ export function Organization({
     )
   }
 
-  if (!isPending && !activeOrganization) {
+  if (
+    activeOrganizationPending ||
+    updatePermissionPending
+  ) {
+    return null
+  }
+
+  if (!activeOrganization) {
+    return null
+  }
+
+  if (
+    currentView === "settings" &&
+    !canManageOrganization
+  ) {
     return null
   }
 
   return (
     <Tabs
       value={currentView}
-      className={cn("w-full gap-4 md:gap-6", className)}
+      className={cn(
+        "w-full gap-4 md:gap-6",
+        className
+      )}
     >
       <div className={cn(hideNav && "hidden")}>
-        <TabsList aria-label={localization.settings.settings}>
-          <TabsTrigger
-            value="settings"
-            className="gap-1"
-            onClick={() =>
-              navigate({
-                to: slug
-                  ? `${basePaths.organization}/${slugPrefix}${slug}/${organizationViewPaths.organization.settings}`
-                  : `${basePaths.organization}/${organizationViewPaths.organization.settings}`
-              })
-            }
-          >
-            <SettingsIcon className="text-muted-foreground" />
-            {localization.settings.settings}
-          </TabsTrigger>
+        <TabsList
+          aria-label={
+            localization.settings.settings
+          }
+        >
+          {canManageOrganization && (
+            <TabsTrigger
+              value="settings"
+              className="gap-1"
+              onClick={() =>
+                navigate({
+                  to: `${organizationBasePath}/${organizationViewPaths.organization.settings}`
+                })
+              }
+            >
+              <SettingsIcon className="text-muted-foreground" />
+
+              {localization.settings.settings}
+            </TabsTrigger>
+          )}
 
           <TabsTrigger
             value="people"
             className="gap-1"
             onClick={() =>
               navigate({
-                to: slug
-                  ? `${basePaths.organization}/${slugPrefix}${slug}/${organizationViewPaths.organization.people}`
-                  : `${basePaths.organization}/${organizationViewPaths.organization.people}`
+                to: `${organizationBasePath}/${organizationViewPaths.organization.people}`
               })
             }
           >
             <UserIcon className="text-muted-foreground" />
+
             {organizationLocalization.people}
           </TabsTrigger>
 
@@ -143,30 +242,39 @@ export function Organization({
             className="gap-1"
             onClick={() =>
               navigate({
-                to: slug
-                  ? `${basePaths.organization}/${slugPrefix}${slug}/teams`
-                  : `${basePaths.organization}/teams`
+                to: `${organizationBasePath}/teams`
               })
             }
           >
             <TeamsIcon className="text-muted-foreground" />
+
             Teams
           </TabsTrigger>
         </TabsList>
       </div>
 
-      <TabsContent value="settings" tabIndex={-1}>
-        <OrganizationSettings />
-      </TabsContent>
+      {canManageOrganization && (
+        <TabsContent
+          value="settings"
+          tabIndex={-1}
+        >
+          <OrganizationSettings />
+        </TabsContent>
+      )}
 
-      <TabsContent value="people" tabIndex={-1}>
+      <TabsContent
+        value="people"
+        tabIndex={-1}
+      >
         <OrganizationPeople />
       </TabsContent>
 
-      <TabsContent value="teams" tabIndex={-1}>
+      <TabsContent
+        value="teams"
+        tabIndex={-1}
+      >
         <OrganizationTeams />
       </TabsContent>
-
     </Tabs>
   )
 }
