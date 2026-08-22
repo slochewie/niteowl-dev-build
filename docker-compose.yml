@@ -4,10 +4,8 @@ services:
   postgres:
     image: postgres:18
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    env_file:
+      - ./.env-postgres
     volumes:
       - ./postgres:/var/lib/postgresql
     healthcheck:
@@ -94,6 +92,30 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+
+  glauth:
+    image: glauth/glauth:v2.5.2
+    restart: unless-stopped
+    volumes:
+      - ./glauth/config.cfg:/app/config/config.cfg:ro
+    ports:
+      - "389:3893"
+    networks: [niteowl-dev]
+
+  glauth-sync:
+    image: 'node:26-trixie'
+    working_dir: /app
+    command: ["node", "index.js"]
+    volumes:
+      - './glauth-sync/app:/app'
+      - './glauth:/glauth'
+    env_file:
+      - ./.env-glauth-sync
+    restart: no
+    networks: [niteowl-dev]
+    depends_on:
+      postgres:
         condition: service_healthy
 
 networks:

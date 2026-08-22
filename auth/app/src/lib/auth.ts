@@ -1,5 +1,5 @@
 import { apiKey } from "@better-auth/api-key";
-import { dash } from "@better-auth/infra";
+import { dash, sentinel } from "@better-auth/infra";
 import { redisStorage } from "@better-auth/redis-storage";
 import { betterAuth } from "better-auth";
 import {
@@ -12,13 +12,17 @@ import {
   organization,
   username,
 } from "better-auth/plugins";
+import { oauthProvider } from "@better-auth/oauth-provider";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { Redis } from "ioredis";
 import { Pool } from "pg";
 import { Resend } from "resend";
 
 import { env } from "./env.js";
+import { integrationManager } from "./plugins/integration-manager/index.js";
 import { sevenShifts } from "./plugins/seven-shifts/index.js";
+import { sevenShiftsCsv } from "./plugins/seven-shifts-csv/index.js";
+import { unifiIdentity } from "./plugins/unifi-identity/index.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -33,6 +37,8 @@ export const redis = new Redis({
 });
 
 export const auth = betterAuth({
+  appName: "NiteOwl Authentication",
+
   logger: {
     disabled: false,
     disableColors: false,
@@ -45,6 +51,10 @@ export const auth = betterAuth({
   baseURL: env.baseURL,
   secret: env.secret,
   trustedOrigins: env.trustedOrigins,
+
+  onAPIError: {
+    errorURL: "/auth/error",
+  },
 
   database: pool,
 
@@ -98,10 +108,25 @@ export const auth = betterAuth({
     },
   },
 
+  socialProviders: {
+    github: { 
+      clientId: process.env.GITHUB_CLIENT_ID as string, 
+      clientSecret: process.env.GITHUB_CLIENT_SECRET as string, 
+    }, 
+  },
+
+
   advanced: {
     ipAddress: {
       ipAddressHeaders: ["x-real-ip"],
     },
+    silenceWarnings: {
+      oauthAuthServerConfig: true,
+    },
+  },
+
+  experimental: {
+    joins: true, // Enable database joins for better performance
   },
 
   plugins: [
@@ -128,7 +153,21 @@ export const auth = betterAuth({
 
     jwt(),
 
+    oauthProvider({ 
+      loginPage: "/auth/sign-in", 
+      consentPage: "/auth/oauth-consent",
+      signup: {
+        page: "/auth/oauth-sign-up"
+      },
+      selectAccount: {
+        page: "/auth/select-account",
+        shouldRedirect: async () => true
+      },
+      // ...other options
+    }),
+
     emailOTP({
+      storeOTP: "hashed",
       sendVerificationOTP: async ({
         email,
         otp,
@@ -153,6 +192,7 @@ export const auth = betterAuth({
     }),
 
     magicLink({
+      storeToken: "hashed",
       sendMagicLink: async ({ email, url }) => {
         const { error } = await resend.emails.send({
           from: emailFrom,
@@ -171,8 +211,25 @@ export const auth = betterAuth({
 
     dash(),
 
+    sentinel(),
+
+    integrationManager({
+      pool,
+    }),
+
     sevenShifts({
       pool,
+    }),
+
+    sevenShiftsCsv({
+      pool,
+      storageRoot:
+        env.sevenShiftsCsvStorageRoot,
+    }),
+
+    unifiIdentity({
+      pool,
+      encryptionKey: env.integrationEncryptionKey,
     }),
 
     tanstackStartCookies(),

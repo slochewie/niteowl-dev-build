@@ -3,7 +3,7 @@ import { ThemeProvider, useTheme } from "next-themes"
 import type { ReactNode } from "react"
 import { apiKeyPlugin } from "@/lib/auth/api-key-plugin"
 import { adminPlugin } from "@/lib/auth/admin-plugin"
-//import { oauthProviderPlugin } from "@/lib/auth/oauth-provider-plugin"
+import { oauthProviderPlugin } from "@/lib/auth/oauth-provider-plugin"
 import { deleteUserPlugin } from "@/lib/auth/delete-user-plugin"
 import { emailOtpPlugin } from "@/lib/auth/email-otp-plugin"
 import { magicLinkPlugin } from "@/lib/auth/magic-link-plugin"
@@ -13,6 +13,7 @@ import { passkeyPlugin } from "@/lib/auth/passkey-plugin"
 import { themePlugin } from "@/lib/auth/theme-plugin"
 import { twoFactorPlugin } from "@/lib/auth/two-factor-plugin"
 import { usernamePlugin } from "@/lib/auth/username-plugin"
+import { unifiIdentityPlugin } from "@/lib/auth/unifi-identity-plugin"
 import { authClient } from "@/lib/auth-client"
 import { AuthProvider } from "./auth/auth-provider"
 import { Toaster } from "./ui/sonner"
@@ -40,7 +41,7 @@ export function Providers({ children }: { children: ReactNode }) {
             usernamePrefix: "@",
             localization: { usernamePlaceholder: "username" }
           }),
-//          oauthProviderPlugin(),
+          oauthProviderPlugin(),
           magicLinkPlugin(),
           emailOtpPlugin({
             emailVerification: true,
@@ -50,6 +51,7 @@ export function Providers({ children }: { children: ReactNode }) {
           twoFactorPlugin(),
           passkeyPlugin(),
           apiKeyPlugin({ organization: true }),
+          unifiIdentityPlugin(),
           adminPlugin(),
           themePlugin({ useTheme }),
           multiSessionPlugin(),

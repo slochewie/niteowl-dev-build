@@ -8,7 +8,6 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { Header } from "@/components/header"
 import { Providers } from "@/components/providers"
 import appCss from '../styles.css?url'
 
@@ -58,7 +57,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body className="antialiased min-h-svh flex flex-col">
         <TooltipProvider>
         <Providers>
-          <Header />
 
           {children}
         </Providers>

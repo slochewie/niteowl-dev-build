@@ -9,23 +9,58 @@ const requiredNames = [
   "REDIS_HOST",
   "REDIS_PORT",
   "REDIS_PASSWORD",
+  "INTEGRATION_ENCRYPTION_KEY",
 ] as const;
 
 for (const name of requiredNames) {
-  if (!process.env[name]) throw new Error(`${name} is required`);
+  if (!process.env[name]) {
+    throw new Error(
+      `${name} is required`,
+    );
+  }
 }
 
 export const env = {
-  port: Number(process.env.PORT ?? 3000),
-  secret: process.env.BETTER_AUTH_SECRET!,
-  baseURL: process.env.BETTER_AUTH_URL!,
-  trustedOrigins: (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
+  port: Number(
+    process.env.PORT ??
+      3000,
+  ),
+
+  secret:
+    process.env.BETTER_AUTH_SECRET!,
+
+  baseURL:
+    process.env.BETTER_AUTH_URL!,
+
+  trustedOrigins: (
+    process.env
+      .BETTER_AUTH_TRUSTED_ORIGINS ??
+    ""
+  )
     .split(",")
-    .map((value) => value.trim())
+    .map((value) =>
+      value.trim(),
+    )
     .filter(Boolean),
+
   redis: {
-    host: process.env.REDIS_HOST!,
-    port: Number(process.env.REDIS_PORT!),
-    password: process.env.REDIS_PASSWORD!,
+    host:
+      process.env.REDIS_HOST!,
+
+    port: Number(
+      process.env.REDIS_PORT!,
+    ),
+
+    password:
+      process.env.REDIS_PASSWORD!,
   },
+
+  integrationEncryptionKey:
+    process.env
+      .INTEGRATION_ENCRYPTION_KEY!,
+
+  sevenShiftsCsvStorageRoot:
+    process.env
+      .SEVEN_SHIFTS_CSV_STORAGE_ROOT ??
+    "/app/.data/integrations/7shifts-csv",
 };

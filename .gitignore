@@ -33,3 +33,27 @@ admin-zip
 
 
 admin/app/dist/server/assets/
+
+# 7shifts CSV importer data
+auth/app/data/seven-shifts-csv/
+auth/app/.data/seven-shifts-csv/
+**/seven-shifts-csv/**/*.csv
+**/seven-shifts-csv/**/selected-file.json
+
+# Generated 7shifts import credentials
+**/seven-shifts-csv/**/*password*.csv
+**/seven-shifts-csv/**/*credentials*.csv
+
+# Local upstream Node source/reference trees
+node-upstream/
+node-upstream-bak/
+
+# Environment files
+.env*
+**/.env*
+
+# Local application runtime/import data
+auth/app/.data/
+
+# Local backup files
+*.backup

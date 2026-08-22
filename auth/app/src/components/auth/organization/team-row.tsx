@@ -1,8 +1,8 @@
 import {
-  Edit,
   Ellipsis,
+  Pencil,
   Trash2,
-  Users,
+  UserPlus,
   UsersRound
 } from "lucide-react"
 
@@ -11,18 +11,27 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "#/components/ui/dropdown-menu.tsx"
-import type { OrganizationTeam } from "./organization-team-types"
+import type {
+  OrganizationTeam
+} from "./organization-team-types"
 
 export type TeamRowProps = {
   team: OrganizationTeam
   canManageMembers: boolean
   canEdit: boolean
   canDelete: boolean
-  onManageMembers: (team: OrganizationTeam) => void
-  onEdit: (team: OrganizationTeam) => void
-  onDelete: (team: OrganizationTeam) => void
+  onManageMembers: (
+    team: OrganizationTeam
+  ) => void
+  onEdit: (
+    team: OrganizationTeam
+  ) => void
+  onDelete: (
+    team: OrganizationTeam
+  ) => void
 }
 
 export function TeamRow({
@@ -40,78 +49,84 @@ export function TeamRow({
     canDelete
 
   return (
-    <div className="flex items-center gap-3 rounded-lg border px-4 py-3">
-      <UsersRound className="size-5 shrink-0 text-muted-foreground" />
+    <div className="flex min-h-16 items-center gap-4 border-b px-3 py-3 last:border-b-0">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted">
+        <UsersRound className="size-4 text-muted-foreground" />
+      </div>
 
-      {canManageMembers ? (
-        <button
-          type="button"
-          className="min-w-0 flex-1 text-left"
-          onClick={() => onManageMembers(team)}
-        >
-          <div className="truncate text-sm font-medium">
-            {team.name}
-          </div>
-
-          <div className="truncate text-xs text-muted-foreground">
-            Manage members
-          </div>
-        </button>
-      ) : (
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-sm font-medium">
-            {team.name}
-          </div>
-
-          <div className="truncate text-xs text-muted-foreground">
-            Team
-          </div>
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-sm font-medium">
+          {team.name}
         </div>
-      )}
+
+        <div className="mt-0.5 truncate text-xs text-muted-foreground">
+          Team
+        </div>
+      </div>
 
       {hasActions && (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger
+            asChild
+          >
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="ml-auto shrink-0"
+              className="ml-auto size-8 shrink-0"
             >
               <Ellipsis />
 
               <span className="sr-only">
-                Actions for {team.name}
+                Actions for{" "}
+                {team.name}
               </span>
             </Button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end">
-            {canManageMembers && (
+          <DropdownMenuContent
+            align="end"
+            className="w-44"
+          >
+            {canEdit && (
               <DropdownMenuItem
-                onSelect={() => onManageMembers(team)}
+                onSelect={() =>
+                  onEdit(team)
+                }
               >
-                <Users />
-                Manage members
+                <Pencil />
+                Edit
               </DropdownMenuItem>
             )}
 
-            {canEdit && (
+            {canManageMembers && (
               <DropdownMenuItem
-                onSelect={() => onEdit(team)}
+                onSelect={() =>
+                  onManageMembers(
+                    team
+                  )
+                }
               >
-                <Edit />
-                Rename team
+                <UserPlus />
+                Add member
               </DropdownMenuItem>
             )}
+
+            {canDelete &&
+              (canEdit ||
+                canManageMembers) && (
+                <DropdownMenuSeparator />
+              )}
 
             {canDelete && (
               <DropdownMenuItem
                 variant="destructive"
-                onSelect={() => onDelete(team)}
+                onSelect={() =>
+                  onDelete(team)
+                }
               >
                 <Trash2 />
-                Delete team
+                Delete
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>

@@ -5,9 +5,11 @@ import { Auth } from "@/components/auth/auth"
 import { emailOtpPlugin } from "@/lib/auth/email-otp-plugin"
 import { magicLinkPlugin } from "@/lib/auth/magic-link-plugin"
 import { twoFactorPlugin } from "@/lib/auth/two-factor-plugin"
+import { oauthProviderPlugin } from "@/lib/auth/oauth-provider-plugin"
 
 const validAuthPathSegments = new Set([
   ...Object.values(viewPaths.auth),
+  ...Object.values(oauthProviderPlugin().viewPaths.auth),
   magicLinkPlugin().viewPaths.auth.magicLink,
   emailOtpPlugin().viewPaths.auth.emailOtp,
   twoFactorPlugin().viewPaths.auth.twoFactor
