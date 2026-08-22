@@ -61,3 +61,11 @@ auth/app/.data/
 # Local Better Auth migration/reference data
 auth/app/better-auth_migrations/
 auth/app/legacy_db/
+
+# Local reference/work directories
+/auth-working/
+/admin/
+
+# Local reference/work directories
+/auth-working/
+/admin/
