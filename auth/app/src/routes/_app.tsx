@@ -20,7 +20,6 @@ import {
 import { AppSidebar } from "@/components/app-sidebar"
 import { OrganizationSwitcher } from "@/components/auth/organization/organization-switcher"
 import { UserButton } from "@/components/auth/user/user-button"
-import { Logo } from "@/components/logo"
 import {
   SidebarInset,
   SidebarProvider,
@@ -93,10 +92,16 @@ function AppLayout() {
             to="/"
             className="flex min-w-0 items-center gap-2.5"
           >
-            <Logo />
+            <img
+              src="/branding/niteowl.dev/niteowl-icon.png"
+              alt=""
+              className="size-7 shrink-0 object-contain"
+            />
 
-            <h1 className="hidden truncate text-base sm:block">
-              BETTER-AUTH. UI
+            <h1 className="truncate text-base">
+              <span>Nite</span>
+              <span className="text-[#00AEEF]">Owl</span>
+              <span>.dev</span>
             </h1>
           </Link>
 

@@ -17,6 +17,8 @@ import type {
 } from "pg"
 import * as z from "zod"
 
+import { upsertUserProfile } from "../user-profile/index.js"
+
 import {
   listSevenShiftsCompanies,
   listSevenShiftsDepartments,
@@ -2259,19 +2261,35 @@ export const sevenShiftsApi = ({
                   email
                 )
 
+              const profileFirstName =
+                nullableText(
+                  user.first_name
+                )
+
+              const profileLastName =
+                nullableText(
+                  user.last_name
+                )
+
+              const preferredFirstName =
+                nullableText(
+                  user.preferred_first_name
+                )
+
+              const preferredLastName =
+                nullableText(
+                  user.preferred_last_name
+                )
+
               const firstName =
-                (
-                  user.preferred_first_name ??
-                  user.first_name ??
-                  ""
-                ).trim()
+                preferredFirstName ??
+                profileFirstName ??
+                ""
 
               const lastName =
-                (
-                  user.preferred_last_name ??
-                  user.last_name ??
-                  ""
-                ).trim()
+                preferredLastName ??
+                profileLastName ??
+                ""
 
               const name =
                 `${firstName} ${lastName}`
@@ -2392,65 +2410,45 @@ export const sevenShiftsApi = ({
                     employeeRecordId =
                       randomUUID()
 
-                    await pool.query(
-                      `
-                        INSERT INTO
-                          "sevenShiftsEmployee" (
-                            id,
-                            "userId",
-                            "employeeId",
-                            "sevenShiftsUserId",
-                            "firstName",
-                            "lastName",
-                            "mobilePhone",
-                            birthdate,
-                            status,
-                            enabled,
-                            "mustChangePassword",
-                            "sourceCreatedAt",
-                            "sourceUpdatedAt"
-                          )
-                        VALUES (
-                          $1,
-                          $2,
-                          $3,
-                          $4,
-                          $5,
-                          $6,
-                          $7,
-                          $8,
-                          $9,
-                          $10,
-                          false,
-                          CURRENT_TIMESTAMP,
-                          CURRENT_TIMESTAMP
-                        )
-                      `,
-                      [
-                        employeeRecordId,
-                        userId,
-                        nullableText(
-                          user.employee_id
-                        ),
-                        user.id,
-                        nullableText(
-                          firstName
-                        ),
-                        nullableText(
-                          lastName
-                        ),
-                        nullableText(
-                          user.mobile_number
-                        ),
-                        parseApiDate(
-                          user.birth_date
-                        ),
-                        user.active
-                          ? "active"
-                          : "inactive",
-                        user.active
-                      ]
+                await pool.query(
+                  `
+                    INSERT INTO
+                      "sevenShiftsEmployee" (
+                        id,
+                        "userId",
+                        "employeeId",
+                        "sevenShiftsUserId",
+                        status,
+                        enabled,
+                        "mustChangePassword",
+                        "sourceCreatedAt",
+                        "sourceUpdatedAt"
+                      )
+                    VALUES (
+                      $1,
+                      $2,
+                      $3,
+                      $4,
+                      $5,
+                      $6,
+                      false,
+                      CURRENT_TIMESTAMP,
+                      CURRENT_TIMESTAMP
                     )
+                  `,
+                  [
+                    employeeRecordId,
+                    userId,
+                    nullableText(
+                      user.employee_id
+                    ),
+                    user.id,
+                    user.active
+                      ? "active"
+                      : "inactive",
+                    user.active
+                  ]
+                )
                   }
                 } else {
                   const username =
@@ -2534,65 +2532,45 @@ export const sevenShiftsApi = ({
                   employeeRecordId =
                     randomUUID()
 
-                  await pool.query(
-                    `
-                      INSERT INTO
-                        "sevenShiftsEmployee" (
-                          id,
-                          "userId",
-                          "employeeId",
-                          "sevenShiftsUserId",
-                          "firstName",
-                          "lastName",
-                          "mobilePhone",
-                          birthdate,
-                          status,
-                          enabled,
-                          "mustChangePassword",
-                          "sourceCreatedAt",
-                          "sourceUpdatedAt"
-                        )
-                      VALUES (
-                        $1,
-                        $2,
-                        $3,
-                        $4,
-                        $5,
-                        $6,
-                        $7,
-                        $8,
-                        $9,
-                        $10,
-                        true,
-                        CURRENT_TIMESTAMP,
-                        CURRENT_TIMESTAMP
-                      )
-                    `,
-                    [
-                      employeeRecordId,
-                      userId,
-                      nullableText(
-                        user.employee_id
-                      ),
-                      user.id,
-                      nullableText(
-                        firstName
-                      ),
-                      nullableText(
-                        lastName
-                      ),
-                      nullableText(
-                        user.mobile_number
-                      ),
-                      parseApiDate(
-                        user.birth_date
-                      ),
-                      user.active
-                        ? "active"
-                        : "inactive",
-                      user.active
-                    ]
+              await pool.query(
+                `
+                  INSERT INTO
+                    "sevenShiftsEmployee" (
+                      id,
+                      "userId",
+                      "employeeId",
+                      "sevenShiftsUserId",
+                      status,
+                      enabled,
+                      "mustChangePassword",
+                      "sourceCreatedAt",
+                      "sourceUpdatedAt"
+                    )
+                  VALUES (
+                    $1,
+                    $2,
+                    $3,
+                    $4,
+                    $5,
+                    $6,
+                    true,
+                    CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP
                   )
+                `,
+                [
+                  employeeRecordId,
+                  userId,
+                  nullableText(
+                    user.employee_id
+                  ),
+                  user.id,
+                  user.active
+                    ? "active"
+                    : "inactive",
+                  user.active
+                ]
+              )
 
                   generatedCredentials.push({
                     name,
@@ -2607,6 +2585,41 @@ export const sevenShiftsApi = ({
                   usersCreated++
                 }
               }
+
+              await upsertUserProfile(
+                pool,
+                userId,
+                {
+                  firstName: profileFirstName,
+                  lastName: profileLastName,
+                  preferredFirstName,
+                  preferredLastName,
+                  pronouns: nullableText(
+                    user.pronouns
+                  ),
+                  birthdate: parseApiDate(
+                    user.birth_date
+                  ),
+                  mobilePhone: nullableText(
+                    user.mobile_number
+                  ),
+                  homePhone: nullableText(
+                    user.home_number
+                  ),
+                  address: nullableText(
+                    user.address
+                  ),
+                  city: nullableText(
+                    user.city
+                  ),
+                  stateProvince: nullableText(
+                    user.prov_state
+                  ),
+                  postalCode: nullableText(
+                    user.postal_zip
+                  )
+                }
+              )
 
               if (!created) {
                 const currentUser =
@@ -2718,152 +2731,93 @@ export const sevenShiftsApi = ({
                   )
                 }
 
-                const currentEmployee =
-                  await pool.query<{
-                    employeeId:
-                      string | null
-                    sevenShiftsUserId:
-                      number | null
-                    firstName:
-                      string | null
-                    lastName:
-                      string | null
-                    mobilePhone:
-                      string | null
-                    birthdate:
-                      Date | null
-                    status:
-                      string | null
-                    enabled:
-                      boolean
-                  }>(
-                    `
-                      SELECT
-                        "employeeId",
-                        "sevenShiftsUserId",
-                        "firstName",
-                        "lastName",
-                        "mobilePhone",
-                        birthdate,
-                        status,
-                        enabled
-                      FROM
-                        "sevenShiftsEmployee"
-                      WHERE
-                        id = $1
-                      LIMIT 1
-                    `,
-                    [
-                      employeeRecordId
-                    ]
-                  )
+            const currentEmployee =
+              await pool.query<{
+                employeeId:
+                  string | null
+                sevenShiftsUserId:
+                  number | null
+                status:
+                  string | null
+                enabled:
+                  boolean
+              }>(
+                `
+                  SELECT
+                    "employeeId",
+                    "sevenShiftsUserId",
+                    status,
+                    enabled
+                  FROM
+                    "sevenShiftsEmployee"
+                  WHERE
+                    id = $1
+                  LIMIT 1
+                `,
+                [
+                  employeeRecordId
+                ]
+              )
 
-                if (
-                  currentEmployee.rowCount !==
-                  1
-                ) {
-                  throw new Error(
-                    `7shifts employee record ${employeeRecordId} was not found`
-                  )
-                }
+            if (
+              currentEmployee.rowCount !==
+              1
+            ) {
+              throw new Error(
+                `7shifts employee record ${employeeRecordId} was not found`
+              )
+            }
 
-                const employee =
-                  currentEmployee.rows[0]
+            const employee =
+              currentEmployee.rows[0]
 
-                const desiredEmployeeId =
-                  nullableText(
-                    user.employee_id
-                  )
+            const desiredEmployeeId =
+              nullableText(
+                user.employee_id
+              )
 
-                const desiredFirstName =
-                  nullableText(
-                    firstName
-                  )
+            const desiredStatus =
+              user.active
+                ? "active"
+                : "inactive"
 
-                const desiredLastName =
-                  nullableText(
-                    lastName
-                  )
+            const employeeChanged =
+              employee.employeeId !==
+                desiredEmployeeId ||
+              employee.sevenShiftsUserId !==
+                user.id ||
+              employee.status !==
+                desiredStatus ||
+              employee.enabled !==
+                user.active
 
-                const desiredMobilePhone =
-                  nullableText(
-                    user.mobile_number
-                  )
+            if (
+              employeeChanged
+            ) {
+              await pool.query(
+                `
+                  UPDATE
+                    "sevenShiftsEmployee"
+                  SET
+                    "employeeId" = $1,
+                    "sevenShiftsUserId" = $2,
+                    status = $3,
+                    enabled = $4,
+                    "sourceUpdatedAt" =
+                      CURRENT_TIMESTAMP
+                  WHERE
+                    id = $5
+                `,
+                [
+                  desiredEmployeeId,
+                  user.id,
+                  desiredStatus,
+                  user.active,
+                  employeeRecordId
+                ]
+              )
+            }
 
-                const desiredBirthdate =
-                  parseApiDate(
-                    user.birth_date
-                  )
-
-                const desiredStatus =
-                  user.active
-                    ? "active"
-                    : "inactive"
-
-                const currentBirthdateTime =
-                  employee.birthdate
-                    ? new Date(
-                        employee.birthdate
-                      ).getTime()
-                    : null
-
-                const desiredBirthdateTime =
-                  desiredBirthdate
-                    ? desiredBirthdate.getTime()
-                    : null
-
-                const employeeChanged =
-                  employee.employeeId !==
-                    desiredEmployeeId ||
-                  employee.sevenShiftsUserId !==
-                    user.id ||
-                  employee.firstName !==
-                    desiredFirstName ||
-                  employee.lastName !==
-                    desiredLastName ||
-                  employee.mobilePhone !==
-                    desiredMobilePhone ||
-                  currentBirthdateTime !==
-                    desiredBirthdateTime ||
-                  employee.status !==
-                    desiredStatus ||
-                  employee.enabled !==
-                    user.active
-
-                if (
-                  employeeChanged
-                ) {
-                  await pool.query(
-                    `
-                      UPDATE
-                        "sevenShiftsEmployee"
-                      SET
-                        "employeeId" = $1,
-                        "sevenShiftsUserId" = $2,
-                        "firstName" = $3,
-                        "lastName" = $4,
-                        "mobilePhone" = $5,
-                        birthdate = $6,
-                        status = $7,
-                        enabled = $8,
-                        "sourceUpdatedAt" =
-                          CURRENT_TIMESTAMP
-                      WHERE
-                        id = $9
-                    `,
-                    [
-                      desiredEmployeeId,
-                      user.id,
-                      desiredFirstName,
-                      desiredLastName,
-                      desiredMobilePhone,
-                      desiredBirthdate,
-                      desiredStatus,
-                      user.active,
-                      employeeRecordId
-                    ]
-                  )
-                }
 
                 if (
                   userChanged ||

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start"
 import { getRequest } from "@tanstack/react-start/server"
 
 import { auth, pool } from "@/lib/auth"
+import { getUserProfile, upsertUserProfile, type UserProfileFields } from "@/lib/plugins/user-profile/index"
 
 export type AdminUserOrganization = {
   id: string
@@ -262,4 +263,39 @@ export const getAdminUser = createServerFn({
       sessions: sessionsResult.rows,
       organizations: organizationsResult.rows
     }
+  })
+
+
+export const getAdminUserProfile = createServerFn({
+  method: "GET"
+})
+  .validator((data: { userId: string }) => data)
+  .handler(async ({ data }) => {
+    await requireGlobalAdmin()
+
+    return getUserProfile(
+      pool,
+      data.userId
+    )
+  })
+
+export const updateAdminUserProfile = createServerFn({
+  method: "POST"
+})
+  .validator(
+    (
+      data: {
+        userId: string
+        fields: UserProfileFields
+      }
+    ) => data
+  )
+  .handler(async ({ data }) => {
+    await requireGlobalAdmin()
+
+    return upsertUserProfile(
+      pool,
+      data.userId,
+      data.fields
+    )
   })

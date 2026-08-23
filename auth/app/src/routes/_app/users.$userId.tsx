@@ -15,6 +15,7 @@ import { UserActivity } from "@/components/auth/admin/user-activity"
 import { UserAdminActions } from "@/components/auth/admin/user-admin-actions"
 import { UserOrganizations } from "@/components/auth/admin/user-organizations"
 import { UserSessions } from "@/components/auth/admin/user-sessions"
+import { UserProfileCard } from "@/components/auth/admin/user-profile-card"
 import { UserAvatar } from "@/components/auth/user/user-avatar"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -45,12 +46,14 @@ import {
   getAllOrganizations
 } from "@/lib/admin/user-organizations"
 import { getAdminUser } from "@/lib/admin/users"
+import { getAdminUserProfile } from "@/lib/admin/users"
 
 export const Route =
   createFileRoute("/_app/users/$userId")({
     loader: async ({ params }) => {
       const [
         user,
+      userProfile,
         allOrganizations,
         activity
       ] = await Promise.all([
@@ -59,6 +62,12 @@ export const Route =
             userId: params.userId
           }
         }),
+
+      getAdminUserProfile({
+        data: {
+          userId: params.userId
+        }
+      }),
 
         getAllOrganizations(),
 
@@ -73,6 +82,7 @@ export const Route =
 
       return {
         user,
+      userProfile,
         allOrganizations,
         activity
       }
@@ -84,6 +94,7 @@ export const Route =
 function UserPage() {
   const {
     user,
+    userProfile,
     allOrganizations,
     activity
   } = Route.useLoaderData()
@@ -221,6 +232,11 @@ function UserPage() {
               <ProfileInformationCard
                 user={user}
               />
+
+            <UserProfileCard
+              userId={user.id}
+              profile={userProfile}
+            />
 
               <div className="grid min-w-0 gap-6 xl:grid-cols-2">
                 <UserSessions

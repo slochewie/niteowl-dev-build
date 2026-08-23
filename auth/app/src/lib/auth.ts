@@ -20,6 +20,7 @@ import { Resend } from "resend";
 
 import { env } from "./env.js";
 import { integrationManager } from "./plugins/integration-manager/index.js";
+import { userProfile } from "./plugins/user-profile/index.js";
 import { sevenShifts } from "./plugins/seven-shifts/index.js";
 import { sevenShiftsCsv } from "./plugins/seven-shifts-csv/index.js";
 import { sevenShiftsApi } from "./plugins/seven-shifts-api/index.js";
@@ -215,6 +216,10 @@ export const auth = betterAuth({
     sentinel(),
 
     integrationManager({
+      pool,
+    }),
+
+    userProfile({
       pool,
     }),
 

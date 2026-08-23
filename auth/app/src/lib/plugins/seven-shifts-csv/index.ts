@@ -25,6 +25,8 @@ import type {
 } from "pg"
 import * as z from "zod"
 
+import { upsertUserProfile } from "../user-profile/index.js"
+
 type SevenShiftsCsvOptions = {
   pool: Pool
   storageRoot: string
@@ -2704,172 +2706,129 @@ export const sevenShiftsCsv = ({
                 disabledEmployees++
               }
 
-              const existingEmployee =
-                await pool.query<{
-                  id:
-                    string
-                  employeeId:
-                    string | null
-                  firstName:
-                    string | null
-                  lastName:
-                    string | null
-                  mobilePhone:
-                    string | null
-                  birthdate:
-                    Date | null
-                  status:
-                    string | null
-                  enabled:
-                    boolean
-                }>(
-                  `
-                    SELECT
-                      id,
-                      "employeeId",
-                      "firstName",
-                      "lastName",
-                      "mobilePhone",
-                      birthdate,
-                      status,
-                      enabled
-                    FROM
-                      "sevenShiftsEmployee"
-                    WHERE
-                      "userId" = $1
-                    LIMIT 1
-                  `,
-                  [
-                    userId
-                  ]
-                )
+              await upsertUserProfile(
+            pool,
+            userId,
+            {
+              firstName: desiredFirstName,
+              lastName: desiredLastName,
+              mobilePhone: desiredMobilePhone,
+              birthdate: desiredBirthdate
+            }
+          )
 
-              let employeeRecordId:
-                string
+          const existingEmployee =
+            await pool.query<{
+              id: string
+              employeeId:
+                string | null
+              status:
+                string | null
+              enabled:
+                boolean
+            }>(
+              `
+                SELECT
+                  id,
+                  "employeeId",
+                  status,
+                  enabled
+                FROM
+                  "sevenShiftsEmployee"
+                WHERE
+                  "userId" = $1
+                LIMIT 1
+              `,
+              [
+                userId
+              ]
+            )
 
-              if (
-                existingEmployee.rowCount ===
-                1
-              ) {
-                const currentEmployee =
-                  existingEmployee.rows[
-                    0
-                  ]
+          let employeeRecordId:
+            string
 
-                employeeRecordId =
-                  currentEmployee.id
+          if (
+            existingEmployee.rowCount ===
+            1
+          ) {
+            const currentEmployee =
+              existingEmployee.rows[0]
 
-                const currentBirthdateTime =
-                  currentEmployee.birthdate
-                    ? new Date(
-                        currentEmployee.birthdate
-                      ).getTime()
-                    : null
+            employeeRecordId =
+              currentEmployee.id
 
-                const desiredBirthdateTime =
-                  desiredBirthdate
-                    ? desiredBirthdate.getTime()
-                    : null
+            employeeChanged =
+              currentEmployee.employeeId !==
+                desiredEmployeeNumber ||
+              currentEmployee.status !==
+                desiredStatus ||
+              currentEmployee.enabled !==
+                enabled
 
-                employeeChanged =
-                  currentEmployee.employeeId !==
-                    desiredEmployeeNumber ||
-                  currentEmployee.firstName !==
-                    desiredFirstName ||
-                  currentEmployee.lastName !==
-                    desiredLastName ||
-                  currentEmployee.mobilePhone !==
-                    desiredMobilePhone ||
-                  currentBirthdateTime !==
-                    desiredBirthdateTime ||
-                  currentEmployee.status !==
-                    desiredStatus ||
-                  currentEmployee.enabled !==
-                    enabled
-
-                if (
-                  employeeChanged
-                ) {
-                  await pool.query(
-                    `
-                      UPDATE
-                        "sevenShiftsEmployee"
-                      SET
-                        "employeeId" = $1,
-                        "firstName" = $2,
-                        "lastName" = $3,
-                        "mobilePhone" = $4,
-                        birthdate = $5,
-                        status = $6,
-                        enabled = $7,
-                        "sourceUpdatedAt" =
-                          CURRENT_TIMESTAMP
-                      WHERE
-                        id = $8
-                    `,
-                    [
-                      desiredEmployeeNumber,
-                      desiredFirstName,
-                      desiredLastName,
-                      desiredMobilePhone,
-                      desiredBirthdate,
-                      desiredStatus,
-                      enabled,
-                      employeeRecordId
-                    ]
-                  )
-                }
-              } else {
-                employeeRecordId =
-                  randomUUID()
-
-                await pool.query(
-                  `
-                    INSERT INTO
-                      "sevenShiftsEmployee" (
-                        id,
-                        "userId",
-                        "employeeId",
-                        "firstName",
-                        "lastName",
-                        "mobilePhone",
-                        birthdate,
-                        status,
-                        enabled,
-                        "mustChangePassword",
-                        "sourceUpdatedAt"
-                      )
-                    VALUES (
-                      $1,
-                      $2,
-                      $3,
-                      $4,
-                      $5,
-                      $6,
-                      $7,
-                      $8,
-                      $9,
-                      $10,
+            if (
+              employeeChanged
+            ) {
+              await pool.query(
+                `
+                  UPDATE
+                    "sevenShiftsEmployee"
+                  SET
+                    "employeeId" = $1,
+                    status = $2,
+                    enabled = $3,
+                    "sourceUpdatedAt" =
                       CURRENT_TIMESTAMP
-                    )
-                  `,
-                  [
-                    employeeRecordId,
-                    userId,
-                    desiredEmployeeNumber,
-                    desiredFirstName,
-                    desiredLastName,
-                    desiredMobilePhone,
-                    desiredBirthdate,
-                    desiredStatus,
-                    enabled,
-                    created
-                  ]
-                )
+                  WHERE
+                    id = $4
+                `,
+                [
+                  desiredEmployeeNumber,
+                  desiredStatus,
+                  enabled,
+                  employeeRecordId
+                ]
+              )
+            }
+          } else {
+            employeeRecordId =
+              randomUUID()
 
-                employeeChanged =
-                  true
-              }
+            await pool.query(
+              `
+                INSERT INTO
+                  "sevenShiftsEmployee" (
+                    id,
+                    "userId",
+                    "employeeId",
+                    status,
+                    enabled,
+                    "mustChangePassword",
+                    "sourceUpdatedAt"
+                  )
+                VALUES (
+                  $1,
+                  $2,
+                  $3,
+                  $4,
+                  $5,
+                  $6,
+                  CURRENT_TIMESTAMP
+                )
+              `,
+              [
+                employeeRecordId,
+                userId,
+                desiredEmployeeNumber,
+                desiredStatus,
+                enabled,
+                created
+              ]
+            )
+
+            employeeChanged =
+              true
+          }
+
 
               if (
                 !created &&

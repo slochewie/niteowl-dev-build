@@ -185,26 +185,6 @@ export const sevenShifts = ({
             unique: true,
           },
 
-          firstName: {
-            type: "string",
-            required: false,
-          },
-
-          lastName: {
-            type: "string",
-            required: false,
-          },
-
-          mobilePhone: {
-            type: "string",
-            required: false,
-          },
-
-          birthdate: {
-            type: "date",
-            required: false,
-          },
-
           status: {
             type: "string",
             required: false,

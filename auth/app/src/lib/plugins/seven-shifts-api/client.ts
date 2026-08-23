@@ -53,8 +53,14 @@ export type SevenShiftsUser = {
   last_name: string
   preferred_first_name?: string | null
   preferred_last_name?: string | null
+  pronouns?: string | null
   email?: string | null
   mobile_number?: string | null
+  home_number?: string | null
+  address?: string | null
+  postal_zip?: string | null
+  city?: string | null
+  prov_state?: string | null
   active: boolean
   invite_status?: string | null
   hire_date?: string | null
