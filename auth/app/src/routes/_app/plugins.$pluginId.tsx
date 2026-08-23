@@ -19,6 +19,9 @@ import {
   SevenShiftsCsvSources
 } from "@/components/admin/plugins/seven-shifts-csv-sources"
 import {
+  SevenShiftsApiSources
+} from "@/components/admin/plugins/seven-shifts-api-sources"
+import {
   Badge
 } from "@/components/ui/badge"
 import {
@@ -173,6 +176,18 @@ function PluginPage() {
                 }
               />
             )}
+
+          {detail.plugin.id ===
+            "seven-shifts-api" && (
+            <SevenShiftsApiSources
+              sources={
+                detail.apiSources
+              }
+              organizations={
+                detail.organizations
+              }
+            />
+          )}
 
             <PluginOrganizations
               detail={detail}

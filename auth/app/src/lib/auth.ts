@@ -22,6 +22,7 @@ import { env } from "./env.js";
 import { integrationManager } from "./plugins/integration-manager/index.js";
 import { sevenShifts } from "./plugins/seven-shifts/index.js";
 import { sevenShiftsCsv } from "./plugins/seven-shifts-csv/index.js";
+import { sevenShiftsApi } from "./plugins/seven-shifts-api/index.js";
 import { unifiIdentity } from "./plugins/unifi-identity/index.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -225,6 +226,12 @@ export const auth = betterAuth({
       pool,
       storageRoot:
         env.sevenShiftsCsvStorageRoot,
+    }),
+
+    sevenShiftsApi({
+      pool,
+      encryptionKey:
+        env.integrationEncryptionKey,
     }),
 
     unifiIdentity({

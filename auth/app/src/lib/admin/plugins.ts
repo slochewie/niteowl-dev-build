@@ -33,6 +33,38 @@ export type AdminSevenShiftsCsvSource = {
   updatedAt: Date
 }
 
+export type AdminSevenShiftsApiSource = {
+  id: string
+  name: string
+  companyId: number | null
+  companyName: string | null
+  apiVersion: string
+  organizationCount: number
+  hasAccessToken: boolean
+  lastTestedAt: Date | null
+  lastSyncAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export type AdminSevenShiftsApiLocation = {
+  id: number
+  company_id: number
+  name: string
+  active?: boolean
+  city?: string | null
+  state?: string | null
+  country?: string | null
+  timezone?: string | null
+}
+
+export type AdminSevenShiftsApiLocationMapping = {
+  organizationId: string
+  organizationName: string
+  sevenShiftsLocationId: number
+  sevenShiftsLocationName: string
+}
+
 export type AdminPluginCatalogItem =
   IntegrationDefinition & {
     enabledOrganizationCount: number
@@ -44,6 +76,8 @@ export type AdminPluginDetail = {
     AdminPluginOrganization[]
   csvSources:
     AdminSevenShiftsCsvSource[]
+  apiSources:
+    AdminSevenShiftsApiSource[]
 }
 
 async function requireGlobalAdmin() {
@@ -183,7 +217,8 @@ export const getAdminPlugin =
           return {
             plugin,
             organizations: [],
-            csvSources: []
+            csvSources: [],
+            apiSources: []
           }
         }
 
@@ -194,6 +229,10 @@ export const getAdminPlugin =
 
         let csvSources:
           AdminSevenShiftsCsvSource[] =
+            []
+
+        let apiSources:
+          AdminSevenShiftsApiSource[] =
             []
 
         if (
@@ -216,10 +255,31 @@ export const getAdminPlugin =
             result.sources
         }
 
+        if (
+          plugin.id ===
+          "seven-shifts-api"
+        ) {
+          const {
+            request
+          } =
+            await requireGlobalAdmin()
+
+          const result =
+            await auth.api
+              .listSevenShiftsApiSources({
+                headers:
+                  request.headers
+              })
+
+          apiSources =
+            result.sources
+        }
+
         return {
           plugin,
           organizations,
-          csvSources
+          csvSources,
+          apiSources
         }
       }
     )
@@ -458,6 +518,249 @@ export const renameAdminSevenShiftsCsvSource =
                 data.sourceId,
               name:
                 data.name
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const createAdminSevenShiftsApiSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        name: string
+        accessToken: string
+        apiVersion?: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .createSevenShiftsApiSource({
+            body: {
+              name:
+                data.name,
+              accessToken:
+                data.accessToken,
+              ...(data.apiVersion
+                ? {
+                    apiVersion:
+                      data.apiVersion
+                  }
+                : {})
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const updateAdminSevenShiftsApiSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+        name: string
+        accessToken?: string
+        apiVersion?: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .updateSevenShiftsApiSource({
+            body: {
+              sourceId:
+                data.sourceId,
+              name:
+                data.name,
+              ...(data.accessToken
+                ? {
+                    accessToken:
+                      data.accessToken
+                  }
+                : {}),
+              ...(data.apiVersion
+                ? {
+                    apiVersion:
+                      data.apiVersion
+                  }
+                : {})
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const testAdminSevenShiftsApiSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .testSevenShiftsApiSource({
+            body: {
+              sourceId:
+                data.sourceId
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const getAdminSevenShiftsApiLocations =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .listSevenShiftsApiLocations({
+            body: {
+              sourceId:
+                data.sourceId
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const assignAdminSevenShiftsApiLocation =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+        organizationId: string
+        sevenShiftsLocationId: number
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .assignSevenShiftsApiLocation({
+            body: {
+              sourceId:
+                data.sourceId,
+              organizationId:
+                data.organizationId,
+              sevenShiftsLocationId:
+                data.sevenShiftsLocationId
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const previewAdminSevenShiftsApiSync =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .previewSevenShiftsApiSync({
+            body: {
+              sourceId:
+                data.sourceId
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const syncAdminSevenShiftsApiSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .syncSevenShiftsApiSource({
+            body: {
+              sourceId:
+                data.sourceId
             },
             headers:
               request.headers
