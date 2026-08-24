@@ -435,7 +435,7 @@ export function GlauthSources({
                         ou={
                           effectiveSlug ||
                           "source-slug"
-                        },ou=tenants,dc=niteowl,dc=dev
+                        },dc=niteowl,dc=dev
                       </span>
                     </p>
                   </div>
@@ -491,15 +491,38 @@ export function GlauthSources({
                   </div>
 
                   <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
                     <div className="font-medium">
                       {source.name}
                     </div>
 
-                    <div className="truncate font-mono text-xs text-muted-foreground">
-                      {source.baseDn}
-                    </div>
+                    <Badge
+                      variant={
+                        source.runtimeStatus ===
+                        "ready"
+                          ? "default"
+                          : source.runtimeStatus ===
+                              "error"
+                            ? "destructive"
+                            : "secondary"
+                      }
+                      className="capitalize"
+                    >
+                      {source.runtimeStatus}
+                    </Badge>
 
-                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    {source.runtimePort ? (
+                      <Badge variant="outline">
+                        LDAP :{source.runtimePort}
+                      </Badge>
+                    ) : null}
+                  </div>
+
+                  <div className="truncate font-mono text-xs text-muted-foreground">
+                    {source.baseDn}
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <span>
                         {source.projectedUsers} projected
                       </span>

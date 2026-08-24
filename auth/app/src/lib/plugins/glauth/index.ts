@@ -293,65 +293,77 @@ export const glauth = ({
             }
 
             const sources =
-              await pool.query<{
-                id: string
-                name: string
-                slug: string
-                baseDn: string
-                backendName: string | null
-                uidStart: number
-                gidNumber: number
-                userGroupName: string
-                enabled: boolean
-                projectedUsers: number
-                activeUsers: number
-                disabledUsers: number
-                createdAt: Date
-                updatedAt: Date
-                lastReconciledAt: Date | null
-              }>(
-                `
-                  SELECT
-                    s.id,
-                    s.name,
-                    s.slug,
-                    s."baseDn",
-                    s."backendName",
-                    s."uidStart",
-                    s."gidNumber",
-                    s."userGroupName",
-                    s.enabled,
-                    COUNT(gu.id)::int AS "projectedUsers",
-                    COUNT(gu.id) FILTER (
-                      WHERE gu.disabled = false
-                    )::int AS "activeUsers",
-                    COUNT(gu.id) FILTER (
-                      WHERE gu.disabled = true
-                    )::int AS "disabledUsers",
-                    s."createdAt",
-                    s."updatedAt",
-                    s."lastReconciledAt"
-                  FROM "glauthSource" s
-                  LEFT JOIN "glauthUser" gu
-                    ON gu."sourceId" = s.id
-                  GROUP BY
-                    s.id,
-                    s.name,
-                    s.slug,
-                    s."baseDn",
-                    s."backendName",
-                    s."uidStart",
-                    s."gidNumber",
-                    s."userGroupName",
-                    s.enabled,
-                    s."createdAt",
-                    s."updatedAt",
-                    s."lastReconciledAt"
-                  ORDER BY s.name
-                `
-              )
+            await pool.query<{
+              id: string
+              name: string
+              slug: string
+              baseDn: string
+              backendName: string | null
+              runtimeSchema: string | null
+              runtimePort: number | null
+              runtimeStatus: string
+              uidStart: number
+              gidNumber: number
+              userGroupName: string
+              enabled: boolean
+              projectedUsers: number
+              activeUsers: number
+              disabledUsers: number
+              createdAt: Date
+              updatedAt: Date
+              lastReconciledAt: Date | null
+            }>(
+              `
+                SELECT
+                  s.id,
+                  s.name,
+                  s.slug,
+                  s."baseDn",
+                  s."backendName",
+                  s."runtimeSchema",
+                  s."runtimePort",
+                  s."runtimeStatus",
+                  s."uidStart",
+                  s."gidNumber",
+                  s."userGroupName",
+                  s.enabled,
+                  COUNT(gu.id)::int AS "projectedUsers",
+                  COUNT(gu.id) FILTER (
+                    WHERE gu.disabled = false
+                  )::int AS "activeUsers",
+                  COUNT(gu.id) FILTER (
+                    WHERE gu.disabled = true
+                  )::int AS "disabledUsers",
+                  s."createdAt",
+                  s."updatedAt",
+                  s."lastReconciledAt"
+                FROM "glauthSource" s
 
-            const assignments =
+                LEFT JOIN "glauthUser" gu
+                  ON gu."sourceId" = s.id
+
+                GROUP BY
+                  s.id,
+                  s.name,
+                  s.slug,
+                  s."baseDn",
+                  s."backendName",
+                  s."runtimeSchema",
+                  s."runtimePort",
+                  s."runtimeStatus",
+                  s."uidStart",
+                  s."gidNumber",
+                  s."userGroupName",
+                  s.enabled,
+                  s."createdAt",
+                  s."updatedAt",
+                  s."lastReconciledAt"
+
+                ORDER BY s.name
+              `
+            )
+
+          const assignments =
               await pool.query<{
                 sourceId: string
                 organizationId: string

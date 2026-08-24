@@ -821,6 +821,9 @@ export type AdminGlauthSource = {
   slug: string
   baseDn: string
   backendName: string | null
+  runtimeSchema: string | null
+  runtimePort: number | null
+  runtimeStatus: string
   uidStart: number
   gidNumber: number
   userGroupName: string
