@@ -7,6 +7,9 @@ import {
   IntegrationLogo
 } from "@/components/admin/plugins/integration-logo"
 import {
+  GlauthSources
+} from "@/components/admin/plugins/glauth-sources"
+import {
   PluginOrganizations
 } from "@/components/admin/plugins/plugin-organizations"
 import {
@@ -29,7 +32,8 @@ import {
   CardContent
 } from "@/components/ui/card"
 import {
-  getAdminPlugin
+  getAdminPlugin,
+  getAdminGlauthSources
 } from "@/lib/admin/plugins"
 import type {
   CatalogIntegrationId,
@@ -51,8 +55,15 @@ export const Route =
           }
         })
 
+      const glauthSources =
+        params.pluginId ===
+        "glauth"
+          ? await getAdminGlauthSources()
+          : []
+
       return {
-        detail
+        detail,
+        glauthSources
       }
     },
 
@@ -62,7 +73,8 @@ export const Route =
 
 function PluginPage() {
   const {
-    detail
+    detail,
+    glauthSources
   } = Route.useLoaderData()
 
   const Icon =
@@ -177,21 +189,33 @@ function PluginPage() {
               />
             )}
 
-          {detail.plugin.id ===
-            "seven-shifts-api" && (
-            <SevenShiftsApiSources
-              sources={
-                detail.apiSources
-              }
-              organizations={
-                detail.organizations
-              }
-            />
-          )}
+            {detail.plugin.id ===
+              "seven-shifts-api" && (
+              <SevenShiftsApiSources
+                sources={
+                  detail.apiSources
+                }
+                organizations={
+                  detail.organizations
+                }
+              />
+            )}
 
-            <PluginOrganizations
-              detail={detail}
-            />
+            {detail.plugin.id ===
+            "glauth" ? (
+              <GlauthSources
+                sources={
+                  glauthSources
+                }
+                organizations={
+                  detail.organizations
+                }
+              />
+            ) : (
+              <PluginOrganizations
+                detail={detail}
+              />
+            )}
           </>
         )}
       </div>
@@ -213,6 +237,7 @@ function hasIntegrationLogo(
     case "counter":
       return true
 
+    case "glauth":
     case "wifi":
     case "mqtt":
       return false

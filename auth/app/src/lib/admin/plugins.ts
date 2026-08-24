@@ -812,3 +812,177 @@ export const syncAdminSevenShiftsApiSource =
           })
       }
     )
+
+
+
+export type AdminGlauthSource = {
+  id: string
+  name: string
+  slug: string
+  baseDn: string
+  backendName: string | null
+  uidStart: number
+  gidNumber: number
+  userGroupName: string
+  enabled: boolean
+  projectedUsers: number
+  activeUsers: number
+  disabledUsers: number
+  lastReconciledAt: Date | string | null
+  organizationIds: string[]
+}
+
+export const getAdminGlauthSources =
+  createServerFn({
+    method: "GET"
+  }).handler(
+    async (): Promise<
+      AdminGlauthSource[]
+    > => {
+      const {
+        request
+      } =
+        await requireGlobalAdmin()
+
+      const result =
+        await auth.api
+          .listGlauthSources({
+            headers:
+              request.headers
+          })
+
+      return result.sources
+    }
+  )
+
+export const createAdminGlauthSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        name: string
+        slug: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .createGlauthSource({
+            body: data,
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const updateAdminGlauthSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+        name: string
+        uidStart: number
+        gidNumber: number
+        userGroupName: string
+        enabled: boolean
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .updateGlauthSource({
+            body: data,
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export const setAdminGlauthOrganizationSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        organizationId: string
+        sourceId:
+          string | null
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .setGlauthOrganizationSource({
+            body: data,
+            headers:
+              request.headers
+          })
+      }
+    )
+
+export type AdminGlauthReconcileResult = {
+  sourceId: string
+  sourceName: string
+  organizations: number
+  users: number
+  created: number
+  updated: number
+  removed: number
+  disabled: number
+}
+
+export const reconcileAdminGlauthSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }): Promise<
+        AdminGlauthReconcileResult
+      > => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .reconcileGlauthSource({
+            body: {
+              sourceId:
+                data.sourceId
+            },
+            headers:
+              request.headers
+          })
+      }
+    )

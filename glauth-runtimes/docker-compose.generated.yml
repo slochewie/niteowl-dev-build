@@ -1,0 +1,36 @@
+services:
+  glauth-ash-bars:
+    image: glauth/glauth-plugins:v2.5.2
+    restart: unless-stopped
+    volumes:
+      - './glauth-runtimes/ash-bars/config.cfg:/app/config/config.cfg:ro'
+    ports:
+      - "390:3893"
+    networks: [niteowl-dev]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  glauth-the-mark:
+    image: glauth/glauth-plugins:v2.5.2
+    restart: unless-stopped
+    volumes:
+      - './glauth-runtimes/the-mark/config.cfg:/app/config/config.cfg:ro'
+    ports:
+      - "391:3893"
+    networks: [niteowl-dev]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  glauth-bennysppsc:
+    image: glauth/glauth-plugins:v2.5.2
+    restart: unless-stopped
+    volumes:
+      - './glauth-runtimes/bennysppsc/config.cfg:/app/config/config.cfg:ro'
+    ports:
+      - "392:3893"
+    networks: [niteowl-dev]
+    depends_on:
+      postgres:
+        condition: service_healthy

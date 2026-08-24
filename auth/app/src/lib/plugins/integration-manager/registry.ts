@@ -2,6 +2,7 @@ export const INTEGRATION_IDS = [
   "seven-shifts-csv",
   "seven-shifts-api",
   "unifi-api",
+  "glauth",
   "unifi-ldap"
 ] as const
 
@@ -62,12 +63,21 @@ export const INTEGRATIONS =
       status: "available"
     },
     {
+      id: "glauth",
+      name: "GLAuth",
+      description:
+        "Project Better Auth identities into lightweight LDAP directories.",
+      category: "Identity",
+      configurationLabel: "LDAP Directories",
+      status: "available"
+    },
+    {
       id: "unifi-ldap",
       name: "UniFi LDAP",
       description:
-        "Provide organization identities to UniFi through LDAP.",
+        "Connect UniFi Identity to an LDAP directory and assign organizations to LDAP connections.",
       category: "Network",
-      configurationLabel: "LDAP Connection",
+      configurationLabel: "LDAP Sources",
       status: "available"
     },
     {

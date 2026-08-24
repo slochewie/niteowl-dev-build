@@ -172,6 +172,7 @@ function hasIntegrationLogo(
     case "counter":
       return true
 
+    case "glauth":
     case "wifi":
     case "mqtt":
       return false
@@ -192,8 +193,11 @@ export function getPluginIcon(
     case "unifi-api":
       return Network
 
-    case "unifi-ldap":
+    case "glauth":
       return ServerCog
+
+    case "unifi-ldap":
+      return Network
 
     case "toast-api":
       return Utensils

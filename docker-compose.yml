@@ -95,28 +95,35 @@ services:
         condition: service_healthy
 
   glauth:
-    image: glauth/glauth:v2.5.2
+    image: glauth/glauth-plugins:v2.5.2
     restart: unless-stopped
     volumes:
-      - ./glauth/config.cfg:/app/config/config.cfg:ro
+      - './glauth/config.cfg:/app/config/config.cfg:ro'
     ports:
       - "389:3893"
-    networks: [niteowl-dev]
-
-  glauth-sync:
-    image: 'node:26-trixie'
-    working_dir: /app
-    command: ["node", "index.js"]
-    volumes:
-      - './glauth-sync/app:/app'
-      - './glauth:/glauth'
-    env_file:
-      - ./.env-glauth-sync
-    restart: no
     networks: [niteowl-dev]
     depends_on:
       postgres:
         condition: service_healthy
+
+  glauth-runtime-manager:
+    image: 'node:26-trixie'
+    user: "1000:1000"
+    working_dir: /app
+    command: ["node", "index.js"]
+    volumes:
+      - './glauth-runtime-manager/app:/app'
+      - './glauth-runtimes:/glauth-runtimes'
+    env_file:
+      - ./.env-better-auth
+    environment:
+      GLAUTH_RUNTIME_ROOT: /glauth-runtimes
+    restart: "no"
+    networks: [niteowl-dev]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 
 networks:
   niteowl-dev:
