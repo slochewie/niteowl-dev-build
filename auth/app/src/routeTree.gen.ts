@@ -14,15 +14,15 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
 import { Route as AuthPathRouteImport } from './routes/auth/$path'
-import { Route as SettingsPathRouteImport } from './routes/settings/$path'
 import { Route as DotwellKnownOauthAuthorizationServerSplatRouteImport } from './routes/[.]well-known/oauth-authorization-server/$'
 import { Route as AppOrganizationsIndexRouteImport } from './routes/_app/organizations.index'
 import { Route as AppOrganizationsOrganizationIdRouteImport } from './routes/_app/organizations.$organizationId'
 import { Route as AppPluginsIndexRouteImport } from './routes/_app/plugins.index'
 import { Route as AppPluginsPluginIdRouteImport } from './routes/_app/plugins.$pluginId'
+import { Route as AppSettingsPathRouteImport } from './routes/_app.settings.$path'
 import { Route as AppUsersIndexRouteImport } from './routes/_app/users.index'
 import { Route as AppUsersUserIdRouteImport } from './routes/_app/users.$userId'
-import { Route as OrganizationSlugPathRouteImport } from './routes/organization/$slug/$path'
+import { Route as AppOrganizationSlugPathRouteImport } from './routes/_app/organization/$slug/$path'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -46,11 +46,6 @@ const ApiSplatRoute = ApiSplatRouteImport.update({
 const AuthPathRoute = AuthPathRouteImport.update({
   id: '/auth/$path',
   path: '/auth/$path',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsPathRoute = SettingsPathRouteImport.update({
-  id: '/settings/$path',
-  path: '/settings/$path',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DotwellKnownOauthAuthorizationServerSplatRoute =
@@ -80,6 +75,11 @@ const AppPluginsPluginIdRoute = AppPluginsPluginIdRouteImport.update({
   path: '/plugins/$pluginId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSettingsPathRoute = AppSettingsPathRouteImport.update({
+  id: '/settings/$path',
+  path: '/settings/$path',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUsersIndexRoute = AppUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -90,10 +90,10 @@ const AppUsersUserIdRoute = AppUsersUserIdRouteImport.update({
   path: '/users/$userId',
   getParentRoute: () => AppRoute,
 } as any)
-const OrganizationSlugPathRoute = OrganizationSlugPathRouteImport.update({
+const AppOrganizationSlugPathRoute = AppOrganizationSlugPathRouteImport.update({
   id: '/organization/$slug/$path',
   path: '/organization/$slug/$path',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -101,30 +101,30 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/$path': typeof AuthPathRoute
-  '/settings/$path': typeof SettingsPathRoute
   '/.well-known/oauth-authorization-server/$': typeof DotwellKnownOauthAuthorizationServerSplatRoute
   '/organizations/$organizationId': typeof AppOrganizationsOrganizationIdRoute
   '/plugins/$pluginId': typeof AppPluginsPluginIdRoute
+  '/settings/$path': typeof AppSettingsPathRoute
   '/users/$userId': typeof AppUsersUserIdRoute
-  '/organization/$slug/$path': typeof OrganizationSlugPathRoute
   '/organizations/': typeof AppOrganizationsIndexRoute
   '/plugins/': typeof AppPluginsIndexRoute
   '/users/': typeof AppUsersIndexRoute
+  '/organization/$slug/$path': typeof AppOrganizationSlugPathRoute
 }
 export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/$path': typeof AuthPathRoute
-  '/settings/$path': typeof SettingsPathRoute
   '/': typeof AppIndexRoute
   '/.well-known/oauth-authorization-server/$': typeof DotwellKnownOauthAuthorizationServerSplatRoute
   '/organizations/$organizationId': typeof AppOrganizationsOrganizationIdRoute
   '/plugins/$pluginId': typeof AppPluginsPluginIdRoute
+  '/settings/$path': typeof AppSettingsPathRoute
   '/users/$userId': typeof AppUsersUserIdRoute
-  '/organization/$slug/$path': typeof OrganizationSlugPathRoute
   '/organizations': typeof AppOrganizationsIndexRoute
   '/plugins': typeof AppPluginsIndexRoute
   '/users': typeof AppUsersIndexRoute
+  '/organization/$slug/$path': typeof AppOrganizationSlugPathRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -132,16 +132,16 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/$path': typeof AuthPathRoute
-  '/settings/$path': typeof SettingsPathRoute
   '/_app/': typeof AppIndexRoute
   '/.well-known/oauth-authorization-server/$': typeof DotwellKnownOauthAuthorizationServerSplatRoute
   '/_app/organizations/$organizationId': typeof AppOrganizationsOrganizationIdRoute
   '/_app/plugins/$pluginId': typeof AppPluginsPluginIdRoute
+  '/_app/settings/$path': typeof AppSettingsPathRoute
   '/_app/users/$userId': typeof AppUsersUserIdRoute
-  '/organization/$slug/$path': typeof OrganizationSlugPathRoute
   '/_app/organizations/': typeof AppOrganizationsIndexRoute
   '/_app/plugins/': typeof AppPluginsIndexRoute
   '/_app/users/': typeof AppUsersIndexRoute
+  '/_app/organization/$slug/$path': typeof AppOrganizationSlugPathRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -150,46 +150,46 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/api/$'
     | '/auth/$path'
-    | '/settings/$path'
     | '/.well-known/oauth-authorization-server/$'
     | '/organizations/$organizationId'
     | '/plugins/$pluginId'
+    | '/settings/$path'
     | '/users/$userId'
-    | '/organization/$slug/$path'
     | '/organizations/'
     | '/plugins/'
     | '/users/'
+    | '/organization/$slug/$path'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/dashboard'
     | '/api/$'
     | '/auth/$path'
-    | '/settings/$path'
     | '/'
     | '/.well-known/oauth-authorization-server/$'
     | '/organizations/$organizationId'
     | '/plugins/$pluginId'
+    | '/settings/$path'
     | '/users/$userId'
-    | '/organization/$slug/$path'
     | '/organizations'
     | '/plugins'
     | '/users'
+    | '/organization/$slug/$path'
   id:
     | '__root__'
     | '/_app'
     | '/dashboard'
     | '/api/$'
     | '/auth/$path'
-    | '/settings/$path'
     | '/_app/'
     | '/.well-known/oauth-authorization-server/$'
     | '/_app/organizations/$organizationId'
     | '/_app/plugins/$pluginId'
+    | '/_app/settings/$path'
     | '/_app/users/$userId'
-    | '/organization/$slug/$path'
     | '/_app/organizations/'
     | '/_app/plugins/'
     | '/_app/users/'
+    | '/_app/organization/$slug/$path'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,9 +197,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ApiSplatRoute: typeof ApiSplatRoute
   AuthPathRoute: typeof AuthPathRoute
-  SettingsPathRoute: typeof SettingsPathRoute
   DotwellKnownOauthAuthorizationServerSplatRoute: typeof DotwellKnownOauthAuthorizationServerSplatRoute
-  OrganizationSlugPathRoute: typeof OrganizationSlugPathRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -239,13 +237,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthPathRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings/$path': {
-      id: '/settings/$path'
-      path: '/settings/$path'
-      fullPath: '/settings/$path'
-      preLoaderRoute: typeof SettingsPathRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/.well-known/oauth-authorization-server/$': {
       id: '/.well-known/oauth-authorization-server/$'
       path: '/.well-known/oauth-authorization-server/$'
@@ -281,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppPluginsPluginIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/settings/$path': {
+      id: '/_app/settings/$path'
+      path: '/settings/$path'
+      fullPath: '/settings/$path'
+      preLoaderRoute: typeof AppSettingsPathRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/users/': {
       id: '/_app/users/'
       path: '/users'
@@ -295,12 +293,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUsersUserIdRouteImport
       parentRoute: typeof AppRoute
     }
-    '/organization/$slug/$path': {
-      id: '/organization/$slug/$path'
+    '/_app/organization/$slug/$path': {
+      id: '/_app/organization/$slug/$path'
       path: '/organization/$slug/$path'
       fullPath: '/organization/$slug/$path'
-      preLoaderRoute: typeof OrganizationSlugPathRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppOrganizationSlugPathRouteImport
+      parentRoute: typeof AppRoute
     }
   }
 }
@@ -309,20 +307,24 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppOrganizationsOrganizationIdRoute: typeof AppOrganizationsOrganizationIdRoute
   AppPluginsPluginIdRoute: typeof AppPluginsPluginIdRoute
+  AppSettingsPathRoute: typeof AppSettingsPathRoute
   AppUsersUserIdRoute: typeof AppUsersUserIdRoute
   AppOrganizationsIndexRoute: typeof AppOrganizationsIndexRoute
   AppPluginsIndexRoute: typeof AppPluginsIndexRoute
   AppUsersIndexRoute: typeof AppUsersIndexRoute
+  AppOrganizationSlugPathRoute: typeof AppOrganizationSlugPathRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppOrganizationsOrganizationIdRoute: AppOrganizationsOrganizationIdRoute,
   AppPluginsPluginIdRoute: AppPluginsPluginIdRoute,
+  AppSettingsPathRoute: AppSettingsPathRoute,
   AppUsersUserIdRoute: AppUsersUserIdRoute,
   AppOrganizationsIndexRoute: AppOrganizationsIndexRoute,
   AppPluginsIndexRoute: AppPluginsIndexRoute,
   AppUsersIndexRoute: AppUsersIndexRoute,
+  AppOrganizationSlugPathRoute: AppOrganizationSlugPathRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
@@ -332,10 +334,8 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ApiSplatRoute: ApiSplatRoute,
   AuthPathRoute: AuthPathRoute,
-  SettingsPathRoute: SettingsPathRoute,
   DotwellKnownOauthAuthorizationServerSplatRoute:
     DotwellKnownOauthAuthorizationServerSplatRoute,
-  OrganizationSlugPathRoute: OrganizationSlugPathRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -22,6 +22,11 @@ type OrganizationRoleRow = {
   role: string
 }
 
+export type SyncDirection =
+  | "to-better-auth"
+  | "from-better-auth"
+  | "bidirectional"
+
 type OrganizationIntegrationRow = {
   id: string
   organizationId: string
@@ -29,10 +34,19 @@ type OrganizationIntegrationRow = {
   enabled: boolean
   useGlobalConfiguration:
     boolean
+  syncDirection:
+    SyncDirection
 }
 
 const pluginIdSchema =
   z.enum(INTEGRATION_IDS)
+
+const syncDirectionSchema =
+  z.enum([
+    "to-better-auth",
+    "from-better-auth",
+    "bidirectional"
+  ])
 
 const listOrganizationsQuerySchema =
   z.object({
@@ -60,6 +74,15 @@ const setConfigurationSourceBodySchema =
       z.string().min(1),
     useGlobalConfiguration:
       z.boolean()
+  })
+
+const setSyncDirectionBodySchema =
+  z.object({
+    pluginId: pluginIdSchema,
+    organizationId:
+      z.string().min(1),
+    syncDirection:
+      syncDirectionSchema
   })
 
 async function isGlobalAdmin(
@@ -195,7 +218,11 @@ async function setIntegrationEnabled({
             COALESCE(
               "useGlobalConfiguration",
               false
-            ) AS "useGlobalConfiguration"
+            ) AS "useGlobalConfiguration",
+            COALESCE(
+              "syncDirection",
+              'to-better-auth'
+            ) AS "syncDirection"
         `,
         [
           organizationId,
@@ -241,7 +268,11 @@ async function setIntegrationEnabled({
             COALESCE(
               "useGlobalConfiguration",
               false
-            ) AS "useGlobalConfiguration"
+            ) AS "useGlobalConfiguration",
+            COALESCE(
+              "syncDirection",
+              'to-better-auth'
+            ) AS "syncDirection"
         `,
         [
           organizationId,
@@ -311,7 +342,11 @@ async function setIntegrationConfigurationSource({
             COALESCE(
               "useGlobalConfiguration",
               false
-            ) AS "useGlobalConfiguration"
+            ) AS "useGlobalConfiguration",
+            COALESCE(
+              "syncDirection",
+              'to-better-auth'
+            ) AS "syncDirection"
         `,
         [
           organizationId,
@@ -357,7 +392,11 @@ async function setIntegrationConfigurationSource({
             COALESCE(
               "useGlobalConfiguration",
               false
-            ) AS "useGlobalConfiguration"
+            ) AS "useGlobalConfiguration",
+            COALESCE(
+              "syncDirection",
+              'to-better-auth'
+            ) AS "syncDirection"
         `,
         [
           organizationId,
@@ -381,6 +420,133 @@ async function setIntegrationConfigurationSource({
     client.release()
   }
 }
+
+async function setIntegrationSyncDirection({
+  pool,
+  organizationId,
+  pluginId,
+  syncDirection
+}: {
+  pool: Pool
+  organizationId: string
+  pluginId:
+    (typeof INTEGRATION_IDS)[number]
+  syncDirection:
+    SyncDirection
+}) {
+  const client =
+    await pool.connect()
+
+  try {
+    await client.query(
+      "BEGIN"
+    )
+
+    await client.query(`
+      LOCK TABLE
+        "organizationIntegration"
+      IN SHARE ROW EXCLUSIVE MODE
+    `)
+
+    const updated =
+      await client.query<OrganizationIntegrationRow>(
+        `
+          UPDATE
+            "organizationIntegration"
+          SET
+            "syncDirection" = $3
+          WHERE
+            "organizationId" = $1
+            AND "pluginId" = $2
+          RETURNING
+            id,
+            "organizationId",
+            "pluginId",
+            enabled,
+            COALESCE(
+              "useGlobalConfiguration",
+              false
+            ) AS "useGlobalConfiguration",
+            COALESCE(
+              "syncDirection",
+              'to-better-auth'
+            ) AS "syncDirection"
+        `,
+        [
+          organizationId,
+          pluginId,
+          syncDirection
+        ]
+      )
+
+    if (
+      updated.rowCount ===
+      1
+    ) {
+      await client.query(
+        "COMMIT"
+      )
+
+      return updated.rows[0]!
+    }
+
+    const inserted =
+      await client.query<OrganizationIntegrationRow>(
+        `
+          INSERT INTO
+            "organizationIntegration" (
+              id,
+              "organizationId",
+              "pluginId",
+              enabled,
+              "useGlobalConfiguration",
+              "syncDirection"
+            )
+          VALUES (
+            gen_random_uuid()::text,
+            $1,
+            $2,
+            false,
+            false,
+            $3
+          )
+          RETURNING
+            id,
+            "organizationId",
+            "pluginId",
+            enabled,
+            COALESCE(
+              "useGlobalConfiguration",
+              false
+            ) AS "useGlobalConfiguration",
+            COALESCE(
+              "syncDirection",
+              'to-better-auth'
+            ) AS "syncDirection"
+        `,
+        [
+          organizationId,
+          pluginId,
+          syncDirection
+        ]
+      )
+
+    await client.query(
+      "COMMIT"
+    )
+
+    return inserted.rows[0]!
+  } catch (error) {
+    await client.query(
+      "ROLLBACK"
+    )
+
+    throw error
+  } finally {
+    client.release()
+  }
+}
+
 
 export const integrationManager = ({
   pool
@@ -543,6 +709,8 @@ export const integrationManager = ({
                   string | null
                 csvSourceName:
                   string | null
+              syncDirection:
+                SyncDirection
               }>(
                 `
                   SELECT
@@ -552,6 +720,10 @@ export const integrationManager = ({
                       oi."useGlobalConfiguration",
                       false
                     ) AS "useGlobalConfiguration",
+                  COALESCE(
+                    oi."syncDirection",
+                    'to-better-auth'
+                  ) AS "syncDirection",
                     csvos."sourceId" AS
                       "csvSourceId",
                     csvs.name AS
@@ -732,7 +904,80 @@ export const integrationManager = ({
               integration
             })
           }
-        )
+        ),
+
+    setOrganizationIntegrationSyncDirection:
+      createAuthEndpoint(
+        "/integration-manager/set-sync-direction",
+        {
+          method: "POST",
+          use: [
+            sessionMiddleware
+          ],
+          body:
+            setSyncDirectionBodySchema
+        },
+        async (ctx) => {
+          const session =
+            ctx.context.session
+
+          const {
+            pluginId,
+            organizationId,
+            syncDirection
+          } = ctx.body
+
+          const allowed =
+            await canManageOrganization(
+              pool,
+              session.user.id,
+              organizationId
+            )
+
+          if (!allowed) {
+            return ctx.json(
+              {
+                error:
+                  "Forbidden"
+              },
+              {
+                status: 403
+              }
+            )
+          }
+
+          const exists =
+            await assertOrganizationExists(
+              pool,
+              organizationId
+            )
+
+          if (!exists) {
+            return ctx.json(
+              {
+                error:
+                  "Organization not found"
+              },
+              {
+                status: 404
+              }
+            )
+          }
+
+          const integration =
+            await setIntegrationSyncDirection({
+              pool,
+              organizationId,
+              pluginId,
+              syncDirection
+            })
+
+          return ctx.json({
+            integration
+          })
+        }
+      )
+
     },
 
     schema: {
@@ -768,6 +1013,12 @@ export const integrationManager = ({
             type: "boolean",
             required: false,
             defaultValue: false
+          },
+
+          syncDirection: {
+            type: "string",
+            required: true,
+            defaultValue: "to-better-auth"
           }
         }
       }

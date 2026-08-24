@@ -17,7 +17,7 @@ import type {
 } from "pg"
 import * as z from "zod"
 
-import { upsertUserProfile } from "../user-profile/index.js"
+import { getUserProfile, upsertUserProfile } from "../user-profile/index.js"
 
 import {
   listSevenShiftsCompanies,
@@ -27,7 +27,8 @@ import {
   listSevenShiftsUserRoleAssignments,
   listSevenShiftsLocations,
   SEVEN_SHIFTS_API_VERSION,
-  SevenShiftsApiError
+  SevenShiftsApiError,
+  updateSevenShiftsUser,
 } from "./client.js"
 
 type SevenShiftsApiOptions = {
@@ -620,6 +621,80 @@ async function mapWithConcurrency<
   return results
 }
 
+function normalizeProfileText(
+  value:
+    | string
+    | null
+    | undefined
+) {
+  const normalized =
+    value?.trim() ?? ""
+
+  return normalized ||
+    null
+}
+
+function normalizeProfilePhone(
+  value:
+    | string
+    | null
+    | undefined
+) {
+  const normalized =
+    normalizeProfileText(
+      value
+    )
+
+  if (!normalized) {
+    return null
+  }
+
+  const leadingPlus =
+    normalized.startsWith("+")
+
+  const digits =
+    normalized.replace(
+      /\D/g,
+      ""
+    )
+
+  if (!digits) {
+    return null
+  }
+
+  return leadingPlus
+    ? "+" + digits
+    : digits
+}
+
+function profileDateValue(
+  value:
+    | Date
+    | string
+    | null
+    | undefined
+) {
+  if (!value) {
+    return null
+  }
+
+  const date =
+    new Date(value)
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return null
+  }
+
+  return date
+    .toISOString()
+    .slice(0, 10)
+}
+
+
 type SevenShiftsApiSyncReport = {
   mappedOrganizations: number
   mappedLocations: number
@@ -629,6 +704,7 @@ type SevenShiftsApiSyncReport = {
   usersManaged: number
   usersCreated: number
   usersUpdated: number
+  usersPushedToSevenShifts: number
   usersDisabled: number
   skippedWithoutEmail: number
   membershipsCreated: number
@@ -1638,6 +1714,10 @@ export const sevenShiftsApi = ({
                 number
               sevenShiftsLocationName:
                 string
+              syncDirection:
+                | "to-better-auth"
+                | "from-better-auth"
+                | "bidirectional"
             }>(
               `
                 SELECT
@@ -1645,7 +1725,11 @@ export const sevenShiftsApi = ({
                   o.name AS
                     "organizationName",
                   os."sevenShiftsLocationId",
-                  os."sevenShiftsLocationName"
+                  os."sevenShiftsLocationName",
+                  COALESCE(
+                    oi."syncDirection",
+                    'to-better-auth'
+                  ) AS "syncDirection"
                 FROM
                   "sevenShiftsApiOrganizationSource" os
 
@@ -1795,6 +1879,19 @@ export const sevenShiftsApi = ({
                   })
               })
 
+
+            const assignmentsBySevenShiftsUserId =
+              new Map(
+                assignmentsByUserId.map(
+                  ({
+                    user,
+                    assignments
+                  }) => [
+                    user.id,
+                    assignments
+                  ]
+                )
+              )
 
             const internalLocationBySevenShiftsId =
               new Map<
@@ -2203,6 +2300,9 @@ export const sevenShiftsApi = ({
             let usersUpdated =
               0
 
+            let usersPushedToSevenShifts =
+              0
+
             let usersDisabled =
               0
 
@@ -2586,40 +2686,356 @@ export const sevenShiftsApi = ({
                 }
               }
 
-              await upsertUserProfile(
-                pool,
-                userId,
-                {
-                  firstName: profileFirstName,
-                  lastName: profileLastName,
-                  preferredFirstName,
-                  preferredLastName,
-                  pronouns: nullableText(
-                    user.pronouns
-                  ),
-                  birthdate: parseApiDate(
-                    user.birth_date
-                  ),
-                  mobilePhone: nullableText(
-                    user.mobile_number
-                  ),
-                  homePhone: nullableText(
-                    user.home_number
-                  ),
-                  address: nullableText(
-                    user.address
-                  ),
-                  city: nullableText(
-                    user.city
-                  ),
-                  stateProvince: nullableText(
-                    user.prov_state
-                  ),
-                  postalCode: nullableText(
-                    user.postal_zip
+const userAssignments =
+                assignmentsBySevenShiftsUserId.get(
+                  user.id
+                ) ??
+                []
+
+              const applicableMappings =
+                userAssignments
+                  .map(
+                    (assignment) =>
+                      mappingByLocationId.get(
+                        assignment.location_id
+                      )
+                  )
+                  .filter(
+                    (
+                      mapping
+                    ): mapping is NonNullable<
+                      typeof mapping
+                    > =>
+                      mapping !==
+                      undefined
+                  )
+
+              const profile =
+                await getUserProfile(
+                  pool,
+                  userId
+                )
+
+              const hasFromBetterAuth =
+                applicableMappings.some(
+                  (mapping) =>
+                    mapping.syncDirection ===
+                    "from-better-auth"
+                )
+
+              const hasBidirectional =
+                applicableMappings.some(
+                  (mapping) =>
+                    mapping.syncDirection ===
+                    "bidirectional"
+                )
+
+              const profileChangedSinceLastSync =
+                profile !== null &&
+                (
+                  source.lastSyncAt ===
+                    null ||
+                  new Date(
+                    profile.updatedAt
+                  ).getTime() >
+                    new Date(
+                      source.lastSyncAt
+                    ).getTime()
+                )
+
+              const shouldPushProfileToSevenShifts =
+                profile !== null &&
+                (
+                  hasFromBetterAuth ||
+                  (
+                    hasBidirectional &&
+                    profileChangedSinceLastSync
+                  )
+
+                )
+
+              if (
+                shouldPushProfileToSevenShifts &&
+                profile
+              ) {
+                const update: {
+                  first_name?: string
+                  last_name?: string
+                  preferred_first_name?: string
+                  preferred_last_name?: string
+                  mobile_number?: string
+                  home_number?: string
+                  address?: string
+                  city?: string
+                  prov_state?: string
+                  postal_zip?: string
+                  birth_date?: string
+                  pronouns?: string
+                } = {}
+
+                const outboundFirstName =
+                  normalizeProfileText(
+                    profile.firstName
+                  )
+
+                if (
+                  outboundFirstName !== null &&
+                  outboundFirstName !==
+                    normalizeProfileText(
+                      user.first_name
+                    )
+                ) {
+                  update.first_name =
+                    outboundFirstName
+                }
+
+                const outboundLastName =
+                  normalizeProfileText(
+                    profile.lastName
+                  )
+
+                if (
+                  outboundLastName !== null &&
+                  outboundLastName !==
+                    normalizeProfileText(
+                      user.last_name
+                    )
+                ) {
+                  update.last_name =
+                    outboundLastName
+                }
+
+                const outboundPreferredFirstName =
+                  normalizeProfileText(
+                    profile.preferredFirstName
+                  )
+
+                if (
+                  outboundPreferredFirstName !== null &&
+                  outboundPreferredFirstName !==
+                    normalizeProfileText(
+                      user.preferred_first_name
+                    )
+                ) {
+                  update.preferred_first_name =
+                    outboundPreferredFirstName
+                }
+
+                const outboundPreferredLastName =
+                  normalizeProfileText(
+                    profile.preferredLastName
+                  )
+
+                if (
+                  outboundPreferredLastName !== null &&
+                  outboundPreferredLastName !==
+                    normalizeProfileText(
+                      user.preferred_last_name
+                    )
+                ) {
+                  update.preferred_last_name =
+                    outboundPreferredLastName
+                }
+
+                const outboundMobilePhone =
+                  normalizeProfilePhone(
+                    profile.mobilePhone
+                  )
+
+                if (
+                  outboundMobilePhone !== null &&
+                  outboundMobilePhone !==
+                    normalizeProfilePhone(
+                      user.mobile_number
+                    )
+                ) {
+                  update.mobile_number =
+                    outboundMobilePhone
+                }
+
+                const outboundHomePhone =
+                  normalizeProfilePhone(
+                    profile.homePhone
+                  )
+
+                if (
+                  outboundHomePhone !== null &&
+                  outboundHomePhone !==
+                    normalizeProfilePhone(
+                      user.home_number
+                    )
+                ) {
+                  update.home_number =
+                    outboundHomePhone
+                }
+
+                const outboundAddress =
+                  normalizeProfileText(
+                    profile.address
+                  )
+
+                if (
+                  outboundAddress !== null &&
+                  outboundAddress !==
+                    normalizeProfileText(
+                      user.address
+                    )
+                ) {
+                  update.address =
+                    outboundAddress
+                }
+
+                const outboundCity =
+                  normalizeProfileText(
+                    profile.city
+                  )
+
+                if (
+                  outboundCity !== null &&
+                  outboundCity !==
+                    normalizeProfileText(
+                      user.city
+                    )
+                ) {
+                  update.city =
+                    outboundCity
+                }
+
+                const outboundStateProvince =
+                  normalizeProfileText(
+                    profile.stateProvince
+                  )
+
+                if (
+                  outboundStateProvince !== null &&
+                  outboundStateProvince !==
+                    normalizeProfileText(
+                      user.prov_state
+                    )
+                ) {
+                  update.prov_state =
+                    outboundStateProvince
+                }
+
+                const outboundPostalCode =
+                  normalizeProfileText(
+                    profile.postalCode
+                  )
+
+                if (
+                  outboundPostalCode !== null &&
+                  outboundPostalCode !==
+                    normalizeProfileText(
+                      user.postal_zip
+                    )
+                ) {
+                  update.postal_zip =
+                    outboundPostalCode
+                }
+
+                const outboundBirthdate =
+                  profileDateValue(
+                    profile.birthdate
+                  )
+
+                if (
+                  outboundBirthdate !== null &&
+                  outboundBirthdate !==
+                    profileDateValue(
+                      user.birth_date
+                    )
+                ) {
+                  update.birth_date =
+                    outboundBirthdate
+                }
+
+                const outboundPronouns =
+                  normalizeProfileText(
+                    profile.pronouns
+                  )
+
+                if (
+                  outboundPronouns !== null &&
+                  outboundPronouns !==
+                    normalizeProfileText(
+                      user.pronouns
+                    )
+                ) {
+                  update.pronouns =
+                    outboundPronouns
+                }
+
+                if (
+                  Object.keys(
+                    update
+                  ).length >
+                  0
+                ) {
+                  await updateSevenShiftsUser({
+                    accessToken,
+                    companyId:
+                      source.companyId!,
+                    userId:
+                      user.id,
+                    update,
+                    apiVersion:
+                      source.apiVersion
+                  })
+
+                  usersPushedToSevenShifts++
+
+                  Object.assign(
+                    user,
+                    update
                   )
                 }
-              )
+              }
+
+
+              const allowInboundProfileSync =
+                applicableMappings.length >
+                  0 &&
+                !hasFromBetterAuth &&
+                !shouldPushProfileToSevenShifts
+
+              if (
+                allowInboundProfileSync
+              ) {
+                await upsertUserProfile(
+                  pool,
+                  userId,
+                  {
+                    firstName: profileFirstName,
+                    lastName: profileLastName,
+                    preferredFirstName,
+                    preferredLastName,
+                    pronouns: nullableText(
+                      user.pronouns
+                    ),
+                    birthdate: parseApiDate(
+                      user.birth_date
+                    ),
+                    mobilePhone: nullableText(
+                      user.mobile_number
+                    ),
+                    homePhone: nullableText(
+                      user.home_number
+                    ),
+                    address: nullableText(
+                      user.address
+                    ),
+                    city: nullableText(
+                      user.city
+                    ),
+                    stateProvince: nullableText(
+                      user.prov_state
+                    ),
+                    postalCode: nullableText(
+                      user.postal_zip
+                    )
+                  }
+                )
+              }
 
               if (!created) {
                 const currentUser =
@@ -3134,6 +3550,8 @@ export const sevenShiftsApi = ({
                 usersCreated,
 
                 usersUpdated,
+
+                usersPushedToSevenShifts,
 
                 usersDisabled,
 

@@ -1,6 +1,11 @@
+"use client"
+
 import {
   Settings2
 } from "lucide-react"
+import { useState } from "react"
+import { useRouter } from "@tanstack/react-router"
+import { toast } from "sonner"
 
 import {
   IntegrationLogo
@@ -15,9 +20,17 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
 
-import type {
-  AdminOrganizationIntegration
+import {
+  setAdminOrganizationPluginSyncDirection,
+  type AdminOrganizationIntegration
 } from "@/lib/admin/plugins"
 import {
   getIntegration
@@ -37,6 +50,56 @@ export function OrganizationPlugins({
   organization,
   integrations
 }: OrganizationPluginsProps) {
+  const router =
+    useRouter()
+
+  const [
+    pendingPluginId,
+    setPendingPluginId
+  ] = useState<
+    string | null
+  >(null)
+
+  async function setSyncDirection(
+    integration:
+      AdminOrganizationIntegration,
+    syncDirection:
+      AdminOrganizationIntegration["syncDirection"]
+  ) {
+    setPendingPluginId(
+      integration.pluginId
+    )
+
+    try {
+      await setAdminOrganizationPluginSyncDirection({
+        data: {
+          pluginId:
+            integration.pluginId,
+          organizationId:
+            organization.id,
+          syncDirection
+        }
+      })
+
+      toast.success(
+        "Sync direction updated"
+      )
+
+      await router.invalidate()
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to update sync direction"
+      )
+    } finally {
+      setPendingPluginId(
+        null
+      )
+    }
+  }
+
+
   const enabledIntegrations =
     integrations.filter(
       (integration) =>
@@ -162,6 +225,54 @@ export function OrganizationPlugins({
               </CardHeader>
 
               <CardContent>
+              {integration.pluginId ===
+                "seven-shifts-api" && (
+                <div className="mb-4 space-y-2">
+                  <div className="text-sm font-medium">
+                    Sync Direction
+                  </div>
+
+                  <Select
+                    value={
+                      integration.syncDirection
+                    }
+                    disabled={
+                      pendingPluginId ===
+                      integration.pluginId
+                    }
+                    onValueChange={(value) =>
+                      setSyncDirection(
+                        integration,
+                        value as AdminOrganizationIntegration["syncDirection"]
+                      )
+                    }
+                  >
+                    <SelectTrigger className="w-full sm:w-[320px]">
+                      <SelectValue />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="to-better-auth">
+                        7shifts → Better Auth
+                      </SelectItem>
+
+                      <SelectItem value="from-better-auth">
+                        Better Auth → 7shifts
+                      </SelectItem>
+
+                      <SelectItem value="bidirectional">
+                        Bidirectional
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <p className="text-sm text-muted-foreground">
+                    Controls which system supplies shared user data for this organization.
+                  </p>
+                </div>
+              )}
+
+
                 {integration.useGlobalConfiguration ? (
                   <div className="rounded-lg border bg-muted/30 p-4">
                     <div className="flex items-start gap-3">

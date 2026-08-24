@@ -18,7 +18,6 @@ import {
 } from "@tanstack/react-start/server"
 
 import { AppSidebar } from "@/components/app-sidebar"
-import { OrganizationSwitcher } from "@/components/auth/organization/organization-switcher"
 import { UserButton } from "@/components/auth/user/user-button"
 import {
   SidebarInset,
@@ -106,9 +105,7 @@ function AppLayout() {
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
-            <OrganizationSwitcher align="end" />
-
-            <UserButton
+<UserButton
               size="icon"
               align="end"
             />

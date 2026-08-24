@@ -13,6 +13,7 @@ import {
   type IntegrationDefinition,
   type IntegrationId
 } from "@/lib/plugins/integration-manager/registry"
+import type { SyncDirection } from "@/lib/plugins/integration-manager/index"
 
 export type AdminPluginOrganization = {
   id: string
@@ -394,12 +395,52 @@ export const setAdminOrganizationPluginConfigurationSource =
       }
     )
 
+export const setAdminOrganizationPluginSyncDirection =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        pluginId:
+          IntegrationId
+        organizationId:
+          string
+        syncDirection:
+          SyncDirection
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } = await requireGlobalAdmin()
+
+        return auth.api
+          .setOrganizationIntegrationSyncDirection({
+            body: {
+              pluginId:
+                data.pluginId,
+              organizationId:
+                data.organizationId,
+              syncDirection:
+                data.syncDirection
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
+
 export type AdminOrganizationIntegration = {
   pluginId: IntegrationId
   enabled: boolean
   useGlobalConfiguration: boolean
   csvSourceId: string | null
   csvSourceName: string | null
+  syncDirection: SyncDirection
 }
 
 export const getAdminOrganizationIntegrations =
@@ -449,6 +490,10 @@ export const getAdminOrganizationIntegrations =
               useGlobalConfiguration:
                 integration.useGlobalConfiguration ??
                 true,
+
+            syncDirection:
+              (integration.syncDirection ??
+                "to-better-auth") as SyncDirection,
 
               csvSourceId:
                 integration.csvSourceId ??

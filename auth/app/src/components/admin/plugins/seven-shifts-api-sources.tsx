@@ -38,6 +38,10 @@ import {
   Label
 } from "@/components/ui/label"
 import {
+  Progress
+} from "@/components/ui/progress"
+
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -91,6 +95,7 @@ type SevenShiftsApiSyncReport = {
   usersManaged: number
   usersCreated: number
   usersUpdated: number
+  usersPushedToSevenShifts: number
   usersDisabled: number
   skippedWithoutEmail: number
   membershipsCreated: number
@@ -901,6 +906,21 @@ export function SevenShiftsApiSources({
                 </Button>
                 </div>
 
+                {(previewing || syncing) && (
+                  <div className="space-y-2">
+                    <Progress
+                      value={100}
+                      className="h-1 [&>div]:animate-pulse"
+                    />
+
+                    <div className="text-xs text-muted-foreground">
+                      {previewing
+                        ? "Loading synchronization preview…"
+                        : "Synchronizing with 7shifts…"}
+                    </div>
+                  </div>
+                )}
+
                 {syncPreview && (
                   <div className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -1038,6 +1058,13 @@ export function SevenShiftsApiSources({
                     label="Users Updated"
                     value={
                       syncReport.usersUpdated
+                    }
+                  />
+
+                  <PreviewValue
+                    label="Pushed to 7shifts"
+                    value={
+                      syncReport.usersPushedToSevenShifts
                     }
                   />
 

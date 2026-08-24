@@ -70,6 +70,25 @@ export type SevenShiftsUser = {
   birth_date?: string | null
 }
 
+export type SevenShiftsUserUpdate = {
+  first_name?: string
+  last_name?: string
+  preferred_first_name?:
+    string | null
+  preferred_last_name?:
+    string | null
+  mobile_number?:
+    string | null
+  home_number?:
+    string | null
+  address?: string | null
+  postal_zip?: string | null
+  city?: string | null
+  prov_state?: string | null
+  birth_date?: string | null
+  pronouns?: string | null
+}
+
 export type SevenShiftsRoleAssignment = {
   role_id: number
   company_id: number
@@ -451,6 +470,43 @@ export async function listSevenShiftsUsers({
       "/users"
   })
 }
+
+export async function updateSevenShiftsUser({
+  accessToken,
+  companyId,
+  userId,
+  update,
+  apiVersion,
+  baseUrl
+}: {
+  accessToken: string
+  companyId: number
+  userId: number
+  update:
+    SevenShiftsUserUpdate
+  apiVersion?: string
+  baseUrl?: string
+}) {
+  const response =
+    await sevenShiftsRequest<{
+      data: SevenShiftsUser
+    }>({
+      accessToken,
+      apiVersion,
+      baseUrl,
+      method: "PUT",
+      path:
+        "/company/" +
+        companyId +
+        "/users/" +
+        userId,
+      body:
+        update
+    })
+
+  return response.data
+}
+
 
 export async function listSevenShiftsUserRoleAssignments({
   accessToken,
