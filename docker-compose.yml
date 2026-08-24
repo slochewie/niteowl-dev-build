@@ -94,36 +94,30 @@ services:
       redis:
         condition: service_healthy
 
-  glauth:
-    image: glauth/glauth-plugins:v2.5.2
-    restart: unless-stopped
-    volumes:
-      - './glauth/config.cfg:/app/config/config.cfg:ro'
-    ports:
-      - "389:3893"
-    networks: [niteowl-dev]
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   glauth-runtime-manager:
     image: 'node:26-trixie'
-    user: "1000:1000"
     working_dir: /app
     command: ["node", "index.js"]
     volumes:
       - './glauth-runtime-manager/app:/app'
       - './glauth-runtimes:/glauth-runtimes'
+      - '/var/run/docker.sock:/var/run/docker.sock'
     env_file:
       - ./.env-better-auth
     environment:
       GLAUTH_RUNTIME_ROOT: /glauth-runtimes
-    restart: "no"
+      GLAUTH_RUNTIME_HOST_ROOT: /home/ubuntu/docker/niteowl-dev-build/glauth-runtimes
+      GLAUTH_RUNTIME_NETWORK: niteowl-dev
+      GLAUTH_RUNTIME_IMAGE: glauth/glauth-plugins:v2.5.2
+      GLAUTH_RUNTIME_POLL_MS: "30000"
+      GLAUTH_RUNTIME_HOST_UID: "1000"
+      GLAUTH_RUNTIME_HOST_GID: "1000"
+    restart: unless-stopped
     networks: [niteowl-dev]
     depends_on:
       postgres:
         condition: service_healthy
-
 
 networks:
   niteowl-dev:
