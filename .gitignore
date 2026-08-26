@@ -79,3 +79,7 @@ glauth-postgres/config.cfg
 
 # Dynamically generated GLAUTH instances
 /glauth-runtimes/
+
+# macOS metadata
+.DS_Store
+._*
