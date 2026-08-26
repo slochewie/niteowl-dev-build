@@ -1,6 +1,13 @@
 "use client";
 
-import { Building2, Plus, RefreshCw, ServerCog, Settings2 } from "lucide-react";
+import {
+  Building2,
+  Plus,
+  RefreshCw,
+  ServerCog,
+  Settings2,
+  Trash2,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -35,6 +42,7 @@ import {
 
 import {
   createAdminGlauthSource,
+  deleteAdminGlauthSource,
   reconcileAdminGlauthSource,
   setAdminGlauthOrganizationSource,
   updateAdminGlauthSource,
@@ -82,6 +90,8 @@ export function GlauthSources({
   );
 
   const [togglingSourceId, setTogglingSourceId] = useState<string | null>(null);
+
+  const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null);
 
   const [savingSource, setSavingSource] = useState(false);
 
@@ -166,6 +176,38 @@ export function GlauthSources({
       );
     } finally {
       setSavingSource(false);
+    }
+  }
+
+  async function deleteSource(source: AdminGlauthSource) {
+    const confirmed = window.confirm(
+      `Delete "${source.name}"? This permanently removes the GLAuth source, projected directory data, service accounts, runtime schema, and runtime container.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setDeletingSourceId(source.id);
+
+    try {
+      await deleteAdminGlauthSource({
+        data: {
+          sourceId: source.id,
+        },
+      });
+
+      toast.success("GLAuth source deleted");
+
+      await router.invalidate();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete GLAuth source",
+      );
+    } finally {
+      setDeletingSourceId(null);
     }
   }
 
@@ -428,6 +470,18 @@ export function GlauthSources({
                       : source.enabled
                         ? "Disable"
                         : "Enable"}
+                  </Button>
+
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={
+                      deletingSourceId !== null || togglingSourceId !== null
+                    }
+                    onClick={() => void deleteSource(source)}
+                  >
+                    <Trash2 className="mr-2 size-4" />
+                    {deletingSourceId === source.id ? "Deleting..." : "Delete"}
                   </Button>
 
                   <Button

@@ -36,6 +36,12 @@ const createSourceBodySchema =
         )
   })
 
+const deleteSourceBodySchema =
+  z.object({
+    sourceId:
+      z.string().min(1)
+  })
+
 const updateSourceBodySchema =
   z.object({
     sourceId:
@@ -546,7 +552,148 @@ export const glauth = ({
           }
         ),
 
-      updateGlauthSource:
+      deleteGlauthSource:
+      createAuthEndpoint(
+        "/glauth/sources/delete",
+        {
+          method: "POST",
+          use: [
+            sessionMiddleware
+          ],
+          body:
+            deleteSourceBodySchema
+        },
+        async (ctx) => {
+          const allowed =
+            await isGlobalAdmin(
+              pool,
+              ctx.context
+                .session
+                .user
+                .id
+            )
+
+          if (!allowed) {
+            return ctx.json(
+              {
+                error:
+                  "Forbidden"
+              },
+              {
+                status: 403
+              }
+            )
+          }
+
+          const {
+            sourceId
+          } = ctx.body
+
+          const client =
+            await pool.connect()
+
+          try {
+            await client.query(
+              "BEGIN"
+            )
+
+            const sourceResult =
+              await client.query<{
+                id: string
+                name: string
+                slug: string
+                runtimeSchema: string | null
+              }>(
+                `
+                  SELECT
+                    id,
+                    name,
+                    slug,
+                    "runtimeSchema"
+                  FROM "glauthSource"
+                  WHERE id = $1
+                  LIMIT 1
+                  FOR UPDATE
+                `,
+                [
+                  sourceId
+                ]
+              )
+
+            const source =
+              sourceResult.rows[0]
+
+            if (!source) {
+              await client.query(
+                "ROLLBACK"
+              )
+
+              return ctx.json(
+                {
+                  error:
+                    "GLAuth source not found"
+                },
+                {
+                  status: 404
+                }
+              )
+            }
+
+            const runtimeSchema =
+              source.runtimeSchema
+
+            if (
+              runtimeSchema &&
+              !/^[a-z0-9_]+$/.test(
+                runtimeSchema
+              )
+            ) {
+              throw new Error(
+                "GLAuth source runtime schema is invalid"
+              )
+            }
+
+            await client.query(
+              `
+                DELETE FROM "glauthSource"
+                WHERE id = $1
+              `,
+              [
+                sourceId
+              ]
+            )
+
+            if (runtimeSchema) {
+              await client.query(
+                `DROP SCHEMA IF EXISTS "${runtimeSchema}" CASCADE`
+              )
+            }
+
+            await client.query(
+              "COMMIT"
+            )
+
+            return ctx.json({
+              sourceId:
+                source.id,
+              sourceName:
+                source.name,
+              slug:
+                source.slug
+            })
+          } catch (error) {
+            await client.query(
+              "ROLLBACK"
+            )
+
+            throw error
+          } finally {
+            client.release()
+          }
+        }
+      ),
+
+    updateGlauthSource:
         createAuthEndpoint(
           "/glauth/sources/update",
           {

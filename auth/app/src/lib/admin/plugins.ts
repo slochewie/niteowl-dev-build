@@ -918,6 +918,36 @@ export const updateAdminGlauthSource =
       }
     )
 
+export const deleteAdminGlauthSource =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        sourceId: string
+      }) => data
+    )
+    .handler(
+      async ({
+        data
+      }) => {
+        const {
+          request
+        } =
+          await requireGlobalAdmin()
+
+        return auth.api
+          .deleteGlauthSource({
+            body: {
+              sourceId:
+                data.sourceId
+            },
+            headers:
+              request.headers
+          })
+      }
+    )
+
 export const setAdminGlauthOrganizationSource =
   createServerFn({
     method: "POST"
