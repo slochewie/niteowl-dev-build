@@ -69,3 +69,13 @@ auth/app/legacy_db/
 # Local reference/work directories
 /auth-working/
 /admin/
+
+
+# GLAUTH instance configuration
+# These may contain credentials and environment-specific settings.
+glauth/config.cfg
+glauth-postgres/config.cfg
+
+
+# Dynamically generated GLAUTH instances
+/glauth-runtimes/
