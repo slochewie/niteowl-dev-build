@@ -1,122 +1,255 @@
 # NiteOwl Auth Service
 
-NiteOwl Auth Service is a self-hosted identity, authentication, organization management, and application integration service built around Better Auth.
+NiteOwl Auth Service is a self-hosted identity, authentication, organization-management, and application-integration platform built around Better Auth.
 
-It provides a central identity and authorization layer for NiteOwl applications while also acting as middleware between external SaaS platforms, infrastructure services, and custom applications.
+It provides a central identity and authorization layer for NiteOwl applications while connecting external workforce, infrastructure, and directory services.
 
-## Stack
+## Architecture
 
-The application is built with:
+```text
+External workforce and infrastructure systems
+              ↓
+       Better Auth service
+              ↓
+Users • Organizations • Roles • Permissions
+              ↓
+NiteOwl applications • UniFi • GLAuth/LDAP
+```
 
-- **Better Auth** — authentication, sessions, users, organizations, teams, and authorization
-- **Better Auth UI** — authentication and account-management UI
-- **TanStack Start** — full-stack React application framework
-- **shadcn/ui** — application and administration interface components
-- **PostgreSQL** — primary persistent database
-- **Redis** — session and supporting authentication storage
-- **Docker Compose** — local/self-hosted service orchestration
-
-## Identity and Integration Model
-
-Better Auth acts as the central identity and authorization layer between applications and the systems that provide or consume identity data.
-
-For SaaS and infrastructure integrations, an external system can be treated as the authoritative source for some portion of the data managed by Better Auth.
+Better Auth can consume identity data from external authoritative systems or act as the authoritative source itself.
 
 Examples include:
 
-- **7shifts** — workforce, locations, roles, and employment status
-- **Toast** — restaurant and employee data
-- **Paychex** — workforce and payroll-related identity data
-- **UniFi Identity Endpoint** — infrastructure identity, access, and WiFi provisioning
+- **7shifts** for employees, locations, departments, roles, and employment status
+- **UniFi Identity** for infrastructure identity, access, and Wi-Fi provisioning
+- **GLAuth** for LDAP-compatible access to identities managed through Better Auth
+- **NiteOwl Counter** and other custom applications for organization-scoped authorization
 
-Data from these systems can be normalized into Better Auth users, organizations, memberships, roles, and application-specific permissions. Better Auth then provides a consistent identity layer to applications without requiring each application to integrate directly with every external provider.
+Integrations are optional. The service can operate as a standalone authentication and authorization system using Better Auth users, sessions, organizations, memberships, and permissions.
 
-Authority does not have to flow in only one direction. Different integrations can be authoritative for different data, and Better Auth itself can be authoritative where appropriate.
+## Stack
 
-For custom applications such as the NiteOwl **Counter** application, Better Auth can be the authoritative source for users, organizations, permissions, application configuration, and device ownership.
+- **Better Auth** — authentication, sessions, users, organizations, teams, and authorization
+- **Better Auth UI** — authentication and account-management UI
+- **TanStack Start** — full-stack React framework
+- **shadcn/ui** — application and administration components
+- **PostgreSQL 18** — primary persistent database
+- **Redis 8** — session and supporting authentication storage
+- **Node.js 26** — application runtime
+- **Docker Compose** — local and self-hosted orchestration
+- **GLAuth** — dynamically provisioned LDAP-compatible directories
 
-External SaaS integrations are optional. The Auth Service can also operate independently as the complete authentication and authorization system for custom applications that only need Better Auth users, organizations, sessions, and permissions.
+## Repository Layout
+
+```text
+.
+├── auth/
+│   └── app/                    # Better Auth application and admin interface
+├── glauth/                     # Static GLAuth service resources
+├── glauth-postgres/            # GLAuth PostgreSQL resources
+├── glauth-runtime-manager/     # Creates and removes GLAuth instances
+├── glauth-runtimes/            # Generated runtime instances; ignored by Git
+├── postgres/                   # Local PostgreSQL data; ignored by Git
+├── redis/                      # Local Redis data; ignored by Git
+├── docker-compose.yml
+└── README.md
+```
+
+Some local reference or upstream source directories are intentionally excluded from version control.
+
+## Docker Compose Services
+
+| Service | Purpose | Host port |
+| --- | --- | --- |
+| `postgres` | Primary PostgreSQL database | Internal only |
+| `redis` | Persistent Redis service | Internal only |
+| `auth` | NiteOwl Better Auth application | `3031` |
+| `admin` | Separate local administration application | `3030` |
+| `node-upstream` | Local upstream Node reference environment | `3040` |
+| `glauth-runtime-manager` | Manages dynamic GLAuth containers | Internal only |
+
+All services communicate through the `niteowl-dev` Docker network.
+
+## Configuration
+
+The Compose environment expects local environment files including:
+
+```text
+.env-postgres
+.env-better-auth
+.env-btst
+```
+
+Environment files can contain credentials and must not be committed. The repository’s `.gitignore` excludes `.env` variants throughout the project.
+
+At minimum, configure:
+
+- PostgreSQL database credentials
+- Redis password
+- Better Auth secrets and URLs
+- Application database and Redis connections
+- Encryption keys used by integrations
+- External API credentials where required
+
+Use stable encryption keys in deployed environments. Changing a plugin encryption key can make previously stored credentials unreadable.
+
+## Running the Service
+
+Start the primary services:
+
+```bash
+docker compose up -d postgres redis auth glauth-runtime-manager
+```
+
+Start every configured service:
+
+```bash
+docker compose up -d
+```
+
+Check service state:
+
+```bash
+docker compose ps
+```
+
+Follow the authentication service logs:
+
+```bash
+docker compose logs -f auth
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+PostgreSQL and Redis data remain in their local persistent directories after the containers stop.
 
 ## Administration
 
-The application includes a custom administration console for managing:
+The application includes a custom administration interface for managing:
 
-- Users
-- Organizations and memberships
-- Teams
-- Authentication and account information
-- Plugins and integrations
-- Organization-specific integration enablement and configuration
+- users and account state;
+- organizations, memberships, and teams;
+- authentication methods;
+- plugins and integrations;
+- integration sources;
+- organization-level enablement and configuration;
+- workforce synchronization;
+- GLAuth LDAP sources;
+- UniFi Identity access.
 
-Project-specific administration and integration interfaces are maintained separately from upstream Better Auth UI components.
+Project-specific administration components are maintained separately from upstream Better Auth UI components.
 
 ## Custom Better Auth Plugins
 
 ### Integration Manager
 
-Provides the common framework used to register and manage NiteOwl integrations.
+Controls organization-level integration enablement, configuration ownership, and synchronization direction.
 
-It supports global integration configuration, organization-level enablement, and relationships between organizations and external data sources.
+[Integration Manager documentation](auth/app/src/lib/plugins/integration-manager/README.md)
+
+### User Profile
+
+Adds application-specific personal and workforce profile fields to Better Auth users.
+
+[User Profile documentation](auth/app/src/lib/plugins/user-profile/README.md)
+
+### 7shifts Core
+
+Provides the normalized employee, location, department, role, assignment, and application-permission model shared by 7shifts integrations.
+
+[7shifts core documentation](auth/app/src/lib/plugins/seven-shifts/README.md)
 
 ### 7shifts CSV
 
-Imports workforce data exported from 7shifts into the NiteOwl identity system.
+Imports workforce data from 7shifts CSV exports. Sources can be assigned to organizations and reconciled into Better Auth users, memberships, roles, locations, and profiles.
 
-CSV Sources can be assigned to one or more organizations, allowing a workforce export to populate the appropriate Better Auth users, organizations, memberships, roles, locations, and assignments.
-
-CSV upload and import are managed centrally through the **Plugins & APIs** administration interface.
-
-### UniFi Identity
-
-Integrates Better Auth organizations and users with UniFi Identity infrastructure.
-
-Current functionality includes organization-specific UniFi configuration, user provisioning, entitlement handling, and One-Click WiFi access management.
-
-## LDAP Compatibility with GLAuth
-
-GLAuth provides a minimal LDAP-compatible directory service populated from Better Auth.
-
-Better Auth remains the central identity layer. A synchronization service translates selected Better Auth users, account status, organization membership, and related identity information into GLAuth configuration.
-
-This allows infrastructure and legacy applications that expect LDAP or an AD-style directory interface to consume identities managed through NiteOwl without maintaining an independent user database.
-
-In this architecture:
-
-**SaaS / external systems → Better Auth → GLAuth / LDAP consumers**
-
-or, for applications where Better Auth is authoritative:
-
-**Better Auth → custom applications and services**
-
-GLAuth therefore acts as a lightweight compatibility bridge rather than a separate authoritative identity system.
-
-## Work in Progress
+[7shifts CSV documentation](auth/app/src/lib/plugins/seven-shifts-csv/README.md)
 
 ### 7shifts API
 
-Direct 7shifts API integration is being developed alongside the CSV importer.
+Synchronizes workforce and location data directly with the 7shifts API. API credentials are encrypted before storage.
 
-The goal is to allow 7shifts workforce and location data to serve as an authoritative source without requiring manual CSV exports.
+[7shifts API documentation](auth/app/src/lib/plugins/seven-shifts-api/README.md)
 
-### UniFi Integration
+### UniFi Identity
 
-The UniFi integration is being expanded beyond Identity provisioning to support additional UniFi permissions and organization-aware access to UniFi Network information.
+Connects Better Auth organizations and users to UniFi Identity for provisioning, access management, groups, resources, and Wi-Fi entitlements.
 
-### Additional Integrations
+[UniFi Identity documentation](auth/app/src/lib/plugins/unifi-identity/README.md)
 
-Planned or experimental integrations include:
+### GLAuth
+
+Projects selected Better Auth identities and organization memberships into dynamically managed LDAP-compatible directories.
+
+[GLAuth documentation](auth/app/src/lib/plugins/glauth/README.md)
+
+## GLAuth Runtime Management
+
+GLAuth acts as a compatibility bridge for infrastructure and legacy applications that require LDAP.
+
+```text
+External systems → Better Auth → GLAuth → LDAP consumers
+```
+
+The `glauth-runtime-manager` service monitors the database and dynamically creates or removes GLAuth instances.
+
+Generated instances are stored under:
+
+```text
+glauth-runtimes/
+```
+
+This directory is runtime state and is ignored by Git. Individual instance directories and `config.cfg` files may appear or disappear as GLAuth sources are created, updated, or deleted.
+
+The runtime manager mounts the Docker socket so it can manage GLAuth containers. Treat this service as privileged infrastructure and restrict access accordingly.
+
+Relevant runtime settings include:
+
+- `GLAUTH_RUNTIME_ROOT`
+- `GLAUTH_RUNTIME_HOST_ROOT`
+- `GLAUTH_RUNTIME_NETWORK`
+- `GLAUTH_RUNTIME_IMAGE`
+- `GLAUTH_RUNTIME_POLL_MS`
+- `GLAUTH_RUNTIME_HOST_UID`
+- `GLAUTH_RUNTIME_HOST_GID`
+
+Better Auth remains the authoritative identity layer. GLAuth should not be treated as an independent user-management database.
+
+## Runtime and Sensitive Data
+
+The following must remain outside version control:
+
+- environment files;
+- PostgreSQL and Redis data;
+- generated GLAuth runtime directories and configuration;
+- uploaded 7shifts CSV files;
+- generated password and credential exports;
+- integration API tokens;
+- encryption keys;
+- local backups and migration data.
+
+If a credential is accidentally committed, removing the file in a later commit is insufficient. Rotate the credential and, when necessary, rewrite repository history.
+
+## Planned Integrations
+
+Planned or experimental integration areas include:
 
 - Toast
 - Paychex
-- Capacity Counter
-- MQTT services
-- Device provisioning
-- Organization WiFi configuration
+- MQTT
+- NiteOwl Counter
+- device provisioning
+- organization Wi-Fi configuration
+- additional UniFi services
 
-The plugin architecture is intended to allow these services to share the same Better Auth identity and organization model while remaining independently configurable.
+The integration architecture is designed so each service can share the central Better Auth identity and organization model while remaining independently configurable.
 
-## Status
+## Development Status
 
 This project is under active development.
 
-APIs, database schemas, plugin behavior, synchronization rules, and administration interfaces may change as the integration architecture is refined.
+APIs, database schemas, synchronization behavior, authorization rules, plugin interfaces, and administration screens may change as the architecture evolves.
