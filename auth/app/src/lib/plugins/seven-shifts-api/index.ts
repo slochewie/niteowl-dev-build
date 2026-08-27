@@ -119,6 +119,17 @@ const assignLocationBodySchema =
         .positive()
   })
 
+const unassignLocationBodySchema =
+  z.object({
+    sourceId:
+      z.string().min(1),
+
+    sevenShiftsLocationId:
+      z.number()
+        .int()
+        .positive()
+  })
+
 async function isGlobalAdmin(
   pool: Pool,
   userId: string
@@ -3589,6 +3600,281 @@ const userAssignments =
               }
             )
           }
+        }
+      ),
+
+    deleteSevenShiftsApiSource:
+      createAuthEndpoint(
+        "/seven-shifts-api/sources/delete",
+        {
+          method:
+            "POST",
+          use: [
+            sessionMiddleware
+          ],
+          body:
+            sourceBodySchema
+        },
+        async (ctx) => {
+          const allowed =
+            await isGlobalAdmin(
+              pool,
+              ctx.context
+                .session
+                .user
+                .id
+            )
+
+          if (!allowed) {
+            return ctx.json(
+              {
+                error:
+                  "Forbidden"
+              },
+              {
+                status:
+                  403
+              }
+            )
+          }
+
+          const source =
+            await pool.query<{
+              id: string
+              name: string
+              organizationCount:
+                number
+            }>(
+              `
+                SELECT
+                  s.id,
+                  s.name,
+                  COUNT(
+                    os.id
+                  )::int AS
+                    "organizationCount"
+                FROM
+                  "sevenShiftsApiSource" s
+
+                LEFT JOIN
+                  "sevenShiftsApiOrganizationSource" os
+                  ON
+                    os."sourceId" =
+                      s.id
+
+                WHERE
+                  s.id = $1
+
+                GROUP BY
+                  s.id,
+                  s.name
+              `,
+              [
+                ctx.body.sourceId
+              ]
+            )
+
+          if (
+            source.rowCount !==
+            1
+          ) {
+            return ctx.json(
+              {
+                error:
+                  "7shifts API Source not found"
+              },
+              {
+                status:
+                  404
+              }
+            )
+          }
+
+          const currentSource =
+            source.rows[0]
+
+          if (
+            currentSource
+              .organizationCount >
+            0
+          ) {
+            return ctx.json(
+              {
+                error:
+                  `7shifts API Source "${currentSource.name}" is assigned to ${currentSource.organizationCount} organization${currentSource.organizationCount === 1 ? "" : "s"}. Unassign all locations before deleting this source.`
+              },
+              {
+                status:
+                  409
+              }
+            )
+          }
+
+          /*
+           * Repeat the mapping check in the destructive
+           * statement to protect against a mapping being
+           * created after the preflight query.
+           */
+          const deleted =
+            await pool.query<{
+              id: string
+              name: string
+            }>(
+              `
+                DELETE FROM
+                  "sevenShiftsApiSource" s
+
+                WHERE
+                  s.id = $1
+
+                  AND NOT EXISTS (
+                    SELECT
+                      1
+                    FROM
+                      "sevenShiftsApiOrganizationSource" os
+                    WHERE
+                      os."sourceId" =
+                        s.id
+                  )
+
+                RETURNING
+                  s.id,
+                  s.name
+              `,
+              [
+                ctx.body.sourceId
+              ]
+            )
+
+          if (
+            deleted.rowCount !==
+            1
+          ) {
+            return ctx.json(
+              {
+                error:
+                  "7shifts API Source is currently assigned to an organization. Unassign all locations before deleting this source."
+              },
+              {
+                status:
+                  409
+              }
+            )
+          }
+
+          return ctx.json({
+            source:
+              deleted.rows[0]
+          })
+        }
+      ),
+
+    unassignSevenShiftsApiLocation:
+      createAuthEndpoint(
+        "/seven-shifts-api/sources/unassign",
+        {
+          method:
+            "POST",
+          use: [
+            sessionMiddleware
+          ],
+          body:
+            unassignLocationBodySchema
+        },
+        async (ctx) => {
+          const allowed =
+            await isGlobalAdmin(
+              pool,
+              ctx.context
+                .session
+                .user
+                .id
+            )
+
+          if (!allowed) {
+            return ctx.json(
+              {
+                error:
+                  "Forbidden"
+              },
+              {
+                status:
+                  403
+              }
+            )
+          }
+
+          const source =
+            await getSource(
+              pool,
+              ctx.body.sourceId
+            )
+
+          if (!source) {
+            return ctx.json(
+              {
+                error:
+                  "7shifts API Source not found"
+              },
+              {
+                status:
+                  404
+              }
+            )
+          }
+
+          const deleted =
+            await pool.query<{
+              organizationId: string
+              sourceId: string
+              sevenShiftsLocationId:
+                number
+              sevenShiftsLocationName:
+                string
+            }>(
+              `
+                DELETE FROM
+                  "sevenShiftsApiOrganizationSource"
+
+                WHERE
+                  "sourceId" = $1
+                  AND
+                  "sevenShiftsLocationId" =
+                    $2
+
+                RETURNING
+                  "organizationId",
+                  "sourceId",
+                  "sevenShiftsLocationId",
+                  "sevenShiftsLocationName"
+              `,
+              [
+                source.id,
+                ctx.body
+                  .sevenShiftsLocationId
+              ]
+            )
+
+          if (
+            deleted.rowCount !==
+            1
+          ) {
+            return ctx.json(
+              {
+                error:
+                  "This 7shifts location is not assigned to the selected API Source"
+              },
+              {
+                status:
+                  404
+              }
+            )
+          }
+
+          return ctx.json({
+            mapping:
+              deleted.rows[0]
+          })
         }
       ),
 

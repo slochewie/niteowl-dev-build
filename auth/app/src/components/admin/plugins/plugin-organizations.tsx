@@ -35,6 +35,9 @@ import {
   type AdminPluginDetail
 } from "@/lib/admin/plugins"
 
+const UNASSIGNED_SOURCE_VALUE =
+  "__unassigned__"
+
 export function PluginOrganizations({
   detail
 }: {
@@ -103,7 +106,10 @@ export function PluginOrganizations({
 
     try {
       const sourceId =
-        value
+        value ===
+        UNASSIGNED_SOURCE_VALUE
+          ? null
+          : value
 
       await setAdminSevenShiftsCsvOrganizationSource({
         data: {
@@ -113,16 +119,18 @@ export function PluginOrganizations({
       })
 
       const source =
-        detail.csvSources.find(
-          (item) =>
-            item.id ===
-            sourceId
-        )
+        sourceId === null
+          ? null
+          : detail.csvSources.find(
+              (item) =>
+                item.id ===
+                sourceId
+            )
 
       toast.success(
         source
           ? `Using ${source.name}`
-          : "CSV Source updated"
+          : "CSV Source unassigned"
       )
 
       await router.invalidate()
@@ -216,7 +224,7 @@ export function PluginOrganizations({
 
                   const csvSourceValue =
                     organization.csvSourceId ??
-                    ""
+                    UNASSIGNED_SOURCE_VALUE
 
                   return (
                     <div
@@ -318,6 +326,14 @@ export function PluginOrganizations({
                           </SelectTrigger>
 
                           <SelectContent>
+                            <SelectItem
+                              value={
+                                UNASSIGNED_SOURCE_VALUE
+                              }
+                            >
+                              Unassigned
+                            </SelectItem>
+
                             {detail.csvSources.map(
                               (
                                 source

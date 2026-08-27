@@ -2,7 +2,8 @@
 
 import {
   Plus,
-  Save
+  Save,
+  Trash2
 } from "lucide-react"
 import {
   useEffect,
@@ -17,6 +18,17 @@ import { toast } from "sonner"
 import {
   SevenShiftsCsvImportCard
 } from "@/components/admin/plugins/seven-shifts-csv-import-card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog"
 import {
   Button
 } from "@/components/ui/button"
@@ -43,6 +55,7 @@ import {
 
 import {
   createAdminSevenShiftsCsvSource,
+  deleteAdminSevenShiftsCsvSource,
   renameAdminSevenShiftsCsvSource,
   type AdminSevenShiftsCsvSource
 } from "@/lib/admin/plugins"
@@ -82,6 +95,11 @@ export function SevenShiftsCsvSources({
   const [
     creating,
     setCreating
+  ] = useState(false)
+
+  const [
+    deleting,
+    setDeleting
   ] = useState(false)
 
   const selectedSource =
@@ -238,6 +256,67 @@ export function SevenShiftsCsvSources({
       )
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function deleteSource() {
+    if (
+      !selectedSource
+    ) {
+      return
+    }
+
+    if (
+      selectedSource.organizationCount >
+      0
+    ) {
+      toast.error(
+        `Reassign the ${selectedSource.organizationCount} organization${selectedSource.organizationCount === 1 ? "" : "s"} using this CSV Source before deleting it.`
+      )
+
+      return
+    }
+
+    const deletedSourceId =
+      selectedSource.id
+
+    const nextSource =
+      sources.find(
+        (source) =>
+          source.id !==
+          deletedSourceId
+      ) ??
+      null
+
+    setDeleting(true)
+
+    try {
+      const result =
+        await deleteAdminSevenShiftsCsvSource({
+          data: {
+            sourceId:
+              deletedSourceId
+          }
+        })
+
+      toast.success(
+        `CSV Source "${result.source.name}" deleted`
+      )
+
+      setSelectedSourceId(
+        nextSource?.id ??
+        ""
+      )
+
+      await router.invalidate()
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete CSV Source"
+      )
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -411,6 +490,83 @@ export function SevenShiftsCsvSources({
               </Button>
             </div>
           </div>
+
+          {selectedSource && (
+            <div className="border-t pt-6">
+              <div className="space-y-3">
+                <div>
+                  <div className="font-medium">
+                    Delete CSV Source
+                  </div>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {selectedSource.organizationCount >
+                    0
+                      ? `This CSV Source is assigned to ${selectedSource.organizationCount} organization${selectedSource.organizationCount === 1 ? "" : "s"}. Reassign them before deleting this source.`
+                      : "Permanently delete this CSV Source and its uploaded CSV file history."}
+                  </p>
+                </div>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      disabled={
+                        deleting ||
+                        saving ||
+                        creating ||
+                        selectedSource.organizationCount >
+                          0
+                      }
+                    >
+                      <Trash2 />
+
+                      Delete CSV Source
+                    </Button>
+                  </AlertDialogTrigger>
+
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Delete {selectedSource.name}?
+                      </AlertDialogTitle>
+
+                      <AlertDialogDescription>
+                        This permanently deletes the CSV Source and all CSV files stored for it. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+
+                    <AlertDialogFooter>
+                      <AlertDialogCancel
+                        disabled={
+                          deleting
+                        }
+                      >
+                        Cancel
+                      </AlertDialogCancel>
+
+                      <AlertDialogAction
+                        variant="destructive"
+                        disabled={
+                          deleting
+                        }
+                        onClick={() =>
+                          void deleteSource()
+                        }
+                      >
+                        <Trash2 />
+
+                        {deleting
+                          ? "Deleting…"
+                          : "Delete CSV Source"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

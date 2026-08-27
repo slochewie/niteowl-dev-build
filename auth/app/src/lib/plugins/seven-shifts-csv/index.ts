@@ -2,6 +2,7 @@ import {
   mkdir,
   readFile,
   readdir,
+  rm,
   writeFile
 } from "node:fs/promises"
 import {
@@ -1364,6 +1365,194 @@ export const sevenShiftsCsv = ({
           }
         ),
 
+      deleteSevenShiftsCsvSource:
+        createAuthEndpoint(
+          "/seven-shifts-csv/sources/delete",
+          {
+            method:
+              "POST",
+            use: [
+              sessionMiddleware
+            ],
+            body:
+              z.object({
+                sourceId:
+                  z.string().min(1)
+              })
+          },
+          async (ctx) => {
+            const allowed =
+              await isGlobalAdmin(
+                pool,
+                ctx.context
+                  .session
+                  .user
+                  .id
+              )
+
+            if (
+              !allowed
+            ) {
+              return ctx.json(
+                {
+                  error:
+                    "Forbidden"
+                },
+                {
+                  status:
+                    403
+                }
+              )
+            }
+
+            const {
+              sourceId
+            } =
+              ctx.body
+
+            const source =
+              await pool.query<{
+                id: string
+                name: string
+                organizationCount:
+                  number
+              }>(
+                `
+                  SELECT
+                    s.id,
+                    s.name,
+                    COUNT(
+                      os.id
+                    )::int AS
+                      "organizationCount"
+                  FROM
+                    "sevenShiftsCsvSource" s
+                  LEFT JOIN
+                    "sevenShiftsCsvOrganizationSource" os
+                    ON
+                      os."sourceId" =
+                        s.id
+                  WHERE
+                    s.id = $1
+                  GROUP BY
+                    s.id,
+                    s.name
+                `,
+                [
+                  sourceId
+                ]
+              )
+
+            if (
+              source.rowCount !==
+              1
+            ) {
+              return ctx.json(
+                {
+                  error:
+                    "CSV Source not found"
+                },
+                {
+                  status:
+                    404
+                }
+              )
+            }
+
+            const currentSource =
+              source.rows[0]
+
+            if (
+              currentSource
+                .organizationCount >
+              0
+            ) {
+              return ctx.json(
+                {
+                  error:
+                    `CSV Source "${currentSource.name}" is assigned to ${currentSource.organizationCount} organization${currentSource.organizationCount === 1 ? "" : "s"}. Reassign those organizations before deleting this source.`
+                },
+                {
+                  status:
+                    409
+                }
+              )
+            }
+
+            /*
+             * Repeat the assignment check in the DELETE itself
+             * so an organization cannot become attached between
+             * the preflight check and the destructive write.
+             */
+            const deleted =
+              await pool.query<{
+                id: string
+                name: string
+              }>(
+                `
+                  DELETE FROM
+                    "sevenShiftsCsvSource" s
+                  WHERE
+                    s.id = $1
+                    AND NOT EXISTS (
+                      SELECT
+                        1
+                      FROM
+                        "sevenShiftsCsvOrganizationSource" os
+                      WHERE
+                        os."sourceId" =
+                          s.id
+                    )
+                  RETURNING
+                    s.id,
+                    s.name
+                `,
+                [
+                  sourceId
+                ]
+              )
+
+            if (
+              deleted.rowCount !==
+              1
+            ) {
+              return ctx.json(
+                {
+                  error:
+                    "CSV Source is currently assigned to an organization. Reassign it before deleting this source."
+                },
+                {
+                  status:
+                    409
+                }
+              )
+            }
+
+            const directory =
+              getCsvSourceDirectory(
+                storageRoot,
+                sourceId
+              )
+
+            await rm(
+              directory,
+              {
+                recursive:
+                  true,
+                force:
+                  true
+              }
+            )
+
+            return ctx.json({
+              deleted:
+                true,
+              source:
+                deleted.rows[0]
+            })
+          }
+        ),
+
       setSevenShiftsCsvOrganizationSource:
         createAuthEndpoint(
           "/seven-shifts-csv/sources/assign",
@@ -1380,6 +1569,7 @@ export const sevenShiftsCsv = ({
                 sourceId:
                   z.string()
                     .min(1)
+                    .nullable()
               })
           },
           async (ctx) => {
@@ -1447,6 +1637,34 @@ export const sevenShiftsCsv = ({
                     404
                 }
               )
+            }
+
+            if (
+              sourceId ===
+              null
+            ) {
+              await pool.query(
+                `
+                  DELETE FROM
+                    "sevenShiftsCsvOrganizationSource"
+                  WHERE
+                    "organizationId" =
+                      $1
+                `,
+                [
+                  organizationId
+                ]
+              )
+
+              return ctx.json({
+                organizationId,
+                sourceType:
+                  "unassigned",
+                sourceId:
+                  null,
+                sourceName:
+                  null
+              })
             }
 
             const source =

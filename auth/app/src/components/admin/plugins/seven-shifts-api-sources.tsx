@@ -4,7 +4,9 @@ import {
   KeyRound,
   Plus,
   RefreshCw,
-  Save
+  Save,
+  Trash2,
+  Unlink
 } from "lucide-react"
 import {
   useEffect,
@@ -17,6 +19,18 @@ import {
 import {
   toast
 } from "sonner"
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog"
 
 import {
   Badge
@@ -52,10 +66,12 @@ import {
 import {
   assignAdminSevenShiftsApiLocation,
   createAdminSevenShiftsApiSource,
+  deleteAdminSevenShiftsApiSource,
   getAdminSevenShiftsApiLocations,
   previewAdminSevenShiftsApiSync,
   syncAdminSevenShiftsApiSource,
   testAdminSevenShiftsApiSource,
+  unassignAdminSevenShiftsApiLocation,
   updateAdminSevenShiftsApiSource,
   type AdminPluginOrganization,
   type AdminSevenShiftsApiLocation,
@@ -210,6 +226,18 @@ export function SevenShiftsApiSources({
     syncing,
     setSyncing
   ] = useState(false)
+
+  const [
+    deleting,
+    setDeleting
+  ] = useState(false)
+
+  const [
+    unassigningLocationId,
+    setUnassigningLocationId
+  ] = useState<number | null>(
+    null
+  )
 
   const [
     syncReport,
@@ -625,13 +653,132 @@ export function SevenShiftsApiSources({
     }
   }
 
+  async function unassignLocation({
+    sevenShiftsLocationId
+  }: {
+    sevenShiftsLocationId: number
+  }) {
+    if (
+      !selectedSource
+    ) {
+      return
+    }
+
+    setUnassigningLocationId(
+      sevenShiftsLocationId
+    )
+
+    try {
+      await unassignAdminSevenShiftsApiLocation({
+        data: {
+          sourceId:
+            selectedSource.id,
+          sevenShiftsLocationId
+        }
+      })
+
+      toast.success(
+        "7shifts location unassigned"
+      )
+
+      setSyncPreview(null)
+      setSyncReport(null)
+
+      await loadLocations()
+      await router.invalidate()
+    } catch (
+      error
+    ) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to unassign 7shifts location"
+      )
+    } finally {
+      setUnassigningLocationId(
+        null
+      )
+    }
+  }
+
+  async function deleteSource() {
+    if (
+      !selectedSource
+    ) {
+      return
+    }
+
+    if (
+      selectedSource.organizationCount >
+      0
+    ) {
+      toast.error(
+        `Unassign the ${selectedSource.organizationCount} organization${selectedSource.organizationCount === 1 ? "" : "s"} using this API Source before deleting it.`
+      )
+
+      return
+    }
+
+    const deletedSourceId =
+      selectedSource.id
+
+    const nextSource =
+      sources.find(
+        (source) =>
+          source.id !==
+          deletedSourceId
+      ) ??
+      null
+
+    setDeleting(true)
+
+    try {
+      const result =
+        await deleteAdminSevenShiftsApiSource({
+          data: {
+            sourceId:
+              deletedSourceId
+          }
+        })
+
+      toast.success(
+        `API Source "${result.source.name}" deleted`
+      )
+
+      setSelectedSourceId(
+        nextSource?.id ??
+        ""
+      )
+
+      setLocations([])
+      setMappings([])
+      setSyncPreview(null)
+      setSyncReport(null)
+
+      await router.invalidate()
+    } catch (
+      error
+    ) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete API Source"
+      )
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const busy =
     creating ||
     saving ||
     testing ||
     loadingLocations ||
     previewing ||
-    syncing
+    syncing ||
+    deleting ||
+    unassigningLocationId !==
+      null
 
   return (
     <div className="space-y-6">
@@ -1238,49 +1385,74 @@ export function SevenShiftsApiSources({
                                 </div>
                               </div>
 
-                              <Select
-                                value={
-                                  mapping?.organizationId ??
-                                  ""
-                                }
-                                disabled={
-                                  busy
-                                }
-                                onValueChange={(
-                                  organizationId
-                                ) =>
-                                  void assignLocation({
-                                    organizationId,
-                                    sevenShiftsLocationId:
-                                      location.id
-                                  })
-                                }
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Assign organization" />
-                                </SelectTrigger>
+                              <div className="flex flex-col gap-2 sm:flex-row">
+                                <Select
+                                  value={
+                                    mapping?.organizationId ??
+                                    ""
+                                  }
+                                  disabled={
+                                    busy
+                                  }
+                                  onValueChange={(
+                                    organizationId
+                                  ) =>
+                                    void assignLocation({
+                                      organizationId,
+                                      sevenShiftsLocationId:
+                                        location.id
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Assign organization" />
+                                  </SelectTrigger>
 
-                                <SelectContent>
-                                  {organizations.map(
-                                    (
-                                      organization
-                                    ) => (
-                                      <SelectItem
-                                        key={
-                                          organization.id
-                                        }
-                                        value={
-                                          organization.id
-                                        }
-                                      >
-                                        {
-                                          organization.name
-                                        }
-                                      </SelectItem>
-                                    )
-                                  )}
-                                </SelectContent>
-                              </Select>
+                                  <SelectContent>
+                                    {organizations.map(
+                                      (
+                                        organization
+                                      ) => (
+                                        <SelectItem
+                                          key={
+                                            organization.id
+                                          }
+                                          value={
+                                            organization.id
+                                          }
+                                        >
+                                          {
+                                            organization.name
+                                          }
+                                        </SelectItem>
+                                      )
+                                    )}
+                                  </SelectContent>
+                                </Select>
+
+                                {mapping && (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={
+                                      busy
+                                    }
+                                    onClick={() =>
+                                      void unassignLocation({
+                                        sevenShiftsLocationId:
+                                          location.id
+                                      })
+                                    }
+                                  >
+                                    <Unlink />
+
+                                    {unassigningLocationId ===
+                                    location.id
+                                      ? "Unassigning…"
+                                      : "Unassign"}
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           )
                         }
@@ -1290,6 +1462,85 @@ export function SevenShiftsApiSources({
                 </div>
               )}
             </>
+          )}
+
+          {selectedSource && (
+            <div className="border-t pt-6">
+              <div className="rounded-lg border border-destructive/30 p-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="grid gap-1">
+                    <div className="font-medium">
+                      Delete API Source
+                    </div>
+
+                    <div className="text-sm text-muted-foreground">
+                      {selectedSource.organizationCount >
+                      0
+                        ? `Unassign ${selectedSource.organizationCount} organization${selectedSource.organizationCount === 1 ? "" : "s"} before this API Source can be deleted.`
+                        : "Permanently delete this API Source and its stored connection credentials."}
+                    </div>
+                  </div>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger
+                      asChild
+                    >
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        disabled={
+                          busy ||
+                          selectedSource.organizationCount >
+                            0
+                        }
+                      >
+                        <Trash2 />
+
+                        Delete API Source
+                      </Button>
+                    </AlertDialogTrigger>
+
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Delete {selectedSource.name}?
+                        </AlertDialogTitle>
+
+                        <AlertDialogDescription>
+                          This permanently deletes the API Source and its stored 7shifts connection credentials. Previously synchronized Better Auth users and workforce records are not deleted. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+
+                      <AlertDialogFooter>
+                        <AlertDialogCancel
+                          disabled={
+                            deleting
+                          }
+                        >
+                          Cancel
+                        </AlertDialogCancel>
+
+                        <AlertDialogAction
+                          variant="destructive"
+                          disabled={
+                            deleting
+                          }
+                          onClick={() =>
+                            void deleteSource()
+                          }
+                        >
+                          <Trash2 />
+
+                          {deleting
+                            ? "Deleting…"
+                            : "Delete API Source"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </div>
           )}
 
           <div className="border-t pt-6">
