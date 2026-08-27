@@ -100,6 +100,8 @@ export function UnifiAccessReconciliation({
 		string | null
 	>(null);
 
+	const [syncingAll, setSyncingAll] = useState(false);
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: sourceId intentionally resets reconciliation state when the Access source changes.
 	useEffect(() => {
 		setOrganizationId("");
@@ -247,6 +249,109 @@ export function UnifiAccessReconciliation({
 		}
 	}
 
+	async function applyAllFixes() {
+		if (!organizationId || !result) {
+			return;
+		}
+
+		const actionableRows = result.rows.filter(
+			(row) =>
+				row.reconciliationStatus === "missing-in-unifi" ||
+				row.reconciliationStatus === "should-activate" ||
+				row.reconciliationStatus === "should-deactivate",
+		);
+
+		if (actionableRows.length === 0) {
+			return;
+		}
+
+		setSyncingAll(true);
+		setError(null);
+
+		try {
+			for (const row of actionableRows) {
+				if (!row.betterAuthUserId) {
+					continue;
+				}
+
+				switch (row.reconciliationStatus) {
+					case "missing-in-unifi":
+						await provisionAdminUnifiAccessUser({
+							data: {
+								sourceId,
+								organizationId,
+								userId: row.betterAuthUserId,
+							},
+						});
+						break;
+
+					case "should-activate":
+						if (!row.unifiUserId) {
+							continue;
+						}
+
+						await setAdminUnifiAccessUserStatus({
+							data: {
+								sourceId,
+								organizationId,
+								userId: row.betterAuthUserId,
+								status: "ACTIVE",
+							},
+						});
+						break;
+
+					case "should-deactivate":
+						if (!row.unifiUserId) {
+							continue;
+						}
+
+						await setAdminUnifiAccessUserStatus({
+							data: {
+								sourceId,
+								organizationId,
+								userId: row.betterAuthUserId,
+								status: "DEACTIVATED",
+							},
+						});
+						break;
+				}
+			}
+
+			const refreshed =
+				await getAdminUnifiAccessReconciliation({
+					data: {
+						sourceId,
+						organizationId,
+					},
+				});
+
+			setResult(refreshed);
+			onChanged?.();
+		} catch (syncError) {
+			setError(
+				syncError instanceof Error
+					? syncError.message
+					: "Unable to synchronize UniFi Access users",
+			);
+
+			try {
+				const refreshed =
+					await getAdminUnifiAccessReconciliation({
+						data: {
+							sourceId,
+							organizationId,
+						},
+					});
+
+				setResult(refreshed);
+			} catch {
+				// Preserve the original synchronization error.
+			}
+		} finally {
+			setSyncingAll(false);
+		}
+	}
+
 	function selectOrganization(value: string) {
 		setOrganizationId(value);
 
@@ -354,10 +459,25 @@ export function UnifiAccessReconciliation({
 							</SelectContent>
 						</Select>
 
+						<Button
+							type="button"
+							variant="outline"
+							disabled={
+								!result ||
+								syncingAll ||
+								(result.summary.missingInUnifi === 0 &&
+									result.summary.shouldActivate === 0 &&
+									result.summary.shouldDeactivate === 0)
+							}
+							onClick={() => void applyAllFixes()}
+						>
+							{syncingAll ? "Synchronizing…" : "Apply all fixes"}
+						</Button>
+
 						<Select
 							value={statusFilter}
 							onValueChange={changeFilter}
-							disabled={!result}
+							disabled={!result || syncingAll}
 						>
 							<SelectTrigger
 								className="w-[220px]"
