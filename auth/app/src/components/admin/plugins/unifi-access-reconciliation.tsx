@@ -100,21 +100,6 @@ export function UnifiAccessReconciliation({
 		string | null
 	>(null);
 
-	const assignedOrganizations = useMemo(() => {
-		/*
-		 * The backend will reject organizations
-		 * that are not assigned to this source.
-		 *
-		 * We do not have source assignment IDs on
-		 * AdminPluginOrganization itself, so the
-		 * selected source's assignment list remains
-		 * authoritative in the parent. For now,
-		 * this list is the available organization
-		 * catalog passed by the UniFi API page.
-		 */
-		return organizations;
-	}, [organizations]);
-
 	// biome-ignore lint/correctness/useExhaustiveDependencies: sourceId intentionally resets reconciliation state when the Access source changes.
 	useEffect(() => {
 		setOrganizationId("");
@@ -361,7 +346,7 @@ export function UnifiAccessReconciliation({
 							</SelectTrigger>
 
 							<SelectContent>
-								{assignedOrganizations.map((organization) => (
+								{organizations.map((organization) => (
 									<SelectItem key={organization.id} value={organization.id}>
 										{organization.name}
 									</SelectItem>
