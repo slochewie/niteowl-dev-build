@@ -26,6 +26,7 @@ import { sevenShifts } from "./plugins/seven-shifts/index.js";
 import { sevenShiftsCsv } from "./plugins/seven-shifts-csv/index.js";
 import { sevenShiftsApi } from "./plugins/seven-shifts-api/index.js";
 import { unifiIdentity } from "./plugins/unifi-identity/index.js";
+import { unifiAccess } from "./plugins/unifi-access/index.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -247,6 +248,12 @@ export const auth = betterAuth({
     unifiIdentity({
       pool,
       encryptionKey: env.integrationEncryptionKey,
+    }),
+
+    unifiAccess({
+      pool,
+      encryptionKey:
+        env.integrationEncryptionKey,
     }),
 
     tanstackStartCookies(),

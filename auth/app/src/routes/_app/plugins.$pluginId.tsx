@@ -4,11 +4,11 @@ import {
 } from "@tanstack/react-router"
 
 import {
-  IntegrationLogo
-} from "@/components/admin/plugins/integration-logo"
-import {
   GlauthSources
 } from "@/components/admin/plugins/glauth-sources"
+import {
+  IntegrationLogo
+} from "@/components/admin/plugins/integration-logo"
 import {
   PluginOrganizations
 } from "@/components/admin/plugins/plugin-organizations"
@@ -19,11 +19,14 @@ import {
   PluginPlaceholderConfig
 } from "@/components/admin/plugins/plugin-placeholder-config"
 import {
+  SevenShiftsApiSources
+} from "@/components/admin/plugins/seven-shifts-api-sources"
+import {
   SevenShiftsCsvSources
 } from "@/components/admin/plugins/seven-shifts-csv-sources"
 import {
-  SevenShiftsApiSources
-} from "@/components/admin/plugins/seven-shifts-api-sources"
+  UnifiApi
+} from "@/components/admin/plugins/unifi-api"
 import {
   Badge
 } from "@/components/ui/badge"
@@ -32,8 +35,8 @@ import {
   CardContent
 } from "@/components/ui/card"
 import {
-  getAdminPlugin,
-  getAdminGlauthSources
+  getAdminGlauthSources,
+  getAdminPlugin
 } from "@/lib/admin/plugins"
 import type {
   CatalogIntegrationId,
@@ -202,7 +205,17 @@ function PluginPage() {
             )}
 
             {detail.plugin.id ===
-            "glauth" ? (
+              "unifi-api" ? (
+              <UnifiApi
+                accessSources={
+                  detail.unifiAccessSources
+                }
+                organizations={
+                  detail.organizations
+                }
+              />
+            ) : detail.plugin.id ===
+              "glauth" ? (
               <GlauthSources
                 sources={
                   glauthSources
@@ -211,11 +224,14 @@ function PluginPage() {
                   detail.organizations
                 }
               />
-            ) : (
+            ) : detail.plugin.id !==
+              "seven-shifts-csv" &&
+              detail.plugin.id !==
+                "seven-shifts-api" ? (
               <PluginOrganizations
                 detail={detail}
               />
-            )}
+            ) : null}
           </>
         )}
       </div>
