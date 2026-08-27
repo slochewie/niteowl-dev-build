@@ -1138,6 +1138,38 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 						);
 					}
 
+					/*
+					 * Reconciliation must reflect the live UniFi console rather than
+					 * relying on the last manually refreshed discovery cache.
+					 *
+					 * These calls are read-only UniFi API requests. They do not
+					 * provision users or assign Identity resources.
+					 */
+					const apiToken = decryptApiSecret(
+						source.apiToken,
+						encryptionKey,
+					);
+
+					const connection = {
+						baseUrl: getBaseUrl(source),
+						apiToken,
+						verifyTls: source.verifyTls,
+					};
+
+					const [users, groups, resources] = await Promise.all([
+						listUnifiAccessUsers(connection),
+						listUnifiAccessUserGroups(connection),
+						listUnifiAccessIdentityResources(connection),
+					]);
+
+					await persistUnifiAccessDiscovery({
+						pool,
+						sourceId: source.id,
+						users,
+						groups,
+						resources,
+					});
+
 					const assignment = await pool.query<{
 						organizationId: string;
 						organizationName: string;
