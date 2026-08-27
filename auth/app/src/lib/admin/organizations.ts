@@ -21,6 +21,7 @@ export type AdminOrganizationListItem = {
   name: string
   slug: string
   logo: string | null
+  enabled: boolean
   createdAt: Date
   memberCount: number
   members: AdminOrganizationMemberPreview[]
@@ -60,6 +61,7 @@ export type AdminOrganizationDetail = {
   slug: string
   logo: string | null
   metadata: string | null
+  enabled: boolean
   createdAt: Date
   memberCount: number
   pendingInvitationCount: number
@@ -112,6 +114,7 @@ export const getAdminOrganizations =
           name: string
           slug: string
           logo: string | null
+          enabled: boolean
           createdAt: Date
           memberCount: string
           members:
@@ -122,6 +125,10 @@ export const getAdminOrganizations =
             o.name,
             o.slug,
             o.logo,
+            COALESCE(
+              os.enabled,
+              true
+            ) AS enabled,
             o."createdAt",
             COUNT(m.id)::text AS "memberCount",
             COALESCE(
@@ -160,8 +167,11 @@ export const getAdminOrganizations =
           FROM organization o
           LEFT JOIN member m
             ON m."organizationId" = o.id
+          LEFT JOIN "organizationStatus" os
+            ON os."organizationId" = o.id
           GROUP BY
-            o.id
+            o.id,
+            os.enabled
           ORDER BY
             o."createdAt" DESC
         `)
@@ -172,6 +182,7 @@ export const getAdminOrganizations =
           name: row.name,
           slug: row.slug,
           logo: row.logo,
+          enabled: row.enabled,
           createdAt: row.createdAt,
           memberCount:
             Number(row.memberCount),
@@ -203,18 +214,25 @@ export const getAdminOrganization =
             slug: string
             logo: string | null
             metadata: string | null
+            enabled: boolean
             createdAt: Date
           }>(
             `
               SELECT
-                id,
-                name,
-                slug,
-                logo,
-                metadata,
-                "createdAt"
-              FROM organization
-              WHERE id = $1
+                o.id,
+                o.name,
+                o.slug,
+                o.logo,
+                o.metadata,
+                COALESCE(
+                  os.enabled,
+                  true
+                ) AS enabled,
+                o."createdAt"
+              FROM organization o
+              LEFT JOIN "organizationStatus" os
+                ON os."organizationId" = o.id
+              WHERE o.id = $1
               LIMIT 1
             `,
             [data.organizationId]
@@ -366,6 +384,31 @@ export const getAdminOrganizationUserOptions =
       return result.rows
     }
   )
+
+export const setAdminOrganizationEnabled =
+  createServerFn({
+    method: "POST"
+  })
+    .validator(
+      (data: {
+        organizationId: string
+        enabled: boolean
+      }) => data
+    )
+    .handler(async ({ data }) => {
+      const {
+        request
+      } = await requireGlobalAdmin()
+
+      return auth.api.setOrganizationStatus({
+        body: {
+          organizationId:
+            data.organizationId,
+          enabled: data.enabled
+        },
+        headers: request.headers
+      })
+    })
 
 export const addAdminOrganizationMember =
   createServerFn({
