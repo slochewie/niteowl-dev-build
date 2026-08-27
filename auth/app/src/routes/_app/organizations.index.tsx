@@ -1,7 +1,11 @@
 import {
-  createFileRoute
+  createFileRoute,
+  useRouter
 } from "@tanstack/react-router"
 
+import {
+  OrganizationStatusControls
+} from "@/components/auth/admin/organization-status-controls"
 import {
   OrganizationsTable
 } from "@/components/auth/admin/organizations-table"
@@ -30,6 +34,12 @@ function OrganizationsPage() {
     organizations
   } = Route.useLoaderData()
 
+  const router = useRouter()
+
+  async function refresh() {
+    await router.invalidate()
+  }
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="border-b px-4 py-6 md:px-6">
@@ -42,7 +52,12 @@ function OrganizationsPage() {
         </p>
       </div>
 
-      <div className="flex-1 p-4 md:p-6">
+      <div className="flex-1 space-y-6 p-4 md:p-6">
+        <OrganizationStatusControls
+          organizations={organizations}
+          onChanged={refresh}
+        />
+
         <OrganizationsTable
           organizations={
             organizations
