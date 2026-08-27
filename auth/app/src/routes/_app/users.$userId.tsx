@@ -1,604 +1,446 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { AdminWriteBoundary } from "@/components/auth/admin/admin-access-context";
 import {
-  createFileRoute,
-  Link
-} from "@tanstack/react-router"
+	Building2,
+	CircleCheck,
+	KeyRound,
+	ShieldBan,
+	UserRound,
+} from "lucide-react";
+
+import { UserAccounts } from "@/components/auth/admin/user-accounts";
+import { UserActivity } from "@/components/auth/admin/user-activity";
+import { UserAdminActions } from "@/components/auth/admin/user-admin-actions";
+import { UserOrganizations } from "@/components/auth/admin/user-organizations";
+import { UserSessions } from "@/components/auth/admin/user-sessions";
+import { UserProfileCard } from "@/components/auth/admin/user-profile-card";
+import { UserAvatar } from "@/components/auth/user/user-avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Building2,
-  CircleCheck,
-  KeyRound,
-  ShieldBan,
-  UserRound
-} from "lucide-react"
+	Item,
+	ItemContent,
+	ItemDescription,
+	ItemGroup,
+	ItemMedia,
+	ItemSeparator,
+	ItemTitle,
+} from "@/components/ui/item";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getAdminUserActivity } from "@/lib/admin/user-activity";
+import { getAllOrganizations } from "@/lib/admin/user-organizations";
+import { getAdminUser } from "@/lib/admin/users";
+import { getAdminUserProfile } from "@/lib/admin/users";
 
-import { UserAccounts } from "@/components/auth/admin/user-accounts"
-import { UserActivity } from "@/components/auth/admin/user-activity"
-import { UserAdminActions } from "@/components/auth/admin/user-admin-actions"
-import { UserOrganizations } from "@/components/auth/admin/user-organizations"
-import { UserSessions } from "@/components/auth/admin/user-sessions"
-import { UserProfileCard } from "@/components/auth/admin/user-profile-card"
-import { UserAvatar } from "@/components/auth/user/user-avatar"
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemMedia,
-  ItemSeparator,
-  ItemTitle
-} from "@/components/ui/item"
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs"
-import {
-  getAdminUserActivity
-} from "@/lib/admin/user-activity"
-import {
-  getAllOrganizations
-} from "@/lib/admin/user-organizations"
-import { getAdminUser } from "@/lib/admin/users"
-import { getAdminUserProfile } from "@/lib/admin/users"
+export const Route = createFileRoute("/_app/users/$userId")({
+	loader: async ({ params }) => {
+		const [user, userProfile, allOrganizations, activity] = await Promise.all([
+			getAdminUser({
+				data: {
+					userId: params.userId,
+				},
+			}),
 
-export const Route =
-  createFileRoute("/_app/users/$userId")({
-    loader: async ({ params }) => {
-      const [
-        user,
-      userProfile,
-        allOrganizations,
-        activity
-      ] = await Promise.all([
-        getAdminUser({
-          data: {
-            userId: params.userId
-          }
-        }),
+			getAdminUserProfile({
+				data: {
+					userId: params.userId,
+				},
+			}),
 
-      getAdminUserProfile({
-        data: {
-          userId: params.userId
-        }
-      }),
+			getAllOrganizations(),
 
-        getAllOrganizations(),
+			getAdminUserActivity({
+				data: {
+					userId: params.userId,
+					limit: 100,
+					offset: 0,
+				},
+			}),
+		]);
 
-        getAdminUserActivity({
-          data: {
-            userId: params.userId,
-            limit: 100,
-            offset: 0
-          }
-        })
-      ])
+		return {
+			user,
+			userProfile,
+			allOrganizations,
+			activity,
+		};
+	},
 
-      return {
-        user,
-      userProfile,
-        allOrganizations,
-        activity
-      }
-    },
-
-    component: UserPage
-  })
+	component: UserPage,
+});
 
 function UserPage() {
-  const {
-    user,
-    userProfile,
-    allOrganizations,
-    activity
-  } = Route.useLoaderData()
+	const { user, userProfile, allOrganizations, activity } =
+		Route.useLoaderData();
 
-  return (
-    <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
-      <div className="border-b px-4 py-4 sm:px-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link
-            to="/users"
-            className="hover:text-foreground"
-          >
-            Users
-          </Link>
+	return (
+		<div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+			<div className="border-b px-4 py-4 sm:px-6">
+				<div className="flex items-center gap-2 text-sm text-muted-foreground">
+					<Link to="/users" className="hover:text-foreground">
+						Users
+					</Link>
 
-          <span>/</span>
+					<span>/</span>
 
-          <span className="truncate text-foreground">
-            {user.name || user.email}
-          </span>
-        </div>
-      </div>
+					<span className="truncate text-foreground">
+						{user.name || user.email}
+					</span>
+				</div>
+			</div>
 
-      <div className="grid min-w-0 flex-1 gap-6 p-4 sm:p-6 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="min-w-0 space-y-6">
-          <div className="space-y-4">
-            <UserAvatar
-              user={{
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                image: user.image ?? undefined,
-                username: user.username,
-                displayUsername:
-                  user.displayUsername,
-                emailVerified:
-                  user.emailVerified,
-                createdAt: user.createdAt,
-                updatedAt: user.updatedAt
-              }}
-              className="size-28"
-            />
+			<div className="grid min-w-0 flex-1 gap-6 p-4 sm:p-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+				<aside className="min-w-0 space-y-6">
+					<div className="space-y-4">
+						<UserAvatar
+							user={{
+								id: user.id,
+								name: user.name,
+								email: user.email,
+								image: user.image ?? undefined,
+								username: user.username,
+								displayUsername: user.displayUsername,
+								emailVerified: user.emailVerified,
+								createdAt: user.createdAt,
+								updatedAt: user.updatedAt,
+							}}
+							className="size-28"
+						/>
 
-            <div className="min-w-0">
-              <h1 className="truncate text-2xl font-semibold">
-                {user.name || user.email}
-              </h1>
+						<div className="min-w-0">
+							<h1 className="truncate text-2xl font-semibold">
+								{user.name || user.email}
+							</h1>
 
-              <p className="truncate text-sm text-muted-foreground">
-                {user.email}
-              </p>
-            </div>
+							<p className="truncate text-sm text-muted-foreground">
+								{user.email}
+							</p>
+						</div>
 
-            {user.banned ? (
-              <Badge variant="destructive">
-                <ShieldBan />
-                Banned
-              </Badge>
-            ) : (
-              <Badge variant="secondary">
-                <CircleCheck />
-                Active
-              </Badge>
-            )}
-          </div>
+						{user.banned ? (
+							<Badge variant="destructive">
+								<ShieldBan />
+								Banned
+							</Badge>
+						) : (
+							<Badge variant="secondary">
+								<CircleCheck />
+								Active
+							</Badge>
+						)}
+					</div>
 
-          <UserAdminActions
-            user={{
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              username: user.username,
-              displayUsername:
-                user.displayUsername,
-              banned: user.banned
-            }}
-          />
-        </aside>
+					<AdminWriteBoundary>
+						<UserAdminActions
+							user={{
+								id: user.id,
+								name: user.name,
+								email: user.email,
+								username: user.username,
+								displayUsername: user.displayUsername,
+								role: user.role,
+								banned: user.banned,
+							}}
+						/>
+					</AdminWriteBoundary>
+				</aside>
 
-        <div className="min-w-0 max-w-full overflow-hidden">
-          <Tabs
-            defaultValue="overview"
-            className="min-w-0 w-full"
-          >
-            <div className="max-w-full overflow-x-auto overscroll-x-contain">
-              <TabsList className="h-auto w-max min-w-full justify-start rounded-none border-b bg-transparent p-0">
-                <TabsTrigger
-                  value="overview"
-                  className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
-                >
-                  Overview
-                </TabsTrigger>
+				<div className="min-w-0 max-w-full overflow-hidden">
+					<Tabs defaultValue="overview" className="min-w-0 w-full">
+						<div className="max-w-full overflow-x-auto overscroll-x-contain">
+							<TabsList className="h-auto w-max min-w-full justify-start rounded-none border-b bg-transparent p-0">
+								<TabsTrigger
+									value="overview"
+									className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
+								>
+									Overview
+								</TabsTrigger>
 
-                <TabsTrigger
-                  value="accounts"
-                  className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
-                >
-                  Accounts
-                </TabsTrigger>
+								<TabsTrigger
+									value="accounts"
+									className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
+								>
+									Accounts
+								</TabsTrigger>
 
-                <TabsTrigger
-                  value="sessions"
-                  className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
-                >
-                  Sessions
-                </TabsTrigger>
+								<TabsTrigger
+									value="sessions"
+									className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
+								>
+									Sessions
+								</TabsTrigger>
 
-                <TabsTrigger
-                  value="organizations"
-                  className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
-                >
-                  Organizations
-                </TabsTrigger>
+								<TabsTrigger
+									value="organizations"
+									className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
+								>
+									Organizations
+								</TabsTrigger>
 
-                <TabsTrigger
-                  value="activity"
-                  className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
-                >
-                  Activity
-                </TabsTrigger>
+								<TabsTrigger
+									value="activity"
+									className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
+								>
+									Activity
+								</TabsTrigger>
 
-                <TabsTrigger
-                  value="security"
-                  className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
-                >
-                  Security
-                </TabsTrigger>
-              </TabsList>
-            </div>
+								<TabsTrigger
+									value="security"
+									className="shrink-0 rounded-none border-b-2 border-transparent px-4 py-3 data-[state=active]:border-foreground data-[state=active]:bg-transparent"
+								>
+									Security
+								</TabsTrigger>
+							</TabsList>
+						</div>
 
-            <TabsContent
-              value="overview"
-              className="mt-6 min-w-0 space-y-6"
-            >
-              <ProfileInformationCard
-                user={user}
-              />
+						<TabsContent value="overview" className="mt-6 min-w-0 space-y-6">
+							<ProfileInformationCard user={user} />
 
-            <UserProfileCard
-              userId={user.id}
-              profile={userProfile}
-            />
+							<AdminWriteBoundary>
+								<UserProfileCard userId={user.id} profile={userProfile} />
+							</AdminWriteBoundary>
 
-              <div className="grid min-w-0 gap-6 xl:grid-cols-2">
-                <UserSessions
-                  userId={user.id}
-                  sessions={user.sessions}
-                  compact
-                />
+							<div className="grid min-w-0 gap-6 xl:grid-cols-2">
+								<AdminWriteBoundary>
+									<UserSessions
+										userId={user.id}
+										sessions={user.sessions}
+										compact
+									/>
+								</AdminWriteBoundary>
 
-                <ConnectedAccountsCard
-                  accounts={user.accounts}
-                />
-              </div>
+								<ConnectedAccountsCard accounts={user.accounts} />
+							</div>
 
-              <OrganizationsCard
-                organizations={
-                  user.organizations
-                }
-              />
-            </TabsContent>
+							<OrganizationsCard organizations={user.organizations} />
+						</TabsContent>
 
-            <TabsContent
-              value="accounts"
-              className="mt-6 min-w-0"
-            >
-              <UserAccounts
-                accounts={user.accounts}
-              />
-            </TabsContent>
+						<TabsContent value="accounts" className="mt-6 min-w-0">
+							<UserAccounts accounts={user.accounts} />
+						</TabsContent>
 
-            <TabsContent
-              value="sessions"
-              className="mt-6 min-w-0"
-            >
-              <UserSessions
-                userId={user.id}
-                sessions={user.sessions}
-              />
-            </TabsContent>
+						<TabsContent value="sessions" className="mt-6 min-w-0">
+							<AdminWriteBoundary>
+								<UserSessions userId={user.id} sessions={user.sessions} />
+							</AdminWriteBoundary>
+						</TabsContent>
 
-            <TabsContent
-              value="organizations"
-              className="mt-6 min-w-0"
-            >
-              <UserOrganizations
-                userId={user.id}
-                organizations={
-                  user.organizations
-                }
-                allOrganizations={
-                  allOrganizations
-                }
-              />
-            </TabsContent>
+						<TabsContent value="organizations" className="mt-6 min-w-0">
+							<AdminWriteBoundary>
+								<UserOrganizations
+									userId={user.id}
+									organizations={user.organizations}
+									allOrganizations={allOrganizations}
+								/>
+							</AdminWriteBoundary>
+						</TabsContent>
 
-            <TabsContent
-              value="activity"
-              className="mt-6 min-w-0"
-            >
-              <UserActivity
-                activity={activity}
-              />
-            </TabsContent>
+						<TabsContent value="activity" className="mt-6 min-w-0">
+							<UserActivity activity={activity} />
+						</TabsContent>
 
-            <TabsContent
-              value="security"
-              className="mt-6 min-w-0"
-            >
-              <PlaceholderCard
-                title="Security"
-                description="Authentication and access-control events will appear here."
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
-    </div>
-  )
+						<TabsContent value="security" className="mt-6 min-w-0">
+							<PlaceholderCard
+								title="Security"
+								description="Authentication and access-control events will appear here."
+							/>
+						</TabsContent>
+					</Tabs>
+				</div>
+			</div>
+		</div>
+	);
 }
 
 function ProfileInformationCard({
-  user
+	user,
 }: {
-  user: Awaited<
-    ReturnType<typeof getAdminUser>
-  >
+	user: Awaited<ReturnType<typeof getAdminUser>>;
 }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UserRound className="size-5" />
-          Profile Information
-        </CardTitle>
-      </CardHeader>
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle className="flex items-center gap-2">
+					<UserRound className="size-5" />
+					Profile Information
+				</CardTitle>
+			</CardHeader>
 
-      <CardContent className="grid gap-x-12 gap-y-6 md:grid-cols-2">
-        <InfoField
-          label="Name"
-          value={user.name}
-        />
+			<CardContent className="grid gap-x-12 gap-y-6 md:grid-cols-2">
+				<InfoField label="Name" value={user.name} />
 
-        <InfoField
-          label="Status"
-          value={
-            user.banned
-              ? "Banned"
-              : "Active"
-          }
-        />
+				<InfoField label="Status" value={user.banned ? "Banned" : "Active"} />
 
-        <InfoField
-          label="Email"
-          value={user.email}
-        />
+				<InfoField label="Email" value={user.email} />
 
-        <InfoField
-          label="Joined"
-          value={formatDate(
-            user.createdAt
-          )}
-        />
+				<InfoField label="Joined" value={formatDate(user.createdAt)} />
 
-        <InfoField
-          label="User ID"
-          value={user.id}
-        />
+				<InfoField label="User ID" value={user.id} />
 
-        <InfoField
-          label="Role"
-          value={user.role ?? "user"}
-        />
+				<InfoField label="Role" value={user.role ?? "user"} />
 
-        <InfoField
-          label="Username"
-          value={user.username ?? "—"}
-        />
+				<InfoField label="Username" value={user.username ?? "—"} />
 
-        <InfoField
-          label="Display Username"
-          value={
-            user.displayUsername ??
-            "—"
-          }
-        />
-      </CardContent>
-    </Card>
-  )
+				<InfoField
+					label="Display Username"
+					value={user.displayUsername ?? "—"}
+				/>
+			</CardContent>
+		</Card>
+	);
 }
 
 function ConnectedAccountsCard({
-  accounts
+	accounts,
 }: {
-  accounts: Array<{
-    id: string
-    accountId: string
-    providerId: string
-    createdAt: Date
-  }>
+	accounts: Array<{
+		id: string;
+		accountId: string;
+		providerId: string;
+		createdAt: Date;
+	}>;
 }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Connected Accounts
-        </CardTitle>
-      </CardHeader>
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>Connected Accounts</CardTitle>
+			</CardHeader>
 
-      <CardContent>
-        {accounts.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            No connected accounts
-          </div>
-        ) : (
-          <ItemGroup className="gap-0">
-            {accounts.map(
-              (account, index) => (
-                <div key={account.id}>
-                  {index > 0 && (
-                    <ItemSeparator />
-                  )}
+			<CardContent>
+				{accounts.length === 0 ? (
+					<div className="py-10 text-center text-sm text-muted-foreground">
+						No connected accounts
+					</div>
+				) : (
+					<ItemGroup className="gap-0">
+						{accounts.map((account, index) => (
+							<div key={account.id}>
+								{index > 0 && <ItemSeparator />}
 
-                  <Item>
-                    <ItemMedia variant="icon">
-                      <KeyRound />
-                    </ItemMedia>
+								<Item>
+									<ItemMedia variant="icon">
+										<KeyRound />
+									</ItemMedia>
 
-                    <ItemContent>
-                      <ItemTitle>
-                        {formatProvider(
-                          account.providerId
-                        )}
-                      </ItemTitle>
+									<ItemContent>
+										<ItemTitle>{formatProvider(account.providerId)}</ItemTitle>
 
-                      <ItemDescription>
-                        {account.providerId ===
-                        "credential"
-                          ? "Password authentication"
-                          : account.accountId}
-                      </ItemDescription>
-                    </ItemContent>
-                  </Item>
-                </div>
-              )
-            )}
-          </ItemGroup>
-        )}
-      </CardContent>
-    </Card>
-  )
+										<ItemDescription>
+											{account.providerId === "credential"
+												? "Password authentication"
+												: account.accountId}
+										</ItemDescription>
+									</ItemContent>
+								</Item>
+							</div>
+						))}
+					</ItemGroup>
+				)}
+			</CardContent>
+		</Card>
+	);
 }
 
 function OrganizationsCard({
-  organizations
+	organizations,
 }: {
-  organizations: Array<{
-    id: string
-    memberId: string
-    name: string
-    slug: string
-    logo: string | null
-    role: string
-    joinedAt: Date
-  }>
+	organizations: Array<{
+		id: string;
+		memberId: string;
+		name: string;
+		slug: string;
+		logo: string | null;
+		role: string;
+		joinedAt: Date;
+	}>;
 }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Organizations
-        </CardTitle>
-      </CardHeader>
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>Organizations</CardTitle>
+			</CardHeader>
 
-      <CardContent>
-        {organizations.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            Not a member of any organizations
-          </div>
-        ) : (
-          <ItemGroup className="gap-0">
-            {organizations.map(
-              (
-                organization,
-                index
-              ) => (
-                <div
-                  key={
-                    organization.id
-                  }
-                >
-                  {index > 0 && (
-                    <ItemSeparator />
-                  )}
+			<CardContent>
+				{organizations.length === 0 ? (
+					<div className="py-10 text-center text-sm text-muted-foreground">
+						Not a member of any organizations
+					</div>
+				) : (
+					<ItemGroup className="gap-0">
+						{organizations.map((organization, index) => (
+							<div key={organization.id}>
+								{index > 0 && <ItemSeparator />}
 
-                  <Item>
-                    <ItemMedia variant="icon">
-                      <Building2 />
-                    </ItemMedia>
+								<Item>
+									<ItemMedia variant="icon">
+										<Building2 />
+									</ItemMedia>
 
-                    <ItemContent>
-                      <ItemTitle>
-                        {
-                          organization.name
-                        }
-                      </ItemTitle>
+									<ItemContent>
+										<ItemTitle>{organization.name}</ItemTitle>
 
-                      <ItemDescription>
-                        {
-                          organization.slug
-                        }
-                        {" · "}
-                        {
-                          organization.role
-                        }
-                        {" · Joined "}
-                        {formatDate(
-                          organization.joinedAt
-                        )}
-                      </ItemDescription>
-                    </ItemContent>
-                  </Item>
-                </div>
-              )
-            )}
-          </ItemGroup>
-        )}
-      </CardContent>
-    </Card>
-  )
+										<ItemDescription>
+											{organization.slug}
+											{" · "}
+											{organization.role}
+											{" · Joined "}
+											{formatDate(organization.joinedAt)}
+										</ItemDescription>
+									</ItemContent>
+								</Item>
+							</div>
+						))}
+					</ItemGroup>
+				)}
+			</CardContent>
+		</Card>
+	);
 }
 
 function PlaceholderCard({
-  title,
-  description
+	title,
+	description,
 }: {
-  title: string
-  description: string
+	title: string;
+	description: string;
 }) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {title}
-        </CardTitle>
-      </CardHeader>
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>{title}</CardTitle>
+			</CardHeader>
 
-      <CardContent className="text-sm text-muted-foreground">
-        {description}
-      </CardContent>
-    </Card>
-  )
+			<CardContent className="text-sm text-muted-foreground">
+				{description}
+			</CardContent>
+		</Card>
+	);
 }
 
-function InfoField({
-  label,
-  value
-}: {
-  label: string
-  value: string
-}) {
-  return (
-    <div className="min-w-0 space-y-1">
-      <div className="text-sm text-muted-foreground">
-        {label}
-      </div>
+function InfoField({ label, value }: { label: string; value: string }) {
+	return (
+		<div className="min-w-0 space-y-1">
+			<div className="text-sm text-muted-foreground">{label}</div>
 
-      <div className="break-all text-sm">
-        {value}
-      </div>
-    </div>
-  )
+			<div className="break-all text-sm">{value}</div>
+		</div>
+	);
 }
 
-function formatDate(
-  value: Date
-) {
-  return new Intl.DateTimeFormat(
-    undefined,
-    {
-      dateStyle: "medium",
-      timeStyle: "short"
-    }
-  ).format(
-    new Date(value)
-  )
+function formatDate(value: Date) {
+	return new Intl.DateTimeFormat(undefined, {
+		dateStyle: "medium",
+		timeStyle: "short",
+	}).format(new Date(value));
 }
 
-function formatProvider(
-  providerId: string
-) {
-  if (
-    providerId === "credential"
-  ) {
-    return "Email & Password"
-  }
+function formatProvider(providerId: string) {
+	if (providerId === "credential") {
+		return "Email & Password";
+	}
 
-  return providerId
-    .split(/[-_]/g)
-    .map(
-      (part) =>
-        part.charAt(0)
-          .toUpperCase() +
-        part.slice(1)
-    )
-    .join(" ")
+	return providerId
+		.split(/[-_]/g)
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join(" ");
 }

@@ -1,128 +1,101 @@
-import type { Pool } from "pg"
-import type { BetterAuthPlugin } from "better-auth"
-import {
-  createAuthEndpoint,
-  sessionMiddleware
-} from "better-auth/api"
-import * as z from "zod"
+import type { Pool } from "pg";
+import type { BetterAuthPlugin } from "better-auth";
+import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
+import * as z from "zod";
 
-import {
-  INTEGRATION_IDS
-} from "./registry.js"
+import { INTEGRATION_IDS } from "./registry.js";
 
 type IntegrationManagerOptions = {
-  pool: Pool
-}
+	pool: Pool;
+};
 
 type UserRoleRow = {
-  role: string | null
-}
+	role: string | null;
+};
 
 type OrganizationRoleRow = {
-  role: string
-}
+	role: string;
+};
 
 export type SyncDirection =
-  | "to-better-auth"
-  | "from-better-auth"
-  | "bidirectional"
+	| "to-better-auth"
+	| "from-better-auth"
+	| "bidirectional";
 
 type OrganizationIntegrationRow = {
-  id: string
-  organizationId: string
-  pluginId: string
-  enabled: boolean
-  useGlobalConfiguration:
-    boolean
-  syncDirection:
-    SyncDirection
-}
+	id: string;
+	organizationId: string;
+	pluginId: string;
+	enabled: boolean;
+	useGlobalConfiguration: boolean;
+	syncDirection: SyncDirection;
+};
 
-const pluginIdSchema =
-  z.enum(INTEGRATION_IDS)
+const pluginIdSchema = z.enum(INTEGRATION_IDS);
 
-const syncDirectionSchema =
-  z.enum([
-    "to-better-auth",
-    "from-better-auth",
-    "bidirectional"
-  ])
+const syncDirectionSchema = z.enum([
+	"to-better-auth",
+	"from-better-auth",
+	"bidirectional",
+]);
 
-const listOrganizationsQuerySchema =
-  z.object({
-    pluginId: pluginIdSchema
-  })
+const listOrganizationsQuerySchema = z.object({
+	pluginId: pluginIdSchema,
+});
 
-const organizationIntegrationsQuerySchema =
-  z.object({
-    organizationId:
-      z.string().min(1)
-  })
+const organizationIntegrationsQuerySchema = z.object({
+	organizationId: z.string().min(1),
+});
 
-const setEnabledBodySchema =
-  z.object({
-    pluginId: pluginIdSchema,
-    organizationId:
-      z.string().min(1),
-    enabled: z.boolean()
-  })
+const setEnabledBodySchema = z.object({
+	pluginId: pluginIdSchema,
+	organizationId: z.string().min(1),
+	enabled: z.boolean(),
+});
 
-const setConfigurationSourceBodySchema =
-  z.object({
-    pluginId: pluginIdSchema,
-    organizationId:
-      z.string().min(1),
-    useGlobalConfiguration:
-      z.boolean()
-  })
+const setConfigurationSourceBodySchema = z.object({
+	pluginId: pluginIdSchema,
+	organizationId: z.string().min(1),
+	useGlobalConfiguration: z.boolean(),
+});
 
-const setSyncDirectionBodySchema =
-  z.object({
-    pluginId: pluginIdSchema,
-    organizationId:
-      z.string().min(1),
-    syncDirection:
-      syncDirectionSchema
-  })
+const setSyncDirectionBodySchema = z.object({
+	pluginId: pluginIdSchema,
+	organizationId: z.string().min(1),
+	syncDirection: syncDirectionSchema,
+});
 
 async function isGlobalAdmin(
-  pool: Pool,
-  userId: string
+	pool: Pool,
+	userId: string,
+	allowReadOnly = false,
 ) {
-  const result =
-    await pool.query<UserRoleRow>(
-      `
+	const result = await pool.query<UserRoleRow>(
+		`
         SELECT role
         FROM "user"
         WHERE id = $1
         LIMIT 1
       `,
-      [userId]
-    )
+		[userId],
+	);
 
-  return (
-    result.rows[0]?.role ===
-    "admin"
-  )
+	const role = result.rows[0]?.role;
+
+	return role === "admin" || (allowReadOnly && role === "admin-viewer");
 }
-
 async function canManageOrganization(
-  pool: Pool,
-  userId: string,
-  organizationId: string
+	pool: Pool,
+	userId: string,
+	organizationId: string,
+	allowReadOnly = false,
 ) {
-  if (
-    await isGlobalAdmin(
-      pool,
-      userId
-    )
-  ) {
-    return true
-  }
+	if (await isGlobalAdmin(pool, userId, allowReadOnly)) {
+		return true;
+	}
 
-  const result =
-    await pool.query<OrganizationRoleRow>(
-      `
+	const result = await pool.query<OrganizationRoleRow>(
+		`
         SELECT role
         FROM member
         WHERE
@@ -130,79 +103,63 @@ async function canManageOrganization(
           AND "userId" = $2
         LIMIT 1
       `,
-      [
-        organizationId,
-        userId
-      ]
-    )
+		[organizationId, userId],
+	);
 
-  const role =
-    result.rows[0]?.role
+	const role = result.rows[0]?.role;
 
-  return (
-    role === "owner" ||
-    role === "admin"
-  )
+	return role === "owner" || role === "admin";
 }
 
-async function assertOrganizationExists(
-  pool: Pool,
-  organizationId: string
-) {
-  const result =
-    await pool.query<{
-      id: string
-    }>(
-      `
+async function assertOrganizationExists(pool: Pool, organizationId: string) {
+	const result = await pool.query<{
+		id: string;
+	}>(
+		`
         SELECT id
         FROM organization
         WHERE id = $1
         LIMIT 1
       `,
-      [organizationId]
-    )
+		[organizationId],
+	);
 
-  return result.rowCount === 1
+	return result.rowCount === 1;
 }
 
 async function setIntegrationEnabled({
-  pool,
-  organizationId,
-  pluginId,
-  enabled
+	pool,
+	organizationId,
+	pluginId,
+	enabled,
 }: {
-  pool: Pool
-  organizationId: string
-  pluginId:
-    (typeof INTEGRATION_IDS)[number]
-  enabled: boolean
+	pool: Pool;
+	organizationId: string;
+	pluginId: (typeof INTEGRATION_IDS)[number];
+	enabled: boolean;
 }) {
-  const client =
-    await pool.connect()
+	const client = await pool.connect();
 
-  try {
-    await client.query(
-      "BEGIN"
-    )
+	try {
+		await client.query("BEGIN");
 
-    /*
-     * Better Auth 1.6.x does not support declaring
-     * a composite unique index in a custom plugin
-     * schema.
-     *
-     * Serialize writes to this small configuration
-     * table so update-then-insert cannot create
-     * duplicate organization/plugin rows.
-     */
-    await client.query(`
+		/*
+		 * Better Auth 1.6.x does not support declaring
+		 * a composite unique index in a custom plugin
+		 * schema.
+		 *
+		 * Serialize writes to this small configuration
+		 * table so update-then-insert cannot create
+		 * duplicate organization/plugin rows.
+		 */
+		await client.query(`
       LOCK TABLE
         "organizationIntegration"
       IN SHARE ROW EXCLUSIVE MODE
-    `)
+    `);
 
-    const updated =
-      await client.query<OrganizationIntegrationRow>(
-        `
+		const updated = await client.query<OrganizationIntegrationRow>(
+			`
           UPDATE
             "organizationIntegration"
           SET
@@ -224,27 +181,17 @@ async function setIntegrationEnabled({
               'to-better-auth'
             ) AS "syncDirection"
         `,
-        [
-          organizationId,
-          pluginId,
-          enabled
-        ]
-      )
+			[organizationId, pluginId, enabled],
+		);
 
-    if (
-      updated.rowCount ===
-      1
-    ) {
-      await client.query(
-        "COMMIT"
-      )
+		if (updated.rowCount === 1) {
+			await client.query("COMMIT");
 
-      return updated.rows[0]!
-    }
+			return updated.rows[0]!;
+		}
 
-    const inserted =
-      await client.query<OrganizationIntegrationRow>(
-        `
+		const inserted = await client.query<OrganizationIntegrationRow>(
+			`
           INSERT INTO
             "organizationIntegration" (
               id,
@@ -274,58 +221,45 @@ async function setIntegrationEnabled({
               'to-better-auth'
             ) AS "syncDirection"
         `,
-        [
-          organizationId,
-          pluginId,
-          enabled
-        ]
-      )
+			[organizationId, pluginId, enabled],
+		);
 
-    await client.query(
-      "COMMIT"
-    )
+		await client.query("COMMIT");
 
-    return inserted.rows[0]!
-  } catch (error) {
-    await client.query(
-      "ROLLBACK"
-    )
+		return inserted.rows[0]!;
+	} catch (error) {
+		await client.query("ROLLBACK");
 
-    throw error
-  } finally {
-    client.release()
-  }
+		throw error;
+	} finally {
+		client.release();
+	}
 }
 
 async function setIntegrationConfigurationSource({
-  pool,
-  organizationId,
-  pluginId,
-  useGlobalConfiguration
+	pool,
+	organizationId,
+	pluginId,
+	useGlobalConfiguration,
 }: {
-  pool: Pool
-  organizationId: string
-  pluginId:
-    (typeof INTEGRATION_IDS)[number]
-  useGlobalConfiguration: boolean
+	pool: Pool;
+	organizationId: string;
+	pluginId: (typeof INTEGRATION_IDS)[number];
+	useGlobalConfiguration: boolean;
 }) {
-  const client =
-    await pool.connect()
+	const client = await pool.connect();
 
-  try {
-    await client.query(
-      "BEGIN"
-    )
+	try {
+		await client.query("BEGIN");
 
-    await client.query(`
+		await client.query(`
       LOCK TABLE
         "organizationIntegration"
       IN SHARE ROW EXCLUSIVE MODE
-    `)
+    `);
 
-    const updated =
-      await client.query<OrganizationIntegrationRow>(
-        `
+		const updated = await client.query<OrganizationIntegrationRow>(
+			`
           UPDATE
             "organizationIntegration"
           SET
@@ -348,27 +282,17 @@ async function setIntegrationConfigurationSource({
               'to-better-auth'
             ) AS "syncDirection"
         `,
-        [
-          organizationId,
-          pluginId,
-          useGlobalConfiguration
-        ]
-      )
+			[organizationId, pluginId, useGlobalConfiguration],
+		);
 
-    if (
-      updated.rowCount ===
-      1
-    ) {
-      await client.query(
-        "COMMIT"
-      )
+		if (updated.rowCount === 1) {
+			await client.query("COMMIT");
 
-      return updated.rows[0]!
-    }
+			return updated.rows[0]!;
+		}
 
-    const inserted =
-      await client.query<OrganizationIntegrationRow>(
-        `
+		const inserted = await client.query<OrganizationIntegrationRow>(
+			`
           INSERT INTO
             "organizationIntegration" (
               id,
@@ -398,59 +322,45 @@ async function setIntegrationConfigurationSource({
               'to-better-auth'
             ) AS "syncDirection"
         `,
-        [
-          organizationId,
-          pluginId,
-          useGlobalConfiguration
-        ]
-      )
+			[organizationId, pluginId, useGlobalConfiguration],
+		);
 
-    await client.query(
-      "COMMIT"
-    )
+		await client.query("COMMIT");
 
-    return inserted.rows[0]!
-  } catch (error) {
-    await client.query(
-      "ROLLBACK"
-    )
+		return inserted.rows[0]!;
+	} catch (error) {
+		await client.query("ROLLBACK");
 
-    throw error
-  } finally {
-    client.release()
-  }
+		throw error;
+	} finally {
+		client.release();
+	}
 }
 
 async function setIntegrationSyncDirection({
-  pool,
-  organizationId,
-  pluginId,
-  syncDirection
+	pool,
+	organizationId,
+	pluginId,
+	syncDirection,
 }: {
-  pool: Pool
-  organizationId: string
-  pluginId:
-    (typeof INTEGRATION_IDS)[number]
-  syncDirection:
-    SyncDirection
+	pool: Pool;
+	organizationId: string;
+	pluginId: (typeof INTEGRATION_IDS)[number];
+	syncDirection: SyncDirection;
 }) {
-  const client =
-    await pool.connect()
+	const client = await pool.connect();
 
-  try {
-    await client.query(
-      "BEGIN"
-    )
+	try {
+		await client.query("BEGIN");
 
-    await client.query(`
+		await client.query(`
       LOCK TABLE
         "organizationIntegration"
       IN SHARE ROW EXCLUSIVE MODE
-    `)
+    `);
 
-    const updated =
-      await client.query<OrganizationIntegrationRow>(
-        `
+		const updated = await client.query<OrganizationIntegrationRow>(
+			`
           UPDATE
             "organizationIntegration"
           SET
@@ -472,27 +382,17 @@ async function setIntegrationSyncDirection({
               'to-better-auth'
             ) AS "syncDirection"
         `,
-        [
-          organizationId,
-          pluginId,
-          syncDirection
-        ]
-      )
+			[organizationId, pluginId, syncDirection],
+		);
 
-    if (
-      updated.rowCount ===
-      1
-    ) {
-      await client.query(
-        "COMMIT"
-      )
+		if (updated.rowCount === 1) {
+			await client.query("COMMIT");
 
-      return updated.rows[0]!
-    }
+			return updated.rows[0]!;
+		}
 
-    const inserted =
-      await client.query<OrganizationIntegrationRow>(
-        `
+		const inserted = await client.query<OrganizationIntegrationRow>(
+			`
           INSERT INTO
             "organizationIntegration" (
               id,
@@ -524,87 +424,64 @@ async function setIntegrationSyncDirection({
               'to-better-auth'
             ) AS "syncDirection"
         `,
-        [
-          organizationId,
-          pluginId,
-          syncDirection
-        ]
-      )
+			[organizationId, pluginId, syncDirection],
+		);
 
-    await client.query(
-      "COMMIT"
-    )
+		await client.query("COMMIT");
 
-    return inserted.rows[0]!
-  } catch (error) {
-    await client.query(
-      "ROLLBACK"
-    )
+		return inserted.rows[0]!;
+	} catch (error) {
+		await client.query("ROLLBACK");
 
-    throw error
-  } finally {
-    client.release()
-  }
+		throw error;
+	} finally {
+		client.release();
+	}
 }
 
+export const integrationManager = ({ pool }: IntegrationManagerOptions) =>
+	({
+		id: "integration-manager",
 
-export const integrationManager = ({
-  pool
-}: IntegrationManagerOptions) =>
-  ({
-    id: "integration-manager",
+		endpoints: {
+			listIntegrationOrganizations: createAuthEndpoint(
+				"/integration-manager/organizations",
+				{
+					method: "GET",
+					use: [sessionMiddleware],
+					query: listOrganizationsQuerySchema,
+				},
+				async (ctx) => {
+					const session = ctx.context.session;
 
-    endpoints: {
-      listIntegrationOrganizations:
-        createAuthEndpoint(
-          "/integration-manager/organizations",
-          {
-            method: "GET",
-            use: [
-              sessionMiddleware
-            ],
-            query:
-              listOrganizationsQuerySchema
-          },
-          async (ctx) => {
-            const session =
-              ctx.context.session
+					const allowed = await isGlobalAdmin(
+						pool,
+						ctx.context.session.user.id,
+						true,
+					);
 
-            const allowed =
-              await isGlobalAdmin(
-                pool,
-                session.user.id
-              )
+					if (!allowed) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
 
-            if (!allowed) {
-              return ctx.json(
-                {
-                  error:
-                    "Forbidden"
-                },
-                {
-                  status: 403
-                }
-              )
-            }
-
-            const result =
-              await pool.query<{
-                id: string
-                name: string
-                slug: string
-                logo:
-                  | string
-                  | null
-                enabled: boolean
-                useGlobalConfiguration:
-                  boolean
-                csvSourceId:
-                  string | null
-                csvSourceName:
-                  string | null
-              }>(
-                `
+					const result = await pool.query<{
+						id: string;
+						name: string;
+						slug: string;
+						logo: string | null;
+						enabled: boolean;
+						useGlobalConfiguration: boolean;
+						csvSourceId: string | null;
+						csvSourceName: string | null;
+					}>(
+						`
                   SELECT
                     o.id,
                     o.name,
@@ -647,72 +524,55 @@ export const integrationManager = ({
                   ORDER BY
                     o.name ASC
                 `,
-                [
-                  ctx.query.pluginId
-                ]
-              )
+						[ctx.query.pluginId],
+					);
 
-            return ctx.json({
-              pluginId:
-                ctx.query.pluginId,
-              organizations:
-                result.rows
-            })
-          }
-        ),
+					return ctx.json({
+						pluginId: ctx.query.pluginId,
+						organizations: result.rows,
+					});
+				},
+			),
 
-      getOrganizationIntegrations:
-        createAuthEndpoint(
-          "/integration-manager/organization",
-          {
-            method: "GET",
-            use: [
-              sessionMiddleware
-            ],
-            query:
-              organizationIntegrationsQuerySchema
-          },
-          async (ctx) => {
-            const session =
-              ctx.context.session
+			getOrganizationIntegrations: createAuthEndpoint(
+				"/integration-manager/organization",
+				{
+					method: "GET",
+					use: [sessionMiddleware],
+					query: organizationIntegrationsQuerySchema,
+				},
+				async (ctx) => {
+					const session = ctx.context.session;
 
-            const {
-              organizationId
-            } = ctx.query
+					const { organizationId } = ctx.query;
 
-            const allowed =
-              await canManageOrganization(
-                pool,
-                session.user.id,
-                organizationId
-              )
+					const allowed = await canManageOrganization(
+						pool,
+						ctx.context.session.user.id,
+						organizationId,
+						true,
+					);
 
-            if (!allowed) {
-              return ctx.json(
-                {
-                  error:
-                    "Forbidden"
-                },
-                {
-                  status: 403
-                }
-              )
-            }
+					if (!allowed) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
 
-            const result =
-              await pool.query<{
-                pluginId: string
-                enabled: boolean
-                useGlobalConfiguration:
-                  boolean
-                csvSourceId:
-                  string | null
-                csvSourceName:
-                  string | null
-              syncDirection:
-                SyncDirection
-              }>(
-                `
+					const result = await pool.query<{
+						pluginId: string;
+						enabled: boolean;
+						useGlobalConfiguration: boolean;
+						csvSourceId: string | null;
+						csvSourceName: string | null;
+						syncDirection: SyncDirection;
+					}>(
+						`
                   SELECT
                     oi."pluginId",
                     oi.enabled,
@@ -749,278 +609,220 @@ export const integrationManager = ({
                   ORDER BY
                     oi."pluginId" ASC
                 `,
-                [
-                  organizationId
-                ]
-              )
+						[organizationId],
+					);
 
-            return ctx.json({
-              organizationId,
-              integrations:
-                result.rows
-            })
-          }
-        ),
+					return ctx.json({
+						organizationId,
+						integrations: result.rows,
+					});
+				},
+			),
 
-      setOrganizationIntegrationEnabled:
-        createAuthEndpoint(
-          "/integration-manager/set-enabled",
-          {
-            method: "POST",
-            use: [
-              sessionMiddleware
-            ],
-            body:
-              setEnabledBodySchema
-          },
-          async (ctx) => {
-            const session =
-              ctx.context.session
+			setOrganizationIntegrationEnabled: createAuthEndpoint(
+				"/integration-manager/set-enabled",
+				{
+					method: "POST",
+					use: [sessionMiddleware],
+					body: setEnabledBodySchema,
+				},
+				async (ctx) => {
+					const session = ctx.context.session;
 
-            const {
-              pluginId,
-              organizationId,
-              enabled
-            } = ctx.body
+					const { pluginId, organizationId, enabled } = ctx.body;
 
-            const allowed =
-              await canManageOrganization(
-                pool,
-                session.user.id,
-                organizationId
-              )
+					const allowed = await canManageOrganization(
+						pool,
+						session.user.id,
+						organizationId,
+					);
 
-            if (!allowed) {
-              return ctx.json(
-                {
-                  error:
-                    "Forbidden"
-                },
-                {
-                  status: 403
-                }
-              )
-            }
+					if (!allowed) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
 
-            const exists =
-              await assertOrganizationExists(
-                pool,
-                organizationId
-              )
+					const exists = await assertOrganizationExists(pool, organizationId);
 
-            if (!exists) {
-              return ctx.json(
-                {
-                  error:
-                    "Organization not found"
-                },
-                {
-                  status: 404
-                }
-              )
-            }
+					if (!exists) {
+						return ctx.json(
+							{
+								error: "Organization not found",
+							},
+							{
+								status: 404,
+							},
+						);
+					}
 
-            const integration =
-              await setIntegrationEnabled({
-                pool,
-                organizationId,
-                pluginId,
-                enabled
-              })
+					const integration = await setIntegrationEnabled({
+						pool,
+						organizationId,
+						pluginId,
+						enabled,
+					});
 
-            return ctx.json({
-              integration
-            })
-          }
-        ),
+					return ctx.json({
+						integration,
+					});
+				},
+			),
 
-      setOrganizationIntegrationConfigurationSource:
-        createAuthEndpoint(
-          "/integration-manager/set-configuration-source",
-          {
-            method: "POST",
-            use: [
-              sessionMiddleware
-            ],
-            body:
-              setConfigurationSourceBodySchema
-          },
-          async (ctx) => {
-            const session =
-              ctx.context.session
+			setOrganizationIntegrationConfigurationSource: createAuthEndpoint(
+				"/integration-manager/set-configuration-source",
+				{
+					method: "POST",
+					use: [sessionMiddleware],
+					body: setConfigurationSourceBodySchema,
+				},
+				async (ctx) => {
+					const session = ctx.context.session;
 
-            const {
-              pluginId,
-              organizationId,
-              useGlobalConfiguration
-            } = ctx.body
+					const { pluginId, organizationId, useGlobalConfiguration } = ctx.body;
 
-            const allowed =
-              await canManageOrganization(
-                pool,
-                session.user.id,
-                organizationId
-              )
+					const allowed = await canManageOrganization(
+						pool,
+						session.user.id,
+						organizationId,
+					);
 
-            if (!allowed) {
-              return ctx.json(
-                {
-                  error:
-                    "Forbidden"
-                },
-                {
-                  status: 403
-                }
-              )
-            }
+					if (!allowed) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
 
-            const exists =
-              await assertOrganizationExists(
-                pool,
-                organizationId
-              )
+					const exists = await assertOrganizationExists(pool, organizationId);
 
-            if (!exists) {
-              return ctx.json(
-                {
-                  error:
-                    "Organization not found"
-                },
-                {
-                  status: 404
-                }
-              )
-            }
+					if (!exists) {
+						return ctx.json(
+							{
+								error: "Organization not found",
+							},
+							{
+								status: 404,
+							},
+						);
+					}
 
-            const integration =
-              await setIntegrationConfigurationSource({
-                pool,
-                organizationId,
-                pluginId,
-                useGlobalConfiguration
-              })
+					const integration = await setIntegrationConfigurationSource({
+						pool,
+						organizationId,
+						pluginId,
+						useGlobalConfiguration,
+					});
 
-            return ctx.json({
-              integration
-            })
-          }
-        ),
+					return ctx.json({
+						integration,
+					});
+				},
+			),
 
-    setOrganizationIntegrationSyncDirection:
-      createAuthEndpoint(
-        "/integration-manager/set-sync-direction",
-        {
-          method: "POST",
-          use: [
-            sessionMiddleware
-          ],
-          body:
-            setSyncDirectionBodySchema
-        },
-        async (ctx) => {
-          const session =
-            ctx.context.session
+			setOrganizationIntegrationSyncDirection: createAuthEndpoint(
+				"/integration-manager/set-sync-direction",
+				{
+					method: "POST",
+					use: [sessionMiddleware],
+					body: setSyncDirectionBodySchema,
+				},
+				async (ctx) => {
+					const session = ctx.context.session;
 
-          const {
-            pluginId,
-            organizationId,
-            syncDirection
-          } = ctx.body
+					const { pluginId, organizationId, syncDirection } = ctx.body;
 
-          const allowed =
-            await canManageOrganization(
-              pool,
-              session.user.id,
-              organizationId
-            )
+					const allowed = await canManageOrganization(
+						pool,
+						session.user.id,
+						organizationId,
+					);
 
-          if (!allowed) {
-            return ctx.json(
-              {
-                error:
-                  "Forbidden"
-              },
-              {
-                status: 403
-              }
-            )
-          }
+					if (!allowed) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
 
-          const exists =
-            await assertOrganizationExists(
-              pool,
-              organizationId
-            )
+					const exists = await assertOrganizationExists(pool, organizationId);
 
-          if (!exists) {
-            return ctx.json(
-              {
-                error:
-                  "Organization not found"
-              },
-              {
-                status: 404
-              }
-            )
-          }
+					if (!exists) {
+						return ctx.json(
+							{
+								error: "Organization not found",
+							},
+							{
+								status: 404,
+							},
+						);
+					}
 
-          const integration =
-            await setIntegrationSyncDirection({
-              pool,
-              organizationId,
-              pluginId,
-              syncDirection
-            })
+					const integration = await setIntegrationSyncDirection({
+						pool,
+						organizationId,
+						pluginId,
+						syncDirection,
+					});
 
-          return ctx.json({
-            integration
-          })
-        }
-      )
+					return ctx.json({
+						integration,
+					});
+				},
+			),
+		},
 
-    },
+		schema: {
+			organizationIntegration: {
+				modelName: "organizationIntegration",
 
-    schema: {
-      organizationIntegration: {
-        modelName:
-          "organizationIntegration",
+				fields: {
+					organizationId: {
+						type: "string",
+						required: true,
+						references: {
+							model: "organization",
+							field: "id",
+							onDelete: "cascade",
+						},
+					},
 
-        fields: {
-          organizationId: {
-            type: "string",
-            required: true,
-            references: {
-              model:
-                "organization",
-              field: "id",
-              onDelete:
-                "cascade"
-            }
-          },
+					pluginId: {
+						type: "string",
+						required: true,
+					},
 
-          pluginId: {
-            type: "string",
-            required: true
-          },
+					enabled: {
+						type: "boolean",
+						required: true,
+						defaultValue: false,
+					},
 
-          enabled: {
-            type: "boolean",
-            required: true,
-            defaultValue: false
-          },
+					useGlobalConfiguration: {
+						type: "boolean",
+						required: false,
+						defaultValue: false,
+					},
 
-          useGlobalConfiguration: {
-            type: "boolean",
-            required: false,
-            defaultValue: false
-          },
-
-          syncDirection: {
-            type: "string",
-            required: true,
-            defaultValue: "to-better-auth"
-          }
-        }
-      }
-    }
-  }) satisfies BetterAuthPlugin
+					syncDirection: {
+						type: "string",
+						required: true,
+						defaultValue: "to-better-auth",
+					},
+				},
+			},
+		},
+	}) satisfies BetterAuthPlugin;

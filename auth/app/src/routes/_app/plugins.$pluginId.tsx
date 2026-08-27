@@ -1,261 +1,167 @@
-import {
-  createFileRoute,
-  Link
-} from "@tanstack/react-router"
+import { createFileRoute, Link } from "@tanstack/react-router";
 
-import {
-  GlauthSources
-} from "@/components/admin/plugins/glauth-sources"
-import {
-  IntegrationLogo
-} from "@/components/admin/plugins/integration-logo"
-import {
-  PluginOrganizations
-} from "@/components/admin/plugins/plugin-organizations"
-import {
-  getPluginIcon
-} from "@/components/admin/plugins/plugin-card"
-import {
-  PluginPlaceholderConfig
-} from "@/components/admin/plugins/plugin-placeholder-config"
-import {
-  SevenShiftsApiSources
-} from "@/components/admin/plugins/seven-shifts-api-sources"
-import {
-  SevenShiftsCsvSources
-} from "@/components/admin/plugins/seven-shifts-csv-sources"
-import {
-  UnifiApi
-} from "@/components/admin/plugins/unifi-api"
-import {
-  Badge
-} from "@/components/ui/badge"
-import {
-  Card,
-  CardContent
-} from "@/components/ui/card"
-import {
-  getAdminGlauthSources,
-  getAdminPlugin
-} from "@/lib/admin/plugins"
+import { GlauthSources } from "@/components/admin/plugins/glauth-sources";
+import { AdminWriteBoundary } from "@/components/auth/admin/admin-access-context";
+import { IntegrationLogo } from "@/components/admin/plugins/integration-logo";
+import { PluginOrganizations } from "@/components/admin/plugins/plugin-organizations";
+import { getPluginIcon } from "@/components/admin/plugins/plugin-card";
+import { PluginPlaceholderConfig } from "@/components/admin/plugins/plugin-placeholder-config";
+import { SevenShiftsApiSources } from "@/components/admin/plugins/seven-shifts-api-sources";
+import { SevenShiftsCsvSources } from "@/components/admin/plugins/seven-shifts-csv-sources";
+import { UnifiApi } from "@/components/admin/plugins/unifi-api";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { getAdminGlauthSources, getAdminPlugin } from "@/lib/admin/plugins";
 import type {
-  CatalogIntegrationId,
-  PlannedIntegrationId
-} from "@/lib/plugins/integration-manager/registry"
+	CatalogIntegrationId,
+	PlannedIntegrationId,
+} from "@/lib/plugins/integration-manager/registry";
 
-export const Route =
-  createFileRoute(
-    "/_app/plugins/$pluginId"
-  )({
-    loader: async ({
-      params
-    }) => {
-      const detail =
-        await getAdminPlugin({
-          data: {
-            pluginId:
-              params.pluginId
-          }
-        })
+export const Route = createFileRoute("/_app/plugins/$pluginId")({
+	loader: async ({ params }) => {
+		const detail = await getAdminPlugin({
+			data: {
+				pluginId: params.pluginId,
+			},
+		});
 
-      const glauthSources =
-        params.pluginId ===
-        "glauth"
-          ? await getAdminGlauthSources()
-          : []
+		const glauthSources =
+			params.pluginId === "glauth" ? await getAdminGlauthSources() : [];
 
-      return {
-        detail,
-        glauthSources
-      }
-    },
+		return {
+			detail,
+			glauthSources,
+		};
+	},
 
-    component:
-      PluginPage
-  })
+	component: PluginPage,
+});
 
 function PluginPage() {
-  const {
-    detail,
-    glauthSources
-  } = Route.useLoaderData()
+	const { detail, glauthSources } = Route.useLoaderData();
 
-  const Icon =
-    getPluginIcon(
-      detail.plugin.id
-    )
+	const Icon = getPluginIcon(detail.plugin.id);
 
-  const planned =
-    detail.plugin.status ===
-    "planned"
+	const planned = detail.plugin.status === "planned";
 
-  const hasBrandLogo =
-    hasIntegrationLogo(
-      detail.plugin.id
-    )
+	const hasBrandLogo = hasIntegrationLogo(detail.plugin.id);
 
-  return (
-    <div className="flex flex-1 flex-col">
-      <div className="border-b px-4 py-4 md:px-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link
-            to="/plugins"
-            className="hover:text-foreground"
-          >
-            Plugins & APIs
-          </Link>
+	return (
+		<div className="flex flex-1 flex-col">
+			<div className="border-b px-4 py-4 md:px-6">
+				<div className="flex items-center gap-2 text-sm text-muted-foreground">
+					<Link to="/plugins" className="hover:text-foreground">
+						Plugins & APIs
+					</Link>
 
-          <span>/</span>
+					<span>/</span>
 
-          <span className="text-foreground">
-            {
-              detail.plugin.name
-            }
-          </span>
-        </div>
-      </div>
+					<span className="text-foreground">{detail.plugin.name}</span>
+				</div>
+			</div>
 
-      <div className="flex-1 space-y-6 p-4 md:p-6">
-        <Card>
-          <CardContent className="flex flex-col gap-5 pt-6 sm:flex-row sm:items-start">
-            {hasBrandLogo ? (
-              <div className="flex h-12 min-w-12 shrink-0 items-center">
-                <IntegrationLogo
-                  pluginId={
-                    detail.plugin.id
-                  }
-                  name={
-                    detail.plugin.name
-                  }
-                />
-              </div>
-            ) : (
-              <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted">
-                <Icon className="size-6" />
-              </div>
-            )}
+			<div className="flex-1 space-y-6 p-4 md:p-6">
+				<Card>
+					<CardContent className="flex flex-col gap-5 pt-6 sm:flex-row sm:items-start">
+						{hasBrandLogo ? (
+							<div className="flex h-12 min-w-12 shrink-0 items-center">
+								<IntegrationLogo
+									pluginId={detail.plugin.id}
+									name={detail.plugin.name}
+								/>
+							</div>
+						) : (
+							<div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-muted">
+								<Icon className="size-6" />
+							</div>
+						)}
 
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="text-2xl font-semibold">
-                  {
-                    detail.plugin.name
-                  }
-                </h1>
+						<div className="min-w-0 flex-1">
+							<div className="flex flex-wrap items-center gap-3">
+								<h1 className="text-2xl font-semibold">{detail.plugin.name}</h1>
 
-                <Badge variant="outline">
-                  {
-                    detail.plugin.category
-                  }
-                </Badge>
+								<Badge variant="outline">{detail.plugin.category}</Badge>
 
-                {planned && (
-                  <Badge variant="secondary">
-                    Planned
-                  </Badge>
-                )}
-              </div>
+								{planned && <Badge variant="secondary">Planned</Badge>}
+							</div>
 
-              <p className="mt-2 text-muted-foreground">
-                {
-                  detail.plugin.description
-                }
-              </p>
+							<p className="mt-2 text-muted-foreground">
+								{detail.plugin.description}
+							</p>
 
-              <div className="mt-4 text-sm">
-                <span className="text-muted-foreground">
-                  Configuration:{" "}
-                </span>
+							<div className="mt-4 text-sm">
+								<span className="text-muted-foreground">Configuration: </span>
 
-                {
-                  detail.plugin.configurationLabel
-                }
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+								{detail.plugin.configurationLabel}
+							</div>
+						</div>
+					</CardContent>
+				</Card>
 
-        {planned ? (
-          <PluginPlaceholderConfig
-            pluginId={
-              detail.plugin.id as PlannedIntegrationId
-            }
-          />
-        ) : (
-          <>
-            {detail.plugin.id ===
-              "seven-shifts-csv" && (
-              <SevenShiftsCsvSources
-                sources={
-                  detail.csvSources
-                }
-              />
-            )}
+				{planned ? (
+					<AdminWriteBoundary>
+						<PluginPlaceholderConfig
+							pluginId={detail.plugin.id as PlannedIntegrationId}
+						/>
+					</AdminWriteBoundary>
+				) : (
+					<>
+						{detail.plugin.id === "seven-shifts-csv" && (
+							<AdminWriteBoundary>
+								<SevenShiftsCsvSources sources={detail.csvSources} />
+							</AdminWriteBoundary>
+						)}
 
-            {detail.plugin.id ===
-              "seven-shifts-api" && (
-              <SevenShiftsApiSources
-                sources={
-                  detail.apiSources
-                }
-                organizations={
-                  detail.organizations
-                }
-              />
-            )}
+						{detail.plugin.id === "seven-shifts-api" && (
+							<AdminWriteBoundary>
+								<SevenShiftsApiSources
+									sources={detail.apiSources}
+									organizations={detail.organizations}
+								/>
+							</AdminWriteBoundary>
+						)}
 
-            {detail.plugin.id ===
-              "unifi-api" ? (
-              <UnifiApi
-                accessSources={
-                  detail.unifiAccessSources
-                }
-                organizations={
-                  detail.organizations
-                }
-              />
-            ) : detail.plugin.id ===
-              "glauth" ? (
-              <GlauthSources
-                sources={
-                  glauthSources
-                }
-                organizations={
-                  detail.organizations
-                }
-              />
-            ) : detail.plugin.id !==
-              "seven-shifts-csv" &&
-              detail.plugin.id !==
-                "seven-shifts-api" ? (
-              <PluginOrganizations
-                detail={detail}
-              />
-            ) : null}
-          </>
-        )}
-      </div>
-    </div>
-  )
+						{detail.plugin.id === "unifi-api" ? (
+							<AdminWriteBoundary>
+								<UnifiApi
+									accessSources={detail.unifiAccessSources}
+									organizations={detail.organizations}
+								/>
+							</AdminWriteBoundary>
+						) : detail.plugin.id === "glauth" ? (
+							<AdminWriteBoundary>
+								<GlauthSources
+									sources={glauthSources}
+									organizations={detail.organizations}
+								/>
+							</AdminWriteBoundary>
+						) : detail.plugin.id !== "seven-shifts-csv" &&
+							detail.plugin.id !== "seven-shifts-api" ? (
+							<AdminWriteBoundary>
+								<PluginOrganizations detail={detail} />
+							</AdminWriteBoundary>
+						) : null}
+					</>
+				)}
+			</div>
+		</div>
+	);
 }
 
-function hasIntegrationLogo(
-  pluginId:
-    CatalogIntegrationId
-) {
-  switch (pluginId) {
-    case "seven-shifts-csv":
-    case "seven-shifts-api":
-    case "unifi-api":
-    case "unifi-ldap":
-    case "toast-api":
-    case "paychex-api":
-    case "counter":
-      return true
+function hasIntegrationLogo(pluginId: CatalogIntegrationId) {
+	switch (pluginId) {
+		case "seven-shifts-csv":
+		case "seven-shifts-api":
+		case "unifi-api":
+		case "unifi-ldap":
+		case "toast-api":
+		case "paychex-api":
+		case "counter":
+			return true;
 
-    case "glauth":
-    case "wifi":
-    case "mqtt":
-      return false
-  }
+		case "glauth":
+		case "wifi":
+		case "mqtt":
+			return false;
+	}
 }

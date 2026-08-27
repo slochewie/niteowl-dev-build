@@ -107,7 +107,11 @@ const unassignBodySchema = z.object({
 	organizationId: z.string().min(1),
 });
 
-async function isGlobalAdmin(pool: Pool, userId: string) {
+async function isGlobalAdmin(
+	pool: Pool,
+	userId: string,
+	allowReadOnly = false,
+) {
 	const result = await pool.query<UserRoleRow>(
 		`
         SELECT role
@@ -118,9 +122,10 @@ async function isGlobalAdmin(pool: Pool, userId: string) {
 		[userId],
 	);
 
-	return result.rows[0]?.role === "admin";
-}
+	const role = result.rows[0]?.role;
 
+	return role === "admin" || (allowReadOnly && role === "admin-viewer");
+}
 async function getSource(pool: Pool, sourceId: string) {
 	const result = await pool.query<AccessSourceRow>(
 		`
@@ -465,7 +470,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					use: [sessionMiddleware],
 				},
 				async (ctx) => {
-					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id))) {
+					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id, true))) {
 						return ctx.json(
 							{
 								error: "Forbidden",
@@ -964,7 +969,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					query: cachedUsersQuerySchema,
 				},
 				async (ctx) => {
-					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id))) {
+					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id, true))) {
 						return ctx.json(
 							{
 								error: "Forbidden",
@@ -1114,7 +1119,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					query: reconciliationQuerySchema,
 				},
 				async (ctx) => {
-					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id))) {
+					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id, true))) {
 						return ctx.json(
 							{
 								error: "Forbidden",
@@ -1145,10 +1150,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					 * These calls are read-only UniFi API requests. They do not
 					 * provision users or assign Identity resources.
 					 */
-					const apiToken = decryptApiSecret(
-						source.apiToken,
-						encryptionKey,
-					);
+					const apiToken = decryptApiSecret(source.apiToken, encryptionKey);
 
 					const connection = {
 						baseUrl: getBaseUrl(source),
@@ -1212,8 +1214,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					if (!organization) {
 						return ctx.json(
 							{
-								error:
-									"Organization assignment was not found",
+								error: "Organization assignment was not found",
 							},
 							{
 								status: 404,
@@ -1684,8 +1685,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					if (!user) {
 						return ctx.json(
 							{
-								error:
-									"Better Auth user was not found",
+								error: "Better Auth user was not found",
 							},
 							{
 								status: 404,
@@ -1740,8 +1740,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					if (!firstName) {
 						return ctx.json(
 							{
-								error:
-									"UniFi Access requires both a first name and last name",
+								error: "UniFi Access requires both a first name and last name",
 							},
 							{
 								status: 400,
@@ -1954,8 +1953,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					if (!user) {
 						return ctx.json(
 							{
-								error:
-									"Better Auth user was not found",
+								error: "Better Auth user was not found",
 							},
 							{
 								status: 404,
@@ -2041,8 +2039,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 						);
 					}
 
-					const unifiUserId =
-						cachedUnifiUser.unifiUserId;
+					const unifiUserId = cachedUnifiUser.unifiUserId;
 
 					await updateUnifiAccessUser(connection, unifiUserId, {
 						status: ctx.body.status,
@@ -2291,8 +2288,7 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 					if (!current) {
 						return ctx.json(
 							{
-								error:
-									"UniFi Access Source not found",
+								error: "UniFi Access Source not found",
 							},
 							{
 								status: 404,

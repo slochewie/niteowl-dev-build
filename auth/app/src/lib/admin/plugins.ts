@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
-
+import { requireAdminRead, requireAdminWrite } from "@/lib/admin/access";
 import { auth } from "@/lib/auth";
 import type { SyncDirection } from "@/lib/plugins/integration-manager/index";
 import {
@@ -100,29 +99,8 @@ export type AdminPluginDetail = {
 	unifiAccessSources: AdminUnifiAccessSource[];
 };
 
-async function requireGlobalAdmin() {
-	const request = getRequest();
-
-	const session = await auth.api.getSession({
-		headers: request.headers,
-	});
-
-	if (!session) {
-		throw new Error("Unauthorized");
-	}
-
-	if (session.user.role !== "admin") {
-		throw new Error("Forbidden");
-	}
-
-	return {
-		request,
-		session,
-	};
-}
-
 async function getOrganizationsForPlugin(pluginId: IntegrationId) {
-	const { request } = await requireGlobalAdmin();
+	const { request } = await requireAdminRead();
 
 	const result = await auth.api.listIntegrationOrganizations({
 		query: {
@@ -131,13 +109,17 @@ async function getOrganizationsForPlugin(pluginId: IntegrationId) {
 		headers: request.headers,
 	});
 
+	if ("error" in result) {
+		throw new Error(result.error);
+	}
+
 	return result.organizations;
 }
 
 export const getAdminPluginCatalog = createServerFn({
 	method: "GET",
 }).handler(async (): Promise<AdminPluginCatalogItem[]> => {
-	const { request } = await requireGlobalAdmin();
+	const { request } = await requireAdminRead();
 
 	return Promise.all(
 		INTEGRATIONS.map(async (plugin) => {
@@ -184,7 +166,7 @@ export const getAdminPlugin = createServerFn({
 })
 	.validator((data: { pluginId: string }) => data)
 	.handler(async ({ data }): Promise<AdminPluginDetail> => {
-		await requireGlobalAdmin();
+		await requireAdminRead();
 
 		const plugin = getIntegration(data.pluginId);
 
@@ -211,7 +193,7 @@ export const getAdminPlugin = createServerFn({
 		let unifiAccessSources: AdminUnifiAccessSource[] = [];
 
 		if (plugin.id === "seven-shifts-csv") {
-			const { request } = await requireGlobalAdmin();
+			const { request } = await requireAdminRead();
 
 			const result = await auth.api.listSevenShiftsCsvSources({
 				headers: request.headers,
@@ -221,7 +203,7 @@ export const getAdminPlugin = createServerFn({
 		}
 
 		if (plugin.id === "seven-shifts-api") {
-			const { request } = await requireGlobalAdmin();
+			const { request } = await requireAdminRead();
 
 			const result = await auth.api.listSevenShiftsApiSources({
 				headers: request.headers,
@@ -231,7 +213,7 @@ export const getAdminPlugin = createServerFn({
 		}
 
 		if (plugin.id === "unifi-api") {
-			const { request } = await requireGlobalAdmin();
+			const { request } = await requireAdminRead();
 
 			const result = await auth.api.listUnifiAccessSources({
 				headers: request.headers,
@@ -260,7 +242,7 @@ export const setAdminOrganizationPluginEnabled = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.setOrganizationIntegrationEnabled({
 			body: {
@@ -279,7 +261,7 @@ export const setAdminSevenShiftsCsvOrganizationSource = createServerFn({
 		(data: { organizationId: string; sourceId: string | null }) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.setSevenShiftsCsvOrganizationSource({
 			body: {
@@ -301,7 +283,7 @@ export const setAdminOrganizationPluginConfigurationSource = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.setOrganizationIntegrationConfigurationSource({
 			body: {
@@ -324,7 +306,7 @@ export const setAdminOrganizationPluginSyncDirection = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.setOrganizationIntegrationSyncDirection({
 			body: {
@@ -350,7 +332,7 @@ export const getAdminOrganizationIntegrations = createServerFn({
 })
 	.validator((data: { organizationId: string }) => data)
 	.handler(async ({ data }): Promise<AdminOrganizationIntegration[]> => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminRead();
 
 		const result = await auth.api.getOrganizationIntegrations({
 			query: {
@@ -382,7 +364,7 @@ export const createAdminSevenShiftsCsvSource = createServerFn({
 })
 	.validator((data: { name: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.createSevenShiftsCsvSource({
 			body: {
@@ -397,7 +379,7 @@ export const renameAdminSevenShiftsCsvSource = createServerFn({
 })
 	.validator((data: { sourceId: string; name: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.renameSevenShiftsCsvSource({
 			body: {
@@ -413,7 +395,7 @@ export const deleteAdminSevenShiftsCsvSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.deleteSevenShiftsCsvSource({
 			body: {
@@ -430,7 +412,7 @@ export const createAdminSevenShiftsApiSource = createServerFn({
 		(data: { name: string; accessToken: string; apiVersion?: string }) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.createSevenShiftsApiSource({
 			body: {
@@ -458,7 +440,7 @@ export const updateAdminSevenShiftsApiSource = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.updateSevenShiftsApiSource({
 			body: {
@@ -484,7 +466,7 @@ export const testAdminSevenShiftsApiSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.testSevenShiftsApiSource({
 			body: {
@@ -499,7 +481,7 @@ export const getAdminSevenShiftsApiLocations = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.listSevenShiftsApiLocations({
 			body: {
@@ -520,7 +502,7 @@ export const assignAdminSevenShiftsApiLocation = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.assignSevenShiftsApiLocation({
 			body: {
@@ -537,7 +519,7 @@ export const deleteAdminSevenShiftsApiSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.deleteSevenShiftsApiSource({
 			body: {
@@ -554,7 +536,7 @@ export const unassignAdminSevenShiftsApiLocation = createServerFn({
 		(data: { sourceId: string; sevenShiftsLocationId: number }) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.unassignSevenShiftsApiLocation({
 			body: {
@@ -579,7 +561,7 @@ export const createAdminUnifiAccessSource = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.createUnifiAccessSource({
 			body: {
@@ -609,7 +591,7 @@ export const updateAdminUnifiAccessSource = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.updateUnifiAccessSource({
 			body: {
@@ -634,7 +616,7 @@ export const testAdminUnifiAccessSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.testUnifiAccessSource({
 			body: {
@@ -652,7 +634,7 @@ export const assignAdminUnifiAccessSource = createServerFn({
 			data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.assignUnifiAccessSource({
 			body: {
@@ -669,7 +651,7 @@ export const unassignAdminUnifiAccessSource = createServerFn({
 })
 	.validator((data: { sourceId: string; organizationId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.unassignUnifiAccessSource({
 			body: {
@@ -685,7 +667,7 @@ export const deleteAdminUnifiAccessSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.deleteUnifiAccessSource({
 			body: {
@@ -700,7 +682,7 @@ export const previewAdminSevenShiftsApiSync = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.previewSevenShiftsApiSync({
 			body: {
@@ -715,7 +697,7 @@ export const syncAdminSevenShiftsApiSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.syncSevenShiftsApiSource({
 			body: {
@@ -748,7 +730,7 @@ export type AdminGlauthSource = {
 export const getAdminGlauthSources = createServerFn({
 	method: "GET",
 }).handler(async (): Promise<AdminGlauthSource[]> => {
-	const { request } = await requireGlobalAdmin();
+	const { request } = await requireAdminRead();
 
 	const result = await auth.api.listGlauthSources({
 		headers: request.headers,
@@ -762,7 +744,7 @@ export const createAdminGlauthSource = createServerFn({
 })
 	.validator((data: { name: string; slug: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.createGlauthSource({
 			body: data,
@@ -784,7 +766,7 @@ export const updateAdminGlauthSource = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.updateGlauthSource({
 			body: data,
@@ -797,7 +779,7 @@ export const deleteAdminGlauthSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.deleteGlauthSource({
 			body: {
@@ -814,7 +796,7 @@ export const setAdminGlauthOrganizationSource = createServerFn({
 		(data: { organizationId: string; sourceId: string | null }) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.setGlauthOrganizationSource({
 			body: data,
@@ -838,7 +820,7 @@ export const reconcileAdminGlauthSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }): Promise<AdminGlauthReconcileResult> => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.reconcileGlauthSource({
 			body: {
@@ -853,7 +835,7 @@ export const discoverAdminUnifiAccessSource = createServerFn({
 })
 	.validator((data: { sourceId: string }) => data)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.discoverUnifiAccessSource({
 			body: {
@@ -907,7 +889,7 @@ export const getAdminUnifiAccessUsers = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }): Promise<AdminUnifiAccessUsersPage> => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminRead();
 
 		return auth.api.listUnifiAccessCachedUsers({
 			query: {
@@ -930,7 +912,7 @@ export const provisionAdminUnifiAccessUser = createServerFn({
 			data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.provisionUnifiAccessUser({
 			body: {
@@ -954,7 +936,7 @@ export const setAdminUnifiAccessUserStatus = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminWrite();
 
 		return auth.api.setUnifiAccessUserStatus({
 			body: {
@@ -1030,7 +1012,7 @@ export const getAdminUnifiAccessReconciliation = createServerFn({
 })
 	.validator((data: { sourceId: string; organizationId: string }) => data)
 	.handler(async ({ data }): Promise<AdminUnifiAccessReconciliation> => {
-		const { request } = await requireGlobalAdmin();
+		const { request } = await requireAdminRead();
 
 		return auth.api.reconcileUnifiAccessSource({
 			query: {

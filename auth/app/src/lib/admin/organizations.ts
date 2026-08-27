@@ -1,125 +1,94 @@
-import { createServerFn } from "@tanstack/react-start"
-import { getRequest } from "@tanstack/react-start/server"
+import { createServerFn } from "@tanstack/react-start";
+import { requireAdminRead, requireAdminWrite } from "@/lib/admin/access";
+import { auth, pool } from "@/lib/auth";
 
-import { auth, pool } from "@/lib/auth"
-
-export type OrganizationRole =
-  | "member"
-  | "admin"
-  | "owner"
+export type OrganizationRole = "member" | "admin" | "owner";
 
 export type AdminOrganizationMemberPreview = {
-  id: string
-  name: string
-  email: string
-  image: string | null
-  role: string
-}
+	id: string;
+	name: string;
+	email: string;
+	image: string | null;
+	role: string;
+};
 
 export type AdminOrganizationListItem = {
-  id: string
-  name: string
-  slug: string
-  logo: string | null
-  enabled: boolean
-  createdAt: Date
-  memberCount: number
-  members: AdminOrganizationMemberPreview[]
-}
+	id: string;
+	name: string;
+	slug: string;
+	logo: string | null;
+	enabled: boolean;
+	createdAt: Date;
+	memberCount: number;
+	members: AdminOrganizationMemberPreview[];
+};
 
 export type AdminOrganizationMember = {
-  memberId: string
-  userId: string
-  name: string
-  email: string
-  image: string | null
-  role: string
-  joinedAt: Date
-  banned: boolean
-}
+	memberId: string;
+	userId: string;
+	name: string;
+	email: string;
+	image: string | null;
+	role: string;
+	joinedAt: Date;
+	banned: boolean;
+};
 
 export type AdminOrganizationInvitation = {
-  id: string
-  email: string
-  role: string | null
-  status: string
-  createdAt: Date
-  expiresAt: Date
-}
+	id: string;
+	email: string;
+	role: string | null;
+	status: string;
+	createdAt: Date;
+	expiresAt: Date;
+};
 
 export type AdminOrganizationTeam = {
-  id: string
-  name: string
-  createdAt: Date
-  memberCount: number
-  memberUserIds: string[]
-}
+	id: string;
+	name: string;
+	createdAt: Date;
+	memberCount: number;
+	memberUserIds: string[];
+};
 
 export type AdminOrganizationDetail = {
-  id: string
-  name: string
-  slug: string
-  logo: string | null
-  metadata: string | null
-  enabled: boolean
-  createdAt: Date
-  memberCount: number
-  pendingInvitationCount: number
-  teamCount: number
-  members: AdminOrganizationMember[]
-  invitations: AdminOrganizationInvitation[]
-  teams: AdminOrganizationTeam[]
-}
+	id: string;
+	name: string;
+	slug: string;
+	logo: string | null;
+	metadata: string | null;
+	enabled: boolean;
+	createdAt: Date;
+	memberCount: number;
+	pendingInvitationCount: number;
+	teamCount: number;
+	members: AdminOrganizationMember[];
+	invitations: AdminOrganizationInvitation[];
+	teams: AdminOrganizationTeam[];
+};
 
 export type AdminOrganizationUserOption = {
-  id: string
-  name: string
-  email: string
-  image: string | null
-}
+	id: string;
+	name: string;
+	email: string;
+	image: string | null;
+};
 
-async function requireGlobalAdmin() {
-  const request = getRequest()
+export const getAdminOrganizations = createServerFn({
+	method: "GET",
+}).handler(async (): Promise<AdminOrganizationListItem[]> => {
+	await requireAdminRead();
 
-  const session = await auth.api.getSession({
-    headers: request.headers
-  })
-
-  if (!session) {
-    throw new Error("Unauthorized")
-  }
-
-  if (session.user.role !== "admin") {
-    throw new Error("Forbidden")
-  }
-
-  return {
-    session,
-    request
-  }
-}
-
-export const getAdminOrganizations =
-  createServerFn({
-    method: "GET"
-  }).handler(
-    async (): Promise<
-      AdminOrganizationListItem[]
-    > => {
-      await requireGlobalAdmin()
-
-      const result =
-        await pool.query<{
-          id: string
-          name: string
-          slug: string
-          logo: string | null
-          enabled: boolean
-          createdAt: Date
-          memberCount: string
-          members:
-            AdminOrganizationMemberPreview[]
-        }>(`
+	const result = await pool.query<{
+		id: string;
+		name: string;
+		slug: string;
+		logo: string | null;
+		enabled: boolean;
+		createdAt: Date;
+		memberCount: string;
+		members: AdminOrganizationMemberPreview[];
+	}>(`
           SELECT
             o.id,
             o.name,
@@ -174,50 +143,37 @@ export const getAdminOrganizations =
             os.enabled
           ORDER BY
             o."createdAt" DESC
-        `)
+        `);
 
-      return result.rows.map(
-        (row) => ({
-          id: row.id,
-          name: row.name,
-          slug: row.slug,
-          logo: row.logo,
-          enabled: row.enabled,
-          createdAt: row.createdAt,
-          memberCount:
-            Number(row.memberCount),
-          members: row.members ?? []
-        })
-      )
-    }
-  )
+	return result.rows.map((row) => ({
+		id: row.id,
+		name: row.name,
+		slug: row.slug,
+		logo: row.logo,
+		enabled: row.enabled,
+		createdAt: row.createdAt,
+		memberCount: Number(row.memberCount),
+		members: row.members ?? [],
+	}));
+});
 
-export const getAdminOrganization =
-  createServerFn({
-    method: "GET"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-      }) => data
-    )
-    .handler(
-      async ({
-        data
-      }): Promise<AdminOrganizationDetail> => {
-        await requireGlobalAdmin()
+export const getAdminOrganization = createServerFn({
+	method: "GET",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }): Promise<AdminOrganizationDetail> => {
+		await requireAdminRead();
 
-        const organizationResult =
-          await pool.query<{
-            id: string
-            name: string
-            slug: string
-            logo: string | null
-            metadata: string | null
-            enabled: boolean
-            createdAt: Date
-          }>(
-            `
+		const organizationResult = await pool.query<{
+			id: string;
+			name: string;
+			slug: string;
+			logo: string | null;
+			metadata: string | null;
+			enabled: boolean;
+			createdAt: Date;
+		}>(
+			`
               SELECT
                 o.id,
                 o.name,
@@ -235,21 +191,17 @@ export const getAdminOrganization =
               WHERE o.id = $1
               LIMIT 1
             `,
-            [data.organizationId]
-          )
+			[data.organizationId],
+		);
 
-        const organization =
-          organizationResult.rows[0]
+		const organization = organizationResult.rows[0];
 
-        if (!organization) {
-          throw new Error(
-            "Organization not found"
-          )
-        }
+		if (!organization) {
+			throw new Error("Organization not found");
+		}
 
-        const membersResult =
-          await pool.query<AdminOrganizationMember>(
-            `
+		const membersResult = await pool.query<AdminOrganizationMember>(
+			`
               SELECT
                 m.id AS "memberId",
                 u.id AS "userId",
@@ -271,12 +223,11 @@ export const getAdminOrganization =
                 u.name ASC,
                 u.email ASC
             `,
-            [data.organizationId]
-          )
+			[data.organizationId],
+		);
 
-        const invitationsResult =
-          await pool.query<AdminOrganizationInvitation>(
-            `
+		const invitationsResult = await pool.query<AdminOrganizationInvitation>(
+			`
               SELECT
                 id,
                 email,
@@ -290,18 +241,17 @@ export const getAdminOrganization =
               ORDER BY
                 "createdAt" DESC
             `,
-            [data.organizationId]
-          )
+			[data.organizationId],
+		);
 
-        const teamsResult =
-          await pool.query<{
-            id: string
-            name: string
-            createdAt: Date
-            memberCount: number
-            memberUserIds: string[]
-          }>(
-            `
+		const teamsResult = await pool.query<{
+			id: string;
+			name: string;
+			createdAt: Date;
+			memberCount: number;
+			memberUserIds: string[];
+		}>(
+			`
               SELECT
                 t.id,
                 t.name,
@@ -326,49 +276,35 @@ export const getAdminOrganization =
               ORDER BY
                 t."createdAt" ASC
             `,
-            [data.organizationId]
-          )
+			[data.organizationId],
+		);
 
-        return {
-          ...organization,
+		return {
+			...organization,
 
-          memberCount:
-            membersResult.rows.length,
+			memberCount: membersResult.rows.length,
 
-          pendingInvitationCount:
-            invitationsResult.rows.filter(
-              (invitation) =>
-                invitation.status ===
-                "pending"
-            ).length,
+			pendingInvitationCount: invitationsResult.rows.filter(
+				(invitation) => invitation.status === "pending",
+			).length,
 
-          teamCount:
-            teamsResult.rows.length,
+			teamCount: teamsResult.rows.length,
 
-          members:
-            membersResult.rows,
+			members: membersResult.rows,
 
-          invitations:
-            invitationsResult.rows,
+			invitations: invitationsResult.rows,
 
-          teams:
-            teamsResult.rows
-        }
-      }
-    )
+			teams: teamsResult.rows,
+		};
+	});
 
-export const getAdminOrganizationUserOptions =
-  createServerFn({
-    method: "GET"
-  }).handler(
-    async (): Promise<
-      AdminOrganizationUserOption[]
-    > => {
-      await requireGlobalAdmin()
+export const getAdminOrganizationUserOptions = createServerFn({
+	method: "GET",
+}).handler(async (): Promise<AdminOrganizationUserOption[]> => {
+	await requireAdminRead();
 
-      const result =
-        await pool.query<AdminOrganizationUserOption>(
-          `
+	const result = await pool.query<AdminOrganizationUserOption>(
+		`
             SELECT
               id,
               name,
@@ -378,361 +314,270 @@ export const getAdminOrganizationUserOptions =
             ORDER BY
               name ASC,
               email ASC
-          `
-        )
+          `,
+	);
 
-      return result.rows
-    }
-  )
+	return result.rows;
+});
 
-export const setAdminOrganizationEnabled =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        enabled: boolean
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const setAdminOrganizationEnabled = createServerFn({
+	method: "POST",
+})
+	.validator((data: { organizationId: string; enabled: boolean }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      return auth.api.setOrganizationStatus({
-        body: {
-          organizationId:
-            data.organizationId,
-          enabled: data.enabled
-        },
-        headers: request.headers
-      })
-    })
+		return auth.api.setOrganizationStatus({
+			body: {
+				organizationId: data.organizationId,
+				enabled: data.enabled,
+			},
+			headers: request.headers,
+		});
+	});
 
-export const addAdminOrganizationMember =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        userId: string
-        role: OrganizationRole
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      await requireGlobalAdmin()
+export const addAdminOrganizationMember = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			organizationId: string;
+			userId: string;
+			role: OrganizationRole;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		await requireAdminWrite();
 
-      await auth.api.addMember({
-        body: {
-          organizationId:
-            data.organizationId,
-          userId: data.userId,
-          role: data.role
-        }
-      })
+		await auth.api.addMember({
+			body: {
+				organizationId: data.organizationId,
+				userId: data.userId,
+				role: data.role,
+			},
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const updateAdminOrganizationMemberRole =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        memberId: string
-        role: OrganizationRole
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const updateAdminOrganizationMemberRole = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			organizationId: string;
+			memberId: string;
+			role: OrganizationRole;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.updateMemberRole({
-        body: {
-          organizationId:
-            data.organizationId,
-          memberId: data.memberId,
-          role: data.role
-        },
-        headers: request.headers
-      })
+		await auth.api.updateMemberRole({
+			body: {
+				organizationId: data.organizationId,
+				memberId: data.memberId,
+				role: data.role,
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const removeAdminOrganizationMember =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        memberId: string
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const removeAdminOrganizationMember = createServerFn({
+	method: "POST",
+})
+	.validator((data: { organizationId: string; memberId: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.removeMember({
-        body: {
-          organizationId:
-            data.organizationId,
-          memberIdOrEmail:
-            data.memberId
-        },
-        headers: request.headers
-      })
+		await auth.api.removeMember({
+			body: {
+				organizationId: data.organizationId,
+				memberIdOrEmail: data.memberId,
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const inviteAdminOrganizationMember =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        email: string
-        role: OrganizationRole
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const inviteAdminOrganizationMember = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: { organizationId: string; email: string; role: OrganizationRole }) =>
+			data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.createInvitation({
-        body: {
-          organizationId:
-            data.organizationId,
-          email: data.email,
-          role: data.role
-        },
-        headers: request.headers
-      })
+		await auth.api.createInvitation({
+			body: {
+				organizationId: data.organizationId,
+				email: data.email,
+				role: data.role,
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const updateAdminOrganization =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        name: string
-        slug: string
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const updateAdminOrganization = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: { organizationId: string; name: string; slug: string }) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.updateOrganization({
-        body: {
-          organizationId:
-            data.organizationId,
-          data: {
-            name: data.name,
-            slug: data.slug
-          }
-        },
-        headers: request.headers
-      })
+		await auth.api.updateOrganization({
+			body: {
+				organizationId: data.organizationId,
+				data: {
+					name: data.name,
+					slug: data.slug,
+				},
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const deleteAdminOrganization =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const deleteAdminOrganization = createServerFn({
+	method: "POST",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.deleteOrganization({
-        body: {
-          organizationId:
-            data.organizationId
-        },
-        headers: request.headers
-      })
+		await auth.api.deleteOrganization({
+			body: {
+				organizationId: data.organizationId,
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const createAdminOrganizationTeam =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        name: string
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const createAdminOrganizationTeam = createServerFn({
+	method: "POST",
+})
+	.validator((data: { organizationId: string; name: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.createTeam({
-        body: {
-          organizationId:
-            data.organizationId,
-          name: data.name
-        },
-        headers: request.headers
-      })
+		await auth.api.createTeam({
+			body: {
+				organizationId: data.organizationId,
+				name: data.name,
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const updateAdminOrganizationTeam =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        teamId: string
-        name: string
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const updateAdminOrganizationTeam = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: { organizationId: string; teamId: string; name: string }) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.updateTeam({
-        body: {
-          teamId: data.teamId,
-          data: {
-            name: data.name,
-            organizationId:
-              data.organizationId
-          }
-        },
-        headers: request.headers
-      })
+		await auth.api.updateTeam({
+			body: {
+				teamId: data.teamId,
+				data: {
+					name: data.name,
+					organizationId: data.organizationId,
+				},
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const deleteAdminOrganizationTeam =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        organizationId: string
-        teamId: string
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const deleteAdminOrganizationTeam = createServerFn({
+	method: "POST",
+})
+	.validator((data: { organizationId: string; teamId: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.removeTeam({
-        body: {
-          organizationId:
-            data.organizationId,
-          teamId: data.teamId
-        },
-        headers: request.headers
-      })
+		await auth.api.removeTeam({
+			body: {
+				organizationId: data.organizationId,
+				teamId: data.teamId,
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const addAdminOrganizationTeamMember =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        teamId: string
-        userId: string
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const addAdminOrganizationTeamMember = createServerFn({
+	method: "POST",
+})
+	.validator((data: { teamId: string; userId: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.addTeamMember({
-        body: {
-          teamId: data.teamId,
-          userId: data.userId
-        },
-        headers: request.headers
-      })
+		await auth.api.addTeamMember({
+			body: {
+				teamId: data.teamId,
+				userId: data.userId,
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});
 
-export const removeAdminOrganizationTeamMember =
-  createServerFn({
-    method: "POST"
-  })
-    .validator(
-      (data: {
-        teamId: string
-        userId: string
-      }) => data
-    )
-    .handler(async ({ data }) => {
-      const {
-        request
-      } = await requireGlobalAdmin()
+export const removeAdminOrganizationTeamMember = createServerFn({
+	method: "POST",
+})
+	.validator((data: { teamId: string; userId: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
 
-      await auth.api.removeTeamMember({
-        body: {
-          teamId: data.teamId,
-          userId: data.userId
-        },
-        headers: request.headers
-      })
+		await auth.api.removeTeamMember({
+			body: {
+				teamId: data.teamId,
+				userId: data.userId,
+			},
+			headers: request.headers,
+		});
 
-      return {
-        ok: true
-      }
-    })
+		return {
+			ok: true,
+		};
+	});

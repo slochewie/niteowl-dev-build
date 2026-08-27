@@ -1,105 +1,87 @@
-import { createServerFn } from "@tanstack/react-start"
-import { getRequest } from "@tanstack/react-start/server"
-
-import { auth, pool } from "@/lib/auth"
-import { getUserProfile, upsertUserProfile, type UserProfileFields } from "@/lib/plugins/user-profile/index"
+import { createServerFn } from "@tanstack/react-start";
+import { requireAdminRead, requireAdminWrite } from "@/lib/admin/access";
+import { pool } from "@/lib/auth";
+import {
+	getUserProfile,
+	upsertUserProfile,
+	type UserProfileFields,
+} from "@/lib/plugins/user-profile/index";
 
 export type AdminUserOrganization = {
-  id: string
-  memberId: string
-  name: string
-  slug: string
-  logo: string | null
-  role: string
-  joinedAt: Date
-}
+	id: string;
+	memberId: string;
+	name: string;
+	slug: string;
+	logo: string | null;
+	role: string;
+	joinedAt: Date;
+};
 
 export type AdminUserListItem = {
-  id: string
-  name: string
-  email: string
-  emailVerified: boolean
-  image: string | null
-  username: string | null
-  displayUsername: string | null
-  role: string | null
-  banned: boolean
-  banReason: string | null
-  banExpires: Date | null
-  createdAt: Date
-  updatedAt: Date
-  organizations: AdminUserOrganization[]
-}
+	id: string;
+	name: string;
+	email: string;
+	emailVerified: boolean;
+	image: string | null;
+	username: string | null;
+	displayUsername: string | null;
+	role: string | null;
+	banned: boolean;
+	banReason: string | null;
+	banExpires: Date | null;
+	createdAt: Date;
+	updatedAt: Date;
+	organizations: AdminUserOrganization[];
+};
 
 export type AdminUserAccount = {
-  id: string
-  accountId: string
-  providerId: string
-  createdAt: Date
-  updatedAt: Date
-}
+	id: string;
+	accountId: string;
+	providerId: string;
+	createdAt: Date;
+	updatedAt: Date;
+};
 
 export type AdminUserSession = {
-  id: string
-  token: string
-  createdAt: Date
-  updatedAt: Date
-  expiresAt: Date
-  ipAddress: string | null
-  userAgent: string | null
-  impersonatedBy: string | null
-  activeOrganizationId: string | null
-  activeTeamId: string | null
-}
+	id: string;
+	token: string;
+	createdAt: Date;
+	updatedAt: Date;
+	expiresAt: Date;
+	ipAddress: string | null;
+	userAgent: string | null;
+	impersonatedBy: string | null;
+	activeOrganizationId: string | null;
+	activeTeamId: string | null;
+};
 
-export type AdminUserDetail = Omit<
-  AdminUserListItem,
-  "organizations"
-> & {
-  accounts: AdminUserAccount[]
-  sessions: AdminUserSession[]
-  organizations: AdminUserOrganization[]
-}
-
-async function requireGlobalAdmin() {
-  const request = getRequest()
-
-  const session = await auth.api.getSession({
-    headers: request.headers
-  })
-
-  if (!session) {
-    throw new Error("Unauthorized")
-  }
-
-  if (session.user.role !== "admin") {
-    throw new Error("Forbidden")
-  }
-
-  return session
-}
+export type AdminUserDetail = Omit<AdminUserListItem, "organizations"> & {
+	accounts: AdminUserAccount[];
+	sessions: AdminUserSession[];
+	organizations: AdminUserOrganization[];
+};
 
 export const getAdminUsers = createServerFn({
-  method: "GET"
+	method: "GET",
 }).handler(async (): Promise<AdminUserListItem[]> => {
-  await requireGlobalAdmin()
+	await requireAdminRead();
 
-  const result = await pool.query<{
-    id: string
-    name: string
-    email: string
-    emailVerified: boolean
-    image: string | null
-    username: string | null
-    displayUsername: string | null
-    role: string | null
-    banned: boolean | null
-    banReason: string | null
-    banExpires: Date | null
-    createdAt: Date
-    updatedAt: Date
-    organizations: AdminUserOrganization[]
-  }>(`
+	const result = await pool.query<{
+		id: string;
+		name: string;
+		email: string;
+		emailVerified: boolean;
+		image: string | null;
+		username: string | null;
+		displayUsername: string | null;
+		role: string | null;
+		banned: boolean | null;
+		banReason: string | null;
+		banExpires: Date | null;
+		createdAt: Date;
+		updatedAt: Date;
+		organizations: AdminUserOrganization[];
+	}>(`
     SELECT
       u.id,
       u.name,
@@ -139,39 +121,38 @@ export const getAdminUsers = createServerFn({
       u.id
     ORDER BY
       u."createdAt" DESC
-  `)
+  `);
 
-  return result.rows.map((row) => ({
-    ...row,
-    banned: row.banned === true,
-    organizations:
-      row.organizations ?? []
-  }))
-})
+	return result.rows.map((row) => ({
+		...row,
+		banned: row.banned === true,
+		organizations: row.organizations ?? [],
+	}));
+});
 
 export const getAdminUser = createServerFn({
-  method: "GET"
+	method: "GET",
 })
-  .validator((data: { userId: string }) => data)
-  .handler(async ({ data }): Promise<AdminUserDetail> => {
-    await requireGlobalAdmin()
+	.validator((data: { userId: string }) => data)
+	.handler(async ({ data }): Promise<AdminUserDetail> => {
+		await requireAdminRead();
 
-    const userResult = await pool.query<{
-      id: string
-      name: string
-      email: string
-      emailVerified: boolean
-      image: string | null
-      username: string | null
-      displayUsername: string | null
-      role: string | null
-      banned: boolean | null
-      banReason: string | null
-      banExpires: Date | null
-      createdAt: Date
-      updatedAt: Date
-    }>(
-      `
+		const userResult = await pool.query<{
+			id: string;
+			name: string;
+			email: string;
+			emailVerified: boolean;
+			image: string | null;
+			username: string | null;
+			displayUsername: string | null;
+			role: string | null;
+			banned: boolean | null;
+			banReason: string | null;
+			banExpires: Date | null;
+			createdAt: Date;
+			updatedAt: Date;
+		}>(
+			`
         SELECT
           id,
           name,
@@ -190,18 +171,17 @@ export const getAdminUser = createServerFn({
         WHERE id = $1
         LIMIT 1
       `,
-      [data.userId]
-    )
+			[data.userId],
+		);
 
-    const user = userResult.rows[0]
+		const user = userResult.rows[0];
 
-    if (!user) {
-      throw new Error("User not found")
-    }
+		if (!user) {
+			throw new Error("User not found");
+		}
 
-    const accountsResult =
-      await pool.query<AdminUserAccount>(
-        `
+		const accountsResult = await pool.query<AdminUserAccount>(
+			`
           SELECT
             id,
             "accountId",
@@ -212,12 +192,11 @@ export const getAdminUser = createServerFn({
           WHERE "userId" = $1
           ORDER BY "createdAt" ASC
         `,
-        [data.userId]
-      )
+			[data.userId],
+		);
 
-    const sessionsResult =
-      await pool.query<AdminUserSession>(
-        `
+		const sessionsResult = await pool.query<AdminUserSession>(
+			`
           SELECT
             id,
             token,
@@ -233,12 +212,11 @@ export const getAdminUser = createServerFn({
           WHERE "userId" = $1
           ORDER BY "createdAt" DESC
         `,
-        [data.userId]
-      )
+			[data.userId],
+		);
 
-    const organizationsResult =
-      await pool.query<AdminUserOrganization>(
-        `
+		const organizationsResult = await pool.query<AdminUserOrganization>(
+			`
           SELECT
             o.id,
             m.id AS "memberId",
@@ -253,49 +231,34 @@ export const getAdminUser = createServerFn({
           WHERE m."userId" = $1
           ORDER BY o.name ASC
         `,
-        [data.userId]
-      )
+			[data.userId],
+		);
 
-    return {
-      ...user,
-      banned: user.banned === true,
-      accounts: accountsResult.rows,
-      sessions: sessionsResult.rows,
-      organizations: organizationsResult.rows
-    }
-  })
-
+		return {
+			...user,
+			banned: user.banned === true,
+			accounts: accountsResult.rows,
+			sessions: sessionsResult.rows,
+			organizations: organizationsResult.rows,
+		};
+	});
 
 export const getAdminUserProfile = createServerFn({
-  method: "GET"
+	method: "GET",
 })
-  .validator((data: { userId: string }) => data)
-  .handler(async ({ data }) => {
-    await requireGlobalAdmin()
+	.validator((data: { userId: string }) => data)
+	.handler(async ({ data }) => {
+		await requireAdminRead();
 
-    return getUserProfile(
-      pool,
-      data.userId
-    )
-  })
+		return getUserProfile(pool, data.userId);
+	});
 
 export const updateAdminUserProfile = createServerFn({
-  method: "POST"
+	method: "POST",
 })
-  .validator(
-    (
-      data: {
-        userId: string
-        fields: UserProfileFields
-      }
-    ) => data
-  )
-  .handler(async ({ data }) => {
-    await requireGlobalAdmin()
+	.validator((data: { userId: string; fields: UserProfileFields }) => data)
+	.handler(async ({ data }) => {
+		await requireAdminWrite();
 
-    return upsertUserProfile(
-      pool,
-      data.userId,
-      data.fields
-    )
-  })
+		return upsertUserProfile(pool, data.userId, data.fields);
+	});
