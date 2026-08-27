@@ -10,12 +10,12 @@ import {
 	MoreHorizontal,
 	Search,
 	ShieldBan,
-	UserPlus,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { useAdminAccess } from "@/components/auth/admin/admin-access-context";
+import { AddUserDialog } from "@/components/auth/admin/add-user-dialog";
 import { UserView } from "@/components/auth/user/user-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -257,10 +257,7 @@ export function UsersTable({ users }: UsersTableProps) {
 						</DropdownMenuContent>
 					</DropdownMenu>
 
-					<Button disabled={readOnly}>
-						<UserPlus />
-						Add User
-					</Button>
+					<AddUserDialog disabled={readOnly} />
 				</div>
 			</div>
 
