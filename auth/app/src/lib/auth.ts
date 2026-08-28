@@ -131,10 +131,9 @@ export const auth = betterAuth({
 		silenceWarnings: {
 			oauthAuthServerConfig: true,
 		},
-	},
-
-	experimental: {
-		joins: true, // Enable database joins for better performance
+		database: {
+			joins: true,
+		},
 	},
 
 	plugins: [
