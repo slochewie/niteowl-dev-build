@@ -57,6 +57,11 @@ const organizationQuerySchema = z.object({
 	organizationId: z.string().min(1),
 });
 
+const deleteShiftBodySchema = z.object({
+	organizationId: z.string().min(1),
+	shiftId: z.string().min(1),
+});
+
 async function isGlobalAdmin(pool: Pool, userId: string) {
 	const result = await pool.query<UserRoleRow>(
 		`
@@ -586,6 +591,56 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				} finally {
 					client.release();
 				}
+			},
+		),
+
+		deleteTipClaimShift: createAuthEndpoint(
+			"/tip-claim/shifts",
+			{
+				method: "DELETE",
+				use: [sessionMiddleware],
+				body: deleteShiftBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const { organizationId, shiftId } = ctx.body;
+
+				if (!(await canSaveShift(pool, userId, organizationId))) {
+					return ctx.json(
+						{
+							error: "Forbidden",
+						},
+						{
+							status: 403,
+						},
+					);
+				}
+
+				const result = await pool.query<{ id: string }>(
+					`
+						DELETE FROM "tipClaimShift"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						RETURNING id
+					`,
+					[shiftId, organizationId],
+				);
+
+				if (result.rowCount !== 1) {
+					return ctx.json(
+						{
+							error: "Shift not found",
+						},
+						{
+							status: 404,
+						},
+					);
+				}
+
+				return ctx.json({
+					shiftId,
+				});
 			},
 		),
 
