@@ -1,6 +1,6 @@
 const requiredNames = [
   "BETTER_AUTH_SECRET",
-  "BETTER_AUTH_URL",
+  "BETTER_AUTH_ALLOWED_HOSTS",
   "PGHOST",
   "PGPORT",
   "PGDATABASE",
@@ -29,8 +29,13 @@ export const env = {
   secret:
     process.env.BETTER_AUTH_SECRET!,
 
-  baseURL:
-    process.env.BETTER_AUTH_URL!,
+  authAllowedHosts: process.env
+    .BETTER_AUTH_ALLOWED_HOSTS!
+    .split(",")
+    .map((value) =>
+      value.trim(),
+    )
+    .filter(Boolean),
 
   trustedOrigins: (
     process.env

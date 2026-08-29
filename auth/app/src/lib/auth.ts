@@ -59,7 +59,10 @@ export const auth = betterAuth({
 		},
 	},
 
-	baseURL: env.baseURL,
+	baseURL: {
+		allowedHosts: env.authAllowedHosts,
+		protocol: "https",
+	},
 	secret: env.secret,
 	trustedOrigins: env.trustedOrigins,
 
