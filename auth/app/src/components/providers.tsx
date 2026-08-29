@@ -19,8 +19,26 @@ import { AuthProvider } from "./auth/auth-provider"
 import { Toaster } from "./ui/sonner"
 
 export function Providers({ children }: { children: ReactNode }) {
-  const navigate = useNavigate()
+  const routerNavigate = useNavigate()
   const { slug } = useParams({ strict: false })
+
+  const navigate = ({
+    to,
+    ...options
+  }: Parameters<typeof routerNavigate>[0]) => {
+    if (
+      typeof to === "string" &&
+      /^https?:\/\//i.test(to)
+    ) {
+      window.location.assign(to)
+      return
+    }
+
+    return routerNavigate({
+      to,
+      ...options
+    })
+  }
 
   return (
     <ThemeProvider
