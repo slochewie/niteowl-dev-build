@@ -53,6 +53,10 @@ const saveShiftBodySchema = z.object({
 	staff: z.array(staffSchema).min(1),
 });
 
+const organizationQuerySchema = z.object({
+	organizationId: z.string().min(1),
+});
+
 async function isGlobalAdmin(pool: Pool, userId: string) {
 	const result = await pool.query<UserRoleRow>(
 		`
@@ -582,6 +586,150 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				} finally {
 					client.release();
 				}
+			},
+		),
+
+		listTipClaimShifts: createAuthEndpoint(
+			"/tip-claim/shifts",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const userId = ctx.context.session.user.id;
+
+				if (!(await canSaveShift(pool, userId, organizationId))) {
+					return ctx.json(
+						{
+							error: "Forbidden",
+						},
+						{
+							status: 403,
+						},
+					);
+				}
+
+				const shiftResult = await pool.query<{
+					id: string;
+					organizationId: string;
+					savedByUserId: string;
+					claimPercent: number;
+					totalSalesCents: number;
+					requiredClaimCents: number;
+					totalWeightUnits: number;
+					bartenderWeight: number;
+					barbackWeight: number;
+					doorWeight: number;
+					completedAt: Date;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"organizationId",
+							"savedByUserId",
+							"claimPercent",
+							"totalSalesCents",
+							"requiredClaimCents",
+							"totalWeightUnits",
+							"bartenderWeight",
+							"barbackWeight",
+							"doorWeight",
+							"completedAt",
+							"createdAt"
+						FROM "tipClaimShift"
+						WHERE "organizationId" = $1
+						ORDER BY "completedAt" DESC, "createdAt" DESC
+					`,
+					[organizationId],
+				);
+
+				if (shiftResult.rows.length === 0) {
+					return ctx.json({
+						shifts: [],
+					});
+				}
+
+				const shiftIds = shiftResult.rows.map((shift) => shift.id);
+
+				const registerResult = await pool.query<{
+					id: string;
+					shiftId: string;
+					registerKey: string;
+					name: string;
+					salesCents: number;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"shiftId",
+							"registerKey",
+							name,
+							"salesCents",
+							"createdAt"
+						FROM "tipClaimRegister"
+						WHERE "shiftId" = ANY($1::text[])
+						ORDER BY "createdAt", id
+					`,
+					[shiftIds],
+				);
+
+				const staffResult = await pool.query<{
+					id: string;
+					shiftId: string;
+					userId: string;
+					name: string;
+					email: string;
+					role: string;
+					registerKey: string | null;
+					weight: number;
+					claimCents: number;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"shiftId",
+							"userId",
+							name,
+							email,
+							role,
+							"registerKey",
+							weight,
+							"claimCents",
+							"createdAt"
+						FROM "tipClaimStaff"
+						WHERE "shiftId" = ANY($1::text[])
+						ORDER BY "createdAt", id
+					`,
+					[shiftIds],
+				);
+
+				const registersByShift = new Map<string, typeof registerResult.rows>();
+				const staffByShift = new Map<string, typeof staffResult.rows>();
+
+				for (const register of registerResult.rows) {
+					const current = registersByShift.get(register.shiftId) ?? [];
+					current.push(register);
+					registersByShift.set(register.shiftId, current);
+				}
+
+				for (const staffMember of staffResult.rows) {
+					const current = staffByShift.get(staffMember.shiftId) ?? [];
+					current.push(staffMember);
+					staffByShift.set(staffMember.shiftId, current);
+				}
+
+				return ctx.json({
+					shifts: shiftResult.rows.map((shift) => ({
+						...shift,
+						registers: registersByShift.get(shift.id) ?? [],
+						staff: staffByShift.get(shift.id) ?? [],
+					})),
+				});
 			},
 		),
 	},
