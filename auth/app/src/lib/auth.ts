@@ -29,6 +29,7 @@ import { integrationManager } from "./plugins/integration-manager/index.js";
 import { glauth } from "./plugins/glauth/index.js";
 import { organizationStatus } from "./plugins/organization-status/index.js";
 import { organizationMemberStatus } from "./plugins/organization-member-status/index.js";
+import { tipClaim } from "./plugins/tip-claim/index.js";
 import { userProfile } from "./plugins/user-profile/index.js";
 import { sevenShifts } from "./plugins/seven-shifts/index.js";
 import { sevenShiftsCsv } from "./plugins/seven-shifts-csv/index.js";
@@ -168,6 +169,10 @@ export const auth = betterAuth({
 		}),
 
 		organizationMemberStatus({
+			pool,
+		}),
+
+		tipClaim({
 			pool,
 		}),
 
