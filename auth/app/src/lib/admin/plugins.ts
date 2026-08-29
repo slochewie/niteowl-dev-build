@@ -468,12 +468,25 @@ export const testAdminSevenShiftsApiSource = createServerFn({
 	.handler(async ({ data }) => {
 		const { request } = await requireAdminWrite();
 
-		return auth.api.testSevenShiftsApiSource({
+		const response = await auth.api.testSevenShiftsApiSource({
 			body: {
 				sourceId: data.sourceId,
 			},
 			headers: request.headers,
+			asResponse: true,
 		});
+
+		const result = await response.json();
+
+		if (!response.ok) {
+			throw new Error(
+				typeof result?.error === "string"
+					? result.error
+					: "7shifts connection test failed",
+			);
+		}
+
+		return result;
 	});
 
 export const getAdminSevenShiftsApiLocations = createServerFn({
@@ -684,12 +697,25 @@ export const previewAdminSevenShiftsApiSync = createServerFn({
 	.handler(async ({ data }) => {
 		const { request } = await requireAdminWrite();
 
-		return auth.api.previewSevenShiftsApiSync({
+		const response = await auth.api.previewSevenShiftsApiSync({
 			body: {
 				sourceId: data.sourceId,
 			},
 			headers: request.headers,
+			asResponse: true,
 		});
+
+		const result = await response.json();
+
+		if (!response.ok) {
+			throw new Error(
+				typeof result?.error === "string"
+					? result.error
+					: "Unable to preview 7shifts synchronization",
+			);
+		}
+
+		return result;
 	});
 
 export const syncAdminSevenShiftsApiSource = createServerFn({
@@ -699,12 +725,25 @@ export const syncAdminSevenShiftsApiSource = createServerFn({
 	.handler(async ({ data }) => {
 		const { request } = await requireAdminWrite();
 
-		return auth.api.syncSevenShiftsApiSource({
+		const response = await auth.api.syncSevenShiftsApiSource({
 			body: {
 				sourceId: data.sourceId,
 			},
 			headers: request.headers,
+			asResponse: true,
 		});
+
+		const result = await response.json();
+
+		if (!response.ok) {
+			throw new Error(
+				typeof result?.error === "string"
+					? result.error
+					: "7shifts synchronization failed",
+			);
+		}
+
+		return result;
 	});
 
 export type AdminGlauthSource = {

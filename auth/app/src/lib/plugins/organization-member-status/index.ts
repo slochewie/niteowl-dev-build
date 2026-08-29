@@ -142,6 +142,131 @@ async function canManageOrganization(
 	return membership.role === "owner" || membership.role === "admin";
 }
 
+export async function setOrganizationMemberStatus({
+	pool,
+	memberId,
+	userId,
+	organizationId,
+	active,
+	source,
+	reason,
+}: {
+	pool: Pool;
+	memberId: string;
+	userId: string;
+	organizationId: string;
+	active: boolean;
+	source?: string | null;
+	reason?: string | null;
+}) {
+	const result = await pool.query<OrganizationMemberStatusRow>(
+		`
+        INSERT INTO
+          "organizationMemberStatus" (
+            id,
+            "memberId",
+            active,
+            source,
+            reason,
+            "deactivatedAt",
+            "reactivatedAt",
+            "createdAt",
+            "updatedAt"
+          )
+        VALUES (
+          gen_random_uuid()::text,
+          $1,
+          $2,
+          $3,
+          $4,
+
+          CASE
+            WHEN $2 = false
+            THEN CURRENT_TIMESTAMP
+            ELSE NULL
+          END,
+
+          CASE
+            WHEN $2 = true
+            THEN CURRENT_TIMESTAMP
+            ELSE NULL
+          END,
+
+          CURRENT_TIMESTAMP,
+          CURRENT_TIMESTAMP
+        )
+
+        ON CONFLICT (
+          "memberId"
+        )
+
+        DO UPDATE SET
+          active =
+            EXCLUDED.active,
+
+          source =
+            EXCLUDED.source,
+
+          reason =
+            EXCLUDED.reason,
+
+          "deactivatedAt" =
+            CASE
+              WHEN
+                "organizationMemberStatus".active = true
+                AND EXCLUDED.active = false
+              THEN
+                CURRENT_TIMESTAMP
+              ELSE
+                "organizationMemberStatus"."deactivatedAt"
+            END,
+
+          "reactivatedAt" =
+            CASE
+              WHEN
+                "organizationMemberStatus".active = false
+                AND EXCLUDED.active = true
+              THEN
+                CURRENT_TIMESTAMP
+              ELSE
+                "organizationMemberStatus"."reactivatedAt"
+            END,
+
+          "updatedAt" =
+            CURRENT_TIMESTAMP
+
+        RETURNING
+          "memberId",
+          active,
+          source,
+          reason,
+          "deactivatedAt",
+          "reactivatedAt"
+      `,
+		[memberId, active, source ?? null, reason ?? null],
+	);
+
+	if (!active) {
+		await pool.query(
+			`
+        UPDATE session
+        SET
+          "activeOrganizationId" =
+            NULL,
+          "updatedAt" =
+            CURRENT_TIMESTAMP
+        WHERE
+          "userId" = $1
+          AND
+          "activeOrganizationId" = $2
+      `,
+			[userId, organizationId],
+		);
+	}
+
+	return result.rows[0];
+}
+
 export const organizationMemberStatus = ({
 	pool,
 }: OrganizationMemberStatusOptions) =>
@@ -429,120 +554,17 @@ export const organizationMemberStatus = ({
 						);
 					}
 
-					const result = await pool.query<OrganizationMemberStatusRow>(
-						`
-                  INSERT INTO
-                    "organizationMemberStatus" (
-                      id,
-                      "memberId",
-                      active,
-                      source,
-                      reason,
-                      "deactivatedAt",
-                      "reactivatedAt",
-                      "createdAt",
-                      "updatedAt"
-                    )
-                  VALUES (
-                    gen_random_uuid()::text,
-                    $1,
-                    $2,
-                    $3,
-                    $4,
+					const status = await setOrganizationMemberStatus({
+						pool,
+						memberId: membership.memberId,
+						userId: ctx.body.userId,
+						organizationId: ctx.body.organizationId,
+						active: ctx.body.active,
+						source: ctx.body.source,
+						reason: ctx.body.reason,
+					});
 
-                    CASE
-                      WHEN $2 = false
-                      THEN CURRENT_TIMESTAMP
-                      ELSE NULL
-                    END,
-
-                    CASE
-                      WHEN $2 = true
-                      THEN CURRENT_TIMESTAMP
-                      ELSE NULL
-                    END,
-
-                    CURRENT_TIMESTAMP,
-                    CURRENT_TIMESTAMP
-                  )
-
-                  ON CONFLICT (
-                    "memberId"
-                  )
-
-                  DO UPDATE SET
-                    active =
-                      EXCLUDED.active,
-
-                    source =
-                      EXCLUDED.source,
-
-                    reason =
-                      EXCLUDED.reason,
-
-                    "deactivatedAt" =
-                      CASE
-                        WHEN
-                          EXCLUDED.active =
-                          false
-                        THEN
-                          CURRENT_TIMESTAMP
-                        ELSE
-                          "organizationMemberStatus".
-                          "deactivatedAt"
-                      END,
-
-                    "reactivatedAt" =
-                      CASE
-                        WHEN
-                          EXCLUDED.active =
-                          true
-                        THEN
-                          CURRENT_TIMESTAMP
-                        ELSE
-                          "organizationMemberStatus".
-                          "reactivatedAt"
-                      END,
-
-                    "updatedAt" =
-                      CURRENT_TIMESTAMP
-
-                  RETURNING
-                    "memberId",
-                    active,
-                    source,
-                    reason,
-                    "deactivatedAt",
-                    "reactivatedAt"
-                `,
-						[
-							membership.memberId,
-							ctx.body.active,
-							ctx.body.source ?? null,
-							ctx.body.reason ?? null,
-						],
-					);
-
-					if (!ctx.body.active) {
-						await pool.query(
-							`
-                  UPDATE session
-                  SET
-                    "activeOrganizationId" =
-                      NULL,
-                    "updatedAt" =
-                      CURRENT_TIMESTAMP
-                  WHERE
-                    "userId" = $1
-                    AND
-                    "activeOrganizationId" =
-                      $2
-                `,
-							[ctx.body.userId, ctx.body.organizationId],
-						);
-					}
-
-					return ctx.json(result.rows[0]);
+					return ctx.json(status);
 				},
 			),
 		},

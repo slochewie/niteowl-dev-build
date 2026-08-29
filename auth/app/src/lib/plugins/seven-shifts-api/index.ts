@@ -1,24 +1,25 @@
-import {
-	createCipheriv,
-	createDecipheriv,
-	randomBytes,
-	randomUUID,
-} from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import type { Pool } from "pg";
 import * as z from "zod";
 
+import {
+	decryptApiSecret as decryptSecret,
+	encryptApiSecret as encryptSecret,
+} from "../api-source/secret.js";
+
+import { setOrganizationMemberStatus } from "../organization-member-status/index.js";
 import { getUserProfile, upsertUserProfile } from "../user-profile/index.js";
 
 import {
 	listSevenShiftsCompanies,
 	listSevenShiftsDepartments,
-	listSevenShiftsRoles,
-	listSevenShiftsUsers,
-	listSevenShiftsUserRoleAssignments,
 	listSevenShiftsLocations,
+	listSevenShiftsRoles,
+	listSevenShiftsUserRoleAssignments,
+	listSevenShiftsUsers,
 	SEVEN_SHIFTS_API_VERSION,
 	SevenShiftsApiError,
 	updateSevenShiftsUser,
@@ -251,8 +252,13 @@ async function ensureMember({
 	);
 
 	if (existing.rowCount === 1) {
-		return false;
+		return {
+			memberId: existing.rows[0].id,
+			created: false,
+		};
 	}
+
+	const memberId = randomUUID();
 
 	await pool.query(
 		`
@@ -271,10 +277,13 @@ async function ensureMember({
         CURRENT_TIMESTAMP
       )
     `,
-		[randomUUID(), organizationId, userId],
+		[memberId, organizationId, userId],
 	);
 
-	return true;
+	return {
+		memberId,
+		created: true,
+	};
 }
 
 async function mapWithConcurrency<Input, Output>({
@@ -1487,10 +1496,16 @@ export const sevenShiftsApi = ({
 
 						const previouslyManaged = await pool.query<{
 							sevenShiftsUserId: number | null;
+							userId: string;
+							organizationId: string;
+							memberId: string;
 						}>(
 							`
                   SELECT DISTINCT
-                    se."sevenShiftsUserId"
+                    se."sevenShiftsUserId",
+                    se."userId",
+                    sl."organizationId",
+                    m.id AS "memberId"
                   FROM
                     "sevenShiftsEmployee" se
 
@@ -1499,6 +1514,21 @@ export const sevenShiftsApi = ({
                     ON
                       sa."employeeId" =
                         se.id
+
+                  INNER JOIN
+                    "sevenShiftsLocation" sl
+                    ON
+                      sl.id =
+                        sa."locationId"
+
+                  INNER JOIN
+                    member m
+                    ON
+                      m."organizationId" =
+                        sl."organizationId"
+                      AND
+                      m."userId" =
+                        se."userId"
 
                   WHERE
                     sa."locationId" =
@@ -1526,8 +1556,6 @@ export const sevenShiftsApi = ({
 						let usersUpdated = 0;
 
 						let usersPushedToSevenShifts = 0;
-
-						let usersDisabled = 0;
 
 						let skippedWithoutEmail = 0;
 
@@ -1717,23 +1745,12 @@ export const sevenShiftsApi = ({
                         "user"
                       SET
                         username = $1,
-                        banned = $2,
-                        "banReason" =
-                          CASE
-                            WHEN $2
-                            THEN
-                              'Disabled in 7shifts'
-                            ELSE
-                              NULL
-                          END,
-                        "banExpires" =
-                          NULL,
                         "updatedAt" =
                           CURRENT_TIMESTAMP
                       WHERE
-                        id = $3
+                        id = $2
                     `,
-										[username, !user.active, userId],
+										[username, userId],
 									);
 
 									const hashedPassword =
@@ -2013,17 +2030,11 @@ export const sevenShiftsApi = ({
 								const currentUser = await pool.query<{
 									name: string;
 									username: string | null;
-									banned: boolean;
-									banReason: string | null;
-									banExpires: Date | null;
 								}>(
 									`
                       SELECT
                         name,
-                        username,
-                        banned,
-                        "banReason",
-                        "banExpires"
+                        username
                       FROM
                         "user"
                       WHERE
@@ -2043,18 +2054,9 @@ export const sevenShiftsApi = ({
 									current.username ??
 									(email ? await uniqueUsername(pool, email) : null);
 
-								const desiredBanned = !user.active;
-
-								const desiredBanReason = desiredBanned
-									? "Disabled in 7shifts"
-									: null;
-
 								const userChanged =
 									current.name !== name ||
-									(username !== null && current.username !== username) ||
-									current.banned !== desiredBanned ||
-									current.banReason !== desiredBanReason ||
-									current.banExpires !== null;
+									(username !== null && current.username !== username);
 
 								if (userChanged) {
 									await pool.query(
@@ -2068,16 +2070,12 @@ export const sevenShiftsApi = ({
                             $2,
                             username
                           ),
-                        banned = $3,
-                        "banReason" = $4,
-                        "banExpires" =
-                          NULL,
                         "updatedAt" =
                           CURRENT_TIMESTAMP
                       WHERE
-                        id = $5
+                        id = $3
                     `,
-										[name, username, desiredBanned, desiredBanReason, userId],
+										[name, username, userId],
 									);
 								}
 
@@ -2150,10 +2148,6 @@ export const sevenShiftsApi = ({
 								}
 							}
 
-							if (!user.active) {
-								usersDisabled++;
-							}
-
 							resolvedEmployees.set(user.id, {
 								employeeRecordId,
 								userId,
@@ -2170,6 +2164,24 @@ export const sevenShiftsApi = ({
 						>();
 
 						const membershipKeys = new Set<string>();
+
+						const membershipsByKey = new Map<
+							string,
+							{
+								memberId: string;
+								organizationId: string;
+								userId: string;
+							}
+						>();
+
+						const desiredMembershipStatuses = new Map<
+							string,
+							{
+								organizationId: string;
+								userId: string;
+								active: boolean;
+							}
+						>();
 
 						for (const { user, assignments } of assignmentsByUserId) {
 							const employee = resolvedEmployees.get(user.id);
@@ -2202,16 +2214,28 @@ export const sevenShiftsApi = ({
 								if (!membershipKeys.has(membershipKey)) {
 									membershipKeys.add(membershipKey);
 
-									if (
-										await ensureMember({
-											pool,
-											organizationId: location.organizationId,
-											userId: employee.userId,
-										})
-									) {
+									const membership = await ensureMember({
+										pool,
+										organizationId: location.organizationId,
+										userId: employee.userId,
+									});
+
+									membershipsByKey.set(membershipKey, {
+										memberId: membership.memberId,
+										organizationId: location.organizationId,
+										userId: employee.userId,
+									});
+
+									if (membership.created) {
 										membershipsCreated++;
 									}
 								}
+
+								desiredMembershipStatuses.set(membershipKey, {
+									organizationId: location.organizationId,
+									userId: employee.userId,
+									active: user.active,
+								});
 
 								const key = `${employee.employeeRecordId}\u0000${location.id}\u0000${role.id}`;
 
@@ -2223,6 +2247,65 @@ export const sevenShiftsApi = ({
 							}
 						}
 
+						for (const [
+							membershipKey,
+							desiredStatus,
+						] of desiredMembershipStatuses) {
+							const membership = membershipsByKey.get(membershipKey);
+
+							if (!membership) {
+								throw new Error(
+									`Unable to resolve Better Auth membership ${membershipKey}`,
+								);
+							}
+
+							await setOrganizationMemberStatus({
+								pool,
+								memberId: membership.memberId,
+								userId: desiredStatus.userId,
+								organizationId: desiredStatus.organizationId,
+								active: desiredStatus.active,
+								source: "seven-shifts-api",
+								reason: desiredStatus.active ? null : "Inactive in 7shifts",
+							});
+						}
+
+						const previousMemberships = new Map<
+							string,
+							{
+								memberId: string;
+								userId: string;
+								organizationId: string;
+							}
+						>();
+
+						for (const previous of previouslyManaged.rows) {
+							const membershipKey = `${previous.organizationId}\u0000${previous.userId}`;
+
+							if (!previousMemberships.has(membershipKey)) {
+								previousMemberships.set(membershipKey, {
+									memberId: previous.memberId,
+									userId: previous.userId,
+									organizationId: previous.organizationId,
+								});
+							}
+						}
+
+						for (const [membershipKey, membership] of previousMemberships) {
+							if (desiredMembershipStatuses.has(membershipKey)) {
+								continue;
+							}
+
+							await setOrganizationMemberStatus({
+								pool,
+								memberId: membership.memberId,
+								userId: membership.userId,
+								organizationId: membership.organizationId,
+								active: false,
+								source: "seven-shifts-api",
+								reason: "No longer assigned in 7shifts",
+							});
+						}
 						type ExistingAssignment = {
 							id: string;
 							employeeId: string;
@@ -2353,7 +2436,11 @@ export const sevenShiftsApi = ({
 
 							usersPushedToSevenShifts,
 
-							usersDisabled,
+							/*
+							 * Retained for report compatibility.
+							 * 7shifts no longer changes Better Auth global bans.
+							 */
+							usersDisabled: 0,
 
 							skippedWithoutEmail,
 

@@ -1,12 +1,13 @@
-import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
-import { basename, join } from "node:path";
 import { randomBytes, randomUUID } from "node:crypto";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { basename, join } from "node:path";
 
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import type { Pool } from "pg";
 import * as z from "zod";
 
+import { setOrganizationMemberStatus } from "../organization-member-status/index.js";
 import { upsertUserProfile } from "../user-profile/index.js";
 
 type SevenShiftsCsvOptions = {
@@ -616,8 +617,13 @@ async function ensureMember({
 	);
 
 	if (existing.rowCount === 1) {
-		return false;
+		return {
+			memberId: existing.rows[0].id,
+			created: false,
+		};
 	}
+
+	const memberId = randomUUID();
 
 	await pool.query(
 		`
@@ -636,10 +642,13 @@ async function ensureMember({
         CURRENT_TIMESTAMP
       )
     `,
-		[randomUUID(), organizationId, userId],
+		[memberId, organizationId, userId],
 	);
 
-	return true;
+	return {
+		memberId,
+		created: true,
+	};
 }
 
 export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
@@ -1515,46 +1524,13 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 					 *
 					 * Test1 should land here.
 					 */
-					if (applicableRows.length === 0) {
-						const report: ImportReport = {
-							fileId: metadata.id,
-							fileName: metadata.originalName,
-
-							sourceRows: rows.length,
-
-							applicableRows: 0,
-
-							ignoredRows: rows.length,
-
-							skippedWithoutEmail: 0,
-
-							employeesSeen: 0,
-
-							usersCreated: 0,
-
-							usersUpdated: 0,
-
-							assignmentsCreated: 0,
-
-							assignmentsRemoved: 0,
-
-							membershipsCreated: 0,
-
-							membershipsRemoved: 0,
-
-							usersDisabled: 0,
-
-							disabledEmployees: 0,
-
-							generatedPasswordFile: null,
-
-							completedAt: new Date().toISOString(),
-						};
-
-						return ctx.json({
-							report,
-						});
-					}
+					/*
+					 * A zero-row import is still authoritative for the
+					 * mapped locations. Continue through reconciliation
+					 * so stale assignments are removed and previously
+					 * 7shifts-managed organization memberships are
+					 * deactivated rather than returning early.
+					 */
 
 					const roles = await getTargetRoles(pool, locations);
 
@@ -1626,8 +1602,6 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 
 					let assignmentsRemoved = 0;
 
-					let usersDisabled = 0;
-
 					let disabledEmployees = 0;
 
 					const userByEmail = new Map<
@@ -1685,18 +1659,12 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 							id: string;
 							name: string;
 							username: string | null;
-							banned: boolean;
-							banReason: string | null;
-							banExpires: Date | null;
 						}>(
 							`
                     SELECT
                       id,
                       name,
-                      username,
-                      banned,
-                      "banReason",
-                      "banExpires"
+                      username
                     FROM
                       "user"
                     WHERE
@@ -1728,22 +1696,8 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 							username =
 								currentUser.username ?? (await uniqueUsername(pool, email));
 
-							const desiredBanned = !enabled;
-
-							const desiredBanReason = desiredBanned
-								? "Disabled in 7shifts"
-								: null;
-
-							if (!currentUser.banned && desiredBanned) {
-								usersDisabled++;
-							}
-
 							userChanged =
-								currentUser.name !== name ||
-								currentUser.username !== username ||
-								currentUser.banned !== desiredBanned ||
-								currentUser.banReason !== desiredBanReason ||
-								currentUser.banExpires !== null;
+								currentUser.name !== name || currentUser.username !== username;
 
 							if (userChanged) {
 								await pool.query(
@@ -1753,16 +1707,12 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
                       SET
                         name = $1,
                         username = $2,
-                        banned = $3,
-                        "banReason" = $4,
-                        "banExpires" =
-                          NULL,
                         "updatedAt" =
                           CURRENT_TIMESTAMP
                       WHERE
-                        id = $5
+                        id = $3
                     `,
-									[name, username, desiredBanned, desiredBanReason, userId],
+									[name, username, userId],
 								);
 							}
 						} else {
@@ -1788,23 +1738,12 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
                       "user"
                     SET
                       username = $1,
-                      banned = $2,
-                      "banReason" =
-                        CASE
-                          WHEN $2
-                          THEN
-                            'Disabled in 7shifts'
-                          ELSE
-                            NULL
-                        END,
-                      "banExpires" =
-                        NULL,
                       "updatedAt" =
                         CURRENT_TIMESTAMP
                     WHERE
-                      id = $3
+                      id = $2
                   `,
-								[username, !enabled, userId],
+								[username, userId],
 							);
 
 							const hashedPassword = await ctx.context.password.hash(password);
@@ -1963,6 +1902,25 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 
 					const membershipKeys = new Set<string>();
 
+					const membershipsByKey = new Map<
+						string,
+						{
+							memberId: string;
+							organizationId: string;
+							userId: string;
+						}
+					>();
+
+					const desiredMembershipStatuses = new Map<
+						string,
+						{
+							organizationId: string;
+							userId: string;
+							active: boolean;
+							status: string;
+						}
+					>();
+
 					for (const row of applicableRows) {
 						const email = (row["Email"] ?? "").trim().toLowerCase();
 
@@ -1989,16 +1947,39 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 						if (!membershipKeys.has(membershipKey)) {
 							membershipKeys.add(membershipKey);
 
-							if (
-								await ensureMember({
-									pool,
-									organizationId: location.organizationId,
-									userId: employee.userId,
-								})
-							) {
+							const membership = await ensureMember({
+								pool,
+								organizationId: location.organizationId,
+								userId: employee.userId,
+							});
+
+							membershipsByKey.set(membershipKey, {
+								memberId: membership.memberId,
+								organizationId: location.organizationId,
+								userId: employee.userId,
+							});
+
+							if (membership.created) {
 								membershipsCreated++;
 							}
 						}
+
+						const rowStatus = (row["User status"] ?? "").trim();
+
+						const rowActive = isEnabledStatus(rowStatus);
+
+						const currentMembershipStatus =
+							desiredMembershipStatuses.get(membershipKey);
+
+						desiredMembershipStatuses.set(membershipKey, {
+							organizationId: location.organizationId,
+							userId: employee.userId,
+							active: currentMembershipStatus?.active === true || rowActive,
+							status:
+								currentMembershipStatus?.active === true
+									? currentMembershipStatus.status
+									: rowStatus,
+						});
 
 						const roleName = (row["Role"] ?? "").trim();
 
@@ -2027,11 +2008,40 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 						});
 					}
 
+					for (const [
+						membershipKey,
+						desiredStatus,
+					] of desiredMembershipStatuses) {
+						const membership = membershipsByKey.get(membershipKey);
+
+						if (!membership) {
+							throw new Error(
+								`Unable to resolve Better Auth membership ${membershipKey}`,
+							);
+						}
+
+						await setOrganizationMemberStatus({
+							pool,
+							memberId: membership.memberId,
+							userId: desiredStatus.userId,
+							organizationId: desiredStatus.organizationId,
+							active: desiredStatus.active,
+							source: "seven-shifts-csv",
+							reason: desiredStatus.active
+								? null
+								: desiredStatus.status
+									? `7shifts status: ${desiredStatus.status}`
+									: "Inactive in 7shifts",
+						});
+					}
 					type ExistingAssignment = {
 						id: string;
 						employeeId: string;
 						locationId: string;
 						roleId: string;
+						memberId: string;
+						userId: string;
+						organizationId: string;
 					};
 
 					let existingAssignments: ExistingAssignment[] = [];
@@ -2040,14 +2050,39 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 						const result = await pool.query<ExistingAssignment>(
 							`
                     SELECT
-                      id,
-                      "employeeId",
-                      "locationId",
-                      "roleId"
+                      sa.id,
+                      sa."employeeId",
+                      sa."locationId",
+                      sa."roleId",
+                      m.id AS "memberId",
+                      se."userId",
+                      sl."organizationId"
                     FROM
-                      "sevenShiftsAssignment"
+                      "sevenShiftsAssignment" sa
+
+                    INNER JOIN
+                      "sevenShiftsEmployee" se
+                      ON
+                        se.id =
+                          sa."employeeId"
+
+                    INNER JOIN
+                      "sevenShiftsLocation" sl
+                      ON
+                        sl.id =
+                          sa."locationId"
+
+                    INNER JOIN
+                      member m
+                      ON
+                        m."organizationId" =
+                          sl."organizationId"
+                        AND
+                        m."userId" =
+                          se."userId"
+
                     WHERE
-                      "locationId" =
+                      sa."locationId" =
                         ANY(
                           $1::text[]
                         )
@@ -2056,6 +2091,43 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 						);
 
 						existingAssignments = result.rows;
+					}
+
+					const previousMemberships = new Map<
+						string,
+						{
+							memberId: string;
+							userId: string;
+							organizationId: string;
+						}
+					>();
+
+					for (const assignment of existingAssignments) {
+						const membershipKey = `${assignment.organizationId}\u0000${assignment.userId}`;
+
+						if (!previousMemberships.has(membershipKey)) {
+							previousMemberships.set(membershipKey, {
+								memberId: assignment.memberId,
+								userId: assignment.userId,
+								organizationId: assignment.organizationId,
+							});
+						}
+					}
+
+					for (const [membershipKey, membership] of previousMemberships) {
+						if (desiredMembershipStatuses.has(membershipKey)) {
+							continue;
+						}
+
+						await setOrganizationMemberStatus({
+							pool,
+							memberId: membership.memberId,
+							userId: membership.userId,
+							organizationId: membership.organizationId,
+							active: false,
+							source: "seven-shifts-csv",
+							reason: "No longer assigned in 7shifts",
+						});
 					}
 
 					const existingByKey = new Map<string, ExistingAssignment>();
@@ -2191,7 +2263,11 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
 						 */
 						membershipsRemoved: 0,
 
-						usersDisabled,
+						/*
+						 * Retained for report compatibility.
+						 * 7shifts no longer changes Better Auth global bans.
+						 */
+						usersDisabled: 0,
 
 						disabledEmployees,
 
