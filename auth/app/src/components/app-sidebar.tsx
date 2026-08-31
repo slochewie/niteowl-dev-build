@@ -125,7 +125,7 @@ export function AppSidebar() {
 
 		return (
 			<SidebarMenuItem key={item.to}>
-				<SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+				<SidebarMenuButton className="text-base [&>svg]:size-5" asChild isActive={isActive} tooltip={item.title}>
 					<Link to={item.to} onClick={closeMobileSidebar}>
 						<item.icon />
 
@@ -140,7 +140,7 @@ export function AppSidebar() {
 		<Sidebar collapsible="icon">
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel>NiteOwl</SidebarGroupLabel>
+					<SidebarGroupLabel className="text-base font-semibold">NiteOwl</SidebarGroupLabel>
 
 					<SidebarGroupContent>
 						<SidebarMenu>
@@ -156,12 +156,12 @@ export function AppSidebar() {
 				<SidebarSeparator />
 
         <SidebarGroup>
-          <SidebarGroupLabel>Apps</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-sm">Apps</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {appsNavigation.map((item) => (
                 <SidebarMenuItem key={item.key}>
-                  <SidebarMenuButton
+                  <SidebarMenuButton className="text-base [&>svg]:size-5"
                     type="button"
                     tooltip={item.title}
                     onClick={() => {
@@ -181,7 +181,7 @@ export function AppSidebar() {
         <SidebarSeparator />
 
 				<SidebarGroup>
-					<SidebarGroupLabel>Settings</SidebarGroupLabel>
+					<SidebarGroupLabel className="text-sm">Settings</SidebarGroupLabel>
 
 					<SidebarGroupContent>
 						<SidebarMenu>
@@ -196,7 +196,7 @@ export function AppSidebar() {
 
 								return (
 									<SidebarMenuItem key={item.to}>
-										<SidebarMenuButton
+										<SidebarMenuButton className="text-base [&>svg]:size-5"
 											asChild
 											isActive={isActive}
 											tooltip={item.title}
@@ -286,7 +286,7 @@ export function AppSidebar() {
 						<SidebarSeparator />
 
 						<SidebarGroup>
-							<SidebarGroupLabel>
+							<SidebarGroupLabel className="text-sm">
 								{readOnly ? "Admin · Read only" : "Admin"}
 							</SidebarGroupLabel>
 
