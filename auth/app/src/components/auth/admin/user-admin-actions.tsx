@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
+import { sendAdminSetupEmail } from "@/lib/admin/users";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -73,6 +74,23 @@ export function UserAdminActions({ user }: UserAdminActionsProps) {
 	);
 
 	const [pending, setPending] = useState(false);
+
+  async function sendSetupEmail() {
+    setPending(true);
+
+    try {
+      await sendAdminSetupEmail({ data: { userId: user.id } });
+      toast.success("Setup email requested for " + user.email);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to send setup email",
+      );
+    } finally {
+      setPending(false);
+    }
+  }
 
 	async function refreshUser() {
 		await navigate({
@@ -273,6 +291,17 @@ export function UserAdminActions({ user }: UserAdminActionsProps) {
 					<KeyRound />
 					Change Password
 				</Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-start"
+          disabled={pending || user.banned}
+          onClick={() => void sendSetupEmail()}
+        >
+          <KeyRound data-icon="inline-start" />
+          Send setup email
+        </Button>
 
 				<Button
 					variant="outline"

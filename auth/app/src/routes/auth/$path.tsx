@@ -2,12 +2,14 @@ import { viewPaths } from "@better-auth-ui/core"
 import { createFileRoute, redirect } from "@tanstack/react-router"
 
 import { Auth } from "@/components/auth/auth"
+import { ResetPassword } from "@/components/auth/reset-password"
 import { emailOtpPlugin } from "@/lib/auth/email-otp-plugin"
 import { magicLinkPlugin } from "@/lib/auth/magic-link-plugin"
 import { twoFactorPlugin } from "@/lib/auth/two-factor-plugin"
 import { oauthProviderPlugin } from "@/lib/auth/oauth-provider-plugin"
 
 const validAuthPathSegments = new Set([
+  "set-password",
   ...Object.values(viewPaths.auth),
   ...Object.values(oauthProviderPlugin().viewPaths.auth),
   magicLinkPlugin().viewPaths.auth.magicLink,
@@ -29,7 +31,7 @@ function AuthPage() {
 
   return (
     <div className="flex justify-center my-auto p-4 md:p-6">
-      <Auth path={path} />
+      {path === "set-password" ? <ResetPassword setup /> : <Auth path={path} />}
     </div>
   )
 }

@@ -92,11 +92,29 @@ export const auth = betterAuth({
 		enabled: true,
 
 		sendResetPassword: async ({ user, url }) => {
+      const callback = new URL(url).searchParams.get("callbackURL");
+      const setup = !!callback &&
+        new URL(callback, url).pathname === "/auth/set-password";
+      const safeURL = url
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
 			const { error } = await resend.emails.send({
 				from: emailFrom,
 				to: user.email,
-				subject: "Reset your password",
-				html: `Click <a href="${url}">here</a> to reset your password.`,
+				subject: setup ? "Set up your account" : "Reset your password",
+				text: setup
+          ? "Set up your NiteOwl account by choosing a password: " + url +
+            "\nThen sign in with your email and new password."
+          : "Reset your password: " + url,
+        html: setup
+          ? '<p>Set up your NiteOwl account by choosing a password.</p>' +
+            '<p><a href="' + safeURL + '">Set up your account</a></p>' +
+            '<p>Then sign in with your email and new password. ' +
+            'If the link expires, ask your administrator to send another.</p>'
+          : '<p>Click <a href="' + safeURL +
+            '">here</a> to reset your password.</p>',
 			});
 
 			if (error) {
@@ -232,7 +250,11 @@ export const auth = betterAuth({
 
 		dash(),
 
-		sentinel(),
+		sentinel({
+      security: {
+        emailNormalization: { enabled: false },
+      },
+    }),
 
 		integrationManager({
 			pool,

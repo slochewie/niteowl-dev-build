@@ -26,6 +26,7 @@ import { cn } from "#/lib/utils.ts"
 
 export type ResetPasswordProps = {
   className?: string
+  setup?: boolean
 }
 
 /**
@@ -35,7 +36,7 @@ export type ResetPasswordProps = {
  *
  * @returns The password reset form UI ready to be mounted in the app layout.
  */
-export function ResetPassword({ className }: ResetPasswordProps) {
+export function ResetPassword({ className, setup = false }: ResetPasswordProps) {
   const {
     authClient,
     basePaths,
@@ -53,7 +54,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
 
   const { mutate: resetPassword, isPending } = useResetPassword(authClient, {
     onSuccess: () => {
-      toast.success(localization.auth.passwordResetSuccess)
+      toast.success(setup ? "Password saved. Sign in to continue." : localization.auth.passwordResetSuccess)
       navigate({ to: signInURL })
     }
   })
@@ -93,7 +94,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
     const password = formData.get("password") as string
     const confirmPassword = formData.get("confirmPassword") as string
 
-    if (emailAndPassword?.confirmPassword && password !== confirmPassword) {
+    if ((setup || emailAndPassword?.confirmPassword) && password !== confirmPassword) {
       toast.error(localization.auth.passwordsDoNotMatch)
       return
     }
@@ -105,7 +106,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
     <Card className={cn("w-full max-w-sm", className)}>
       <CardHeader>
         <CardTitle className="text-xl font-semibold">
-          {localization.auth.resetPassword}
+          {setup ? "Set up your account" : localization.auth.resetPassword}
         </CardTitle>
       </CardHeader>
 
@@ -184,7 +185,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
               <FieldError>{fieldErrors.password}</FieldError>
             </Field>
 
-            {emailAndPassword?.confirmPassword && (
+            {(setup || emailAndPassword?.confirmPassword) && (
               <Field data-invalid={!!fieldErrors.confirmPassword}>
                 <FieldLabel htmlFor="confirmPassword">
                   {localization.auth.confirmPassword}
@@ -262,7 +263,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
               <Button type="submit" disabled={isPending}>
                 {isPending && <Spinner />}
 
-                {localization.auth.resetPassword}
+                {setup ? "Set up your account" : localization.auth.resetPassword}
               </Button>
             </div>
           </FieldGroup>
@@ -270,7 +271,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
 
         <div className="flex flex-col gap-3 items-center w-full mt-4">
           <FieldDescription className="text-center">
-            {localization.auth.rememberYourPassword}{" "}
+            {setup ? "Already set up?" : localization.auth.rememberYourPassword}{" "}
             <Link
               href={getAuthLinkURL(
                 `${basePaths.auth}/${viewPaths.auth.signIn}`,

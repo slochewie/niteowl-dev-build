@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireAdminRead, requireAdminWrite } from "@/lib/admin/access";
-import { pool } from "@/lib/auth";
+import { auth, pool, redis } from "@/lib/auth";
 import {
 	getUserProfile,
 	upsertUserProfile,
@@ -262,3 +262,62 @@ export const updateAdminUserProfile = createServerFn({
 
 		return upsertUserProfile(pool, data.userId, data.fields);
 	});
+
+export const sendAdminSetupEmail = createServerFn({ method: "POST" })
+  .validator((data: unknown) => {
+    if (
+      !data ||
+      typeof data !== "object" ||
+      !("userId" in data) ||
+      typeof data.userId !== "string" ||
+      !data.userId.trim() ||
+      data.userId.length > 256
+    ) {
+      throw new Error("Invalid user ID");
+    }
+
+    return { userId: data.userId.trim() };
+  })
+  .handler(async ({ data }) => {
+    const { request } = await requireAdminWrite();
+
+    const result = await pool.query<{
+      email: string;
+      banned: boolean | null;
+    }>(
+      'SELECT email, banned FROM "user" WHERE id = $1 LIMIT 1',
+      [data.userId],
+    );
+
+    const user = result.rows[0];
+
+    if (!user) throw new Error("User not found");
+
+    if (user.banned) {
+      throw new Error("Unban this user before sending a setup email");
+    }
+
+    const allowed = await redis.set(
+      "onboarding:send:" + data.userId,
+      "1",
+      "EX",
+      60,
+      "NX",
+    );
+
+    if (!allowed) {
+      throw new Error(
+        "Please wait one minute before sending another setup email",
+      );
+    }
+
+    await auth.api.requestPasswordReset({
+      headers: request.headers,
+      body: {
+        email: user.email,
+        redirectTo: "/auth/set-password",
+      },
+    });
+
+    return { success: true };
+  });

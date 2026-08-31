@@ -4,6 +4,9 @@ import {
 	Blocks,
 	Building2,
 	LayoutDashboard,
+	Gauge,
+	Calculator,
+	Network,
 	ShieldCheck,
 	UserCircle,
 	Users,
@@ -26,6 +29,28 @@ import {
 	SidebarSeparator,
 	useSidebar,
 } from "@/components/ui/sidebar";
+
+function getAppLinks() {
+  const hostname = window.location.hostname;
+  const isMccarthysDomain =
+    hostname === "mccarthysirishpub.com" ||
+    hostname.endsWith(".mccarthysirishpub.com");
+  const domain = isMccarthysDomain
+    ? "mccarthysirishpub.com"
+    : "niteowl.dev";
+
+  return {
+    counter: "https://counter." + domain,
+    tipCalculator: "https://tip-calculator." + domain + "/app",
+    networkStatus: "https://unifi." + domain,
+  };
+}
+
+const appsNavigation = [
+  { title: "Counter", key: "counter", icon: Gauge },
+  { title: "Tip Calculator", key: "tipCalculator", icon: Calculator },
+  { title: "Network Status", key: "networkStatus", icon: Network },
+] as const;
 
 export function AppSidebar() {
 	const { canView, readOnly } = useAdminAccess();
@@ -129,6 +154,31 @@ export function AppSidebar() {
 				</SidebarGroup>
 
 				<SidebarSeparator />
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Apps</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {appsNavigation.map((item) => (
+                <SidebarMenuItem key={item.key}>
+                  <SidebarMenuButton
+                    type="button"
+                    tooltip={item.title}
+                    onClick={() => {
+                      closeMobileSidebar();
+                      window.location.assign(getAppLinks()[item.key]);
+                    }}
+                  >
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator />
 
 				<SidebarGroup>
 					<SidebarGroupLabel>Settings</SidebarGroupLabel>
