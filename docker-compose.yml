@@ -53,6 +53,9 @@ services:
 
   auth:
     image: 'node:26-trixie'
+    build:
+      context: .
+      dockerfile: Dockerfile
     working_dir: /app
 #    command: ["npm", "start"]
     command: ["sh", "-c", "npm run build && npm start"]
