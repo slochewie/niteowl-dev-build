@@ -19,7 +19,7 @@ type OrganizationStatusRow = {
 	enabled: boolean;
 };
 
-const roleSchema = z.enum(["bartender", "barback", "door"]);
+const roleSchema = z.enum(["bartender", "manager", "barback", "door"]);
 
 const registerSchema = z.object({
 	registerKey: z.string().min(1),
@@ -45,6 +45,7 @@ const saveShiftBodySchema = z.object({
 	totalWeightUnits: z.number().int().min(0),
 	weights: z.object({
 		bartender: z.number().int().min(0),
+		manager: z.number().int().min(0),
 		barback: z.number().int().min(0),
 		door: z.number().int().min(0),
 	}),
@@ -197,6 +198,10 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					required: true,
 				},
 				bartenderWeight: {
+					type: "number",
+					required: true,
+				},
+				managerWeight: {
 					type: "number",
 					required: true,
 				},
@@ -390,11 +395,12 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 
 					if (
 						staffMember.role !== "bartender" &&
+						staffMember.role !== "manager" &&
 						staffMember.registerKey != null
 					) {
 						return ctx.json(
 							{
-								error: "Only bartenders may be assigned a register",
+								error: "Only bartenders and managers may be assigned a register",
 							},
 							{
 								status: 400,
@@ -469,6 +475,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 								"requiredClaimCents",
 								"totalWeightUnits",
 								"bartenderWeight",
+								"managerWeight",
 								"barbackWeight",
 								"doorWeight",
 								"completedAt",
@@ -486,6 +493,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 								$8,
 								$9,
 								$10,
+								$11,
 								CURRENT_TIMESTAMP
 							)
 							RETURNING id
@@ -498,6 +506,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							body.requiredClaimCents,
 							body.totalWeightUnits,
 							body.weights.bartender,
+							body.weights.manager,
 							body.weights.barback,
 							body.weights.door,
 							body.completedAt,
@@ -675,6 +684,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					requiredClaimCents: number;
 					totalWeightUnits: number;
 					bartenderWeight: number;
+					managerWeight: number;
 					barbackWeight: number;
 					doorWeight: number;
 					completedAt: Date;
@@ -690,6 +700,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							"requiredClaimCents",
 							"totalWeightUnits",
 							"bartenderWeight",
+							"managerWeight",
 							"barbackWeight",
 							"doorWeight",
 							"completedAt",
