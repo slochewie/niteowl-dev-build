@@ -83,3 +83,8 @@ glauth-postgres/config.cfg
 # macOS metadata
 .DS_Store
 ._*
+
+# Local backups from maintenance fixes
+/auth/app/.email-period-backups/
+/auth/app/.onboarding-backups/
+/auth/app/.sidebar-backups/
