@@ -467,18 +467,60 @@ export const counterAccess = ({ pool }: CounterOptions): BetterAuthPlugin => ({
 					organizationId,
 				);
 
-				if (
-					!managementContext.isGlobalAdmin &&
-					(await isGlobalAdmin(pool, userId))
-				) {
-					return ctx.json(
-						{
-							error: "Global administrator assignments cannot be modified",
-						},
-						{
-							status: 403,
-						},
+				const delegatedCounterManager =
+					managementContext.isCounterManager &&
+					!managementContext.isOrganizationManager &&
+					!managementContext.isGlobalAdmin;
+
+				if (delegatedCounterManager) {
+					if (ctx.context.session.user.id === userId) {
+						return ctx.json(
+							{
+								error:
+									"Counter Managers cannot modify their own Counter assignment",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
+
+					const targetManager = await pool.query(
+						`
+							SELECT 1
+							FROM "counterManager"
+							WHERE
+								"organizationId" = $1
+								AND "userId" = $2
+								AND enabled = true
+							LIMIT 1
+						`,
+						[organizationId, userId],
 					);
+
+					if (targetManager.rowCount === 1) {
+						return ctx.json(
+							{
+								error:
+									"Counter Managers cannot modify another Counter Manager's assignment",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
+
+					if (await isGlobalAdmin(pool, userId)) {
+						return ctx.json(
+							{
+								error:
+									"Counter Managers cannot modify a global administrator's assignment",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
 				}
 
 				await pool.query(
@@ -609,8 +651,29 @@ export const counterAccess = ({ pool }: CounterOptions): BetterAuthPlugin => ({
 					[organizationId],
 				);
 
+				const globalAdminResult = await pool.query<{
+					userId: string;
+				}>(
+					`
+						SELECT u.id AS "userId"
+						FROM member m
+						INNER JOIN "user" u
+							ON u.id = m."userId"
+						LEFT JOIN "organizationMemberStatus" oms
+							ON oms."memberId" = m.id
+						WHERE
+							m."organizationId" = $1
+							AND u.role = 'admin'
+							AND COALESCE(u.banned, false) = false
+							AND COALESCE(oms.active, true) = true
+						ORDER BY u.id
+					`,
+					[organizationId],
+				);
+
 				return ctx.json({
 					managerUserIds: result.rows.map((row) => row.userId),
+					globalAdminUserIds: globalAdminResult.rows.map((row) => row.userId),
 					canManageManagers:
 						context.isGlobalAdmin || context.isOrganizationManager,
 				});
