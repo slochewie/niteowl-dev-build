@@ -77,6 +77,12 @@ const updateAccessBodySchema = z.object({
 	enabled: z.boolean(),
 });
 
+const updateManagerBodySchema = z.object({
+	organizationId: z.string().min(1),
+	userId: z.string().min(1),
+	enabled: z.boolean(),
+});
+
 async function isGlobalAdmin(pool: Pool, userId: string) {
 	const result = await pool.query<UserRoleRow>(
 		`
@@ -164,29 +170,49 @@ async function canSaveShift(
 	return result.rowCount === 1;
 }
 
-async function canManageAssignments(
+async function getAssignmentManagementContext(
 	pool: Pool,
 	userId: string,
 	organizationId: string,
 ) {
 	if (!(await organizationIsEnabled(pool, organizationId))) {
-		return false;
+		return {
+			allowed: false,
+			isGlobalAdmin: false,
+			isOrganizationManager: false,
+			isAssignmentManager: false,
+		};
 	}
 
-	if (await isGlobalAdmin(pool, userId)) {
-		return true;
+	const globalAdmin = await isGlobalAdmin(pool, userId);
+
+	if (globalAdmin) {
+		return {
+			allowed: true,
+			isGlobalAdmin: true,
+			isOrganizationManager: false,
+			isAssignmentManager: false,
+		};
 	}
 
-	const result = await pool.query<MembershipRow>(
+	const result = await pool.query<{
+		memberId: string;
+		role: string;
+		assignmentManagerEnabled: boolean | null;
+	}>(
 		`
 			SELECT
 				m.id AS "memberId",
-				m.role
+				m.role,
+				a."assignmentManagerEnabled"
 			FROM member m
 			INNER JOIN "user" u
 				ON u.id = m."userId"
 			LEFT JOIN "organizationMemberStatus" oms
 				ON oms."memberId" = m.id
+			LEFT JOIN "tipClaimEmployeeAssignment" a
+				ON a."organizationId" = m."organizationId"
+				AND a."userId" = m."userId"
 			WHERE
 				m."organizationId" = $1
 				AND m."userId" = $2
@@ -199,7 +225,88 @@ async function canManageAssignments(
 
 	const membership = result.rows[0];
 
-	return membership?.role === "owner" || membership?.role === "admin";
+	if (!membership) {
+		return {
+			allowed: false,
+			isGlobalAdmin: false,
+			isOrganizationManager: false,
+			isAssignmentManager: false,
+		};
+	}
+
+	const organizationManager =
+		membership.role === "owner" || membership.role === "admin";
+	const assignmentManager = membership.assignmentManagerEnabled === true;
+
+	return {
+		allowed: organizationManager || assignmentManager,
+		isGlobalAdmin: false,
+		isOrganizationManager: organizationManager,
+		isAssignmentManager: assignmentManager,
+	};
+}
+
+async function canManageAssignments(
+	pool: Pool,
+	userId: string,
+	organizationId: string,
+) {
+	const context = await getAssignmentManagementContext(
+		pool,
+		userId,
+		organizationId,
+	);
+
+	return context.allowed;
+}
+
+type AssignmentMutationKind = "access" | "roles" | "manager";
+
+async function canModifyAssignmentTarget(
+	pool: Pool,
+	sessionUserId: string,
+	organizationId: string,
+	targetUserId: string,
+	kind: AssignmentMutationKind,
+	enabled?: boolean,
+) {
+	const context = await getAssignmentManagementContext(
+		pool,
+		sessionUserId,
+		organizationId,
+	);
+
+	if (!context.allowed) {
+		return false;
+	}
+
+	if (context.isGlobalAdmin) {
+		return true;
+	}
+
+	if (await isGlobalAdmin(pool, targetUserId)) {
+		return false;
+	}
+
+	if (kind === "manager") {
+		return context.isOrganizationManager;
+	}
+
+	if (
+		context.isAssignmentManager &&
+		!context.isOrganizationManager &&
+		sessionUserId === targetUserId
+	) {
+		if (kind === "roles") {
+			return false;
+		}
+
+		if (kind === "access" && enabled === false) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 async function getEligibleOrganizationUserIds(
@@ -472,7 +579,13 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				const userId = ctx.context.session.user.id;
 				const { organizationId } = ctx.query;
 
-				if (!(await canManageAssignments(pool, userId, organizationId))) {
+				const managementContext = await getAssignmentManagementContext(
+					pool,
+					userId,
+					organizationId,
+				);
+
+				if (!managementContext.allowed) {
 					return ctx.json(
 						{ error: "Forbidden" },
 						{ status: 403 },
@@ -484,7 +597,9 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					userId: string;
 					name: string;
 					email: string;
+					systemRole: string | null;
 					accessEnabled: boolean | null;
+					assignmentManagerEnabled: boolean | null;
 					bartenderEnabled: boolean | null;
 					managerEnabled: boolean | null;
 					barbackEnabled: boolean | null;
@@ -496,7 +611,9 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							m."userId",
 							u.name,
 							u.email,
+							u.role AS "systemRole",
 							a."accessEnabled",
+							a."assignmentManagerEnabled",
 							a."bartenderEnabled",
 							a."managerEnabled",
 							a."barbackEnabled",
@@ -519,17 +636,48 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				);
 
 				return ctx.json({
-					assignments: result.rows.map((row) => ({
-						memberId: row.memberId,
-						userId: row.userId,
-						name: row.name,
-						email: row.email,
-						accessEnabled: row.accessEnabled ?? false,
-						bartenderEnabled: row.bartenderEnabled ?? true,
-						managerEnabled: row.managerEnabled ?? true,
-						barbackEnabled: row.barbackEnabled ?? true,
-						doorEnabled: row.doorEnabled ?? true,
-					})),
+					assignments: result.rows.map((row) => {
+						const accessEnabled = row.accessEnabled ?? false;
+						const systemAdmin = row.systemRole === "admin";
+						const isSelf = row.userId === userId;
+
+						const canUpdateAccess =
+							managementContext.isGlobalAdmin ||
+							(!systemAdmin &&
+								(managementContext.isOrganizationManager ||
+									!managementContext.isAssignmentManager ||
+									!isSelf ||
+									!accessEnabled));
+
+						const canUpdateRoles =
+							managementContext.isGlobalAdmin ||
+							(!systemAdmin &&
+								(managementContext.isOrganizationManager ||
+									!managementContext.isAssignmentManager ||
+									!isSelf));
+
+						const canUpdateManager =
+							managementContext.isGlobalAdmin ||
+							(!systemAdmin && managementContext.isOrganizationManager);
+
+						return {
+							memberId: row.memberId,
+							userId: row.userId,
+							name: row.name,
+							email: row.email,
+							systemAdmin,
+							accessEnabled,
+							assignmentManagerEnabled:
+								row.assignmentManagerEnabled ?? false,
+							bartenderEnabled: row.bartenderEnabled ?? true,
+							managerEnabled: row.managerEnabled ?? true,
+							barbackEnabled: row.barbackEnabled ?? true,
+							doorEnabled: row.doorEnabled ?? true,
+							canUpdateAccess,
+							canUpdateManager,
+							canUpdateRoles,
+						};
+					}),
 				});
 			},
 		),
@@ -612,7 +760,16 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				const sessionUserId = ctx.context.session.user.id;
 				const { organizationId, userId, role, enabled } = ctx.body;
 
-				if (!(await canManageAssignments(pool, sessionUserId, organizationId))) {
+				if (
+					!(await canModifyAssignmentTarget(
+						pool,
+						sessionUserId,
+						organizationId,
+						userId,
+						"roles",
+						enabled,
+					))
+				) {
 					return ctx.json(
 						{ error: "Forbidden" },
 						{ status: 403 },
@@ -707,6 +864,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 
 				const assignmentResult = await pool.query<{
 					accessEnabled: boolean;
+					assignmentManagerEnabled: boolean;
 					bartenderEnabled: boolean;
 					managerEnabled: boolean;
 					barbackEnabled: boolean;
@@ -715,6 +873,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					`
 						SELECT
 							"accessEnabled",
+							"assignmentManagerEnabled",
 							"bartenderEnabled",
 							"managerEnabled",
 							"barbackEnabled",
@@ -778,10 +937,13 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				const { organizationId, userId, enabled } = ctx.body;
 
 				if (
-					!(await canManageAssignments(
+					!(await canModifyAssignmentTarget(
 						pool,
 						sessionUserId,
 						organizationId,
+						userId,
+						"access",
+						enabled,
 					))
 				) {
 					return ctx.json(
@@ -826,6 +988,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 
 				const assignmentResult = await pool.query<{
 					accessEnabled: boolean;
+					assignmentManagerEnabled: boolean;
 					bartenderEnabled: boolean;
 					managerEnabled: boolean;
 					barbackEnabled: boolean;
@@ -862,6 +1025,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							"updatedAt" = CURRENT_TIMESTAMP
 						RETURNING
 							"accessEnabled",
+							"assignmentManagerEnabled",
 							"bartenderEnabled",
 							"managerEnabled",
 							"barbackEnabled",
@@ -874,6 +1038,147 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 
 				if (!assignment) {
 					throw new Error("Failed to update tip claim access");
+				}
+
+				return ctx.json({
+					assignment: {
+						memberId: member.memberId,
+						userId,
+						name: member.name,
+						email: member.email,
+						...assignment,
+					},
+				});
+			},
+		),
+
+		updateTipClaimManager: createAuthEndpoint(
+			"/tip-claim/manager",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: updateManagerBodySchema,
+			},
+			async (ctx) => {
+				const sessionUserId = ctx.context.session.user.id;
+				const { organizationId, userId, enabled } = ctx.body;
+
+				if (
+					!(await canModifyAssignmentTarget(
+						pool,
+						sessionUserId,
+						organizationId,
+						userId,
+						"manager",
+						enabled,
+					))
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const memberResult = await pool.query<{
+					memberId: string;
+					name: string;
+					email: string;
+				}>(
+					`
+						SELECT
+							m.id AS "memberId",
+							u.name,
+							u.email
+						FROM member m
+						INNER JOIN "user" u
+							ON u.id = m."userId"
+						LEFT JOIN "organizationMemberStatus" oms
+							ON oms."memberId" = m.id
+						WHERE
+							m."organizationId" = $1
+							AND m."userId" = $2
+							AND COALESCE(u.banned, false) = false
+							AND COALESCE(oms.active, true) = true
+						LIMIT 1
+					`,
+					[organizationId, userId],
+				);
+
+				const member = memberResult.rows[0];
+
+				if (!member) {
+					return ctx.json(
+						{ error: "Employee is not an active organization member" },
+						{ status: 404 },
+					);
+				}
+
+				const assignmentResult = await pool.query<{
+					accessEnabled: boolean;
+					assignmentManagerEnabled: boolean;
+					bartenderEnabled: boolean;
+					managerEnabled: boolean;
+					barbackEnabled: boolean;
+					doorEnabled: boolean;
+				}>(
+					`
+						INSERT INTO "tipClaimEmployeeAssignment" (
+							id,
+							"organizationId",
+							"userId",
+							"accessEnabled",
+							"assignmentManagerEnabled",
+							"bartenderEnabled",
+							"managerEnabled",
+							"barbackEnabled",
+							"doorEnabled",
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							gen_random_uuid()::text,
+							$1,
+							$2,
+							$3,
+							$4,
+							true,
+							true,
+							true,
+							true,
+							CURRENT_TIMESTAMP,
+							CURRENT_TIMESTAMP
+						)
+						ON CONFLICT ("organizationId", "userId")
+						DO UPDATE SET
+							"assignmentManagerEnabled" =
+								EXCLUDED."assignmentManagerEnabled",
+							"accessEnabled" =
+								CASE
+									WHEN EXCLUDED."assignmentManagerEnabled" = true
+										THEN true
+									ELSE "tipClaimEmployeeAssignment"."accessEnabled"
+								END,
+							"updatedAt" = CURRENT_TIMESTAMP
+						RETURNING
+							"accessEnabled",
+							"assignmentManagerEnabled",
+							"bartenderEnabled",
+							"managerEnabled",
+							"barbackEnabled",
+							"doorEnabled"
+					`,
+					[
+						organizationId,
+						userId,
+						enabled,
+						enabled,
+					],
+				);
+
+				const assignment = assignmentResult.rows[0];
+
+				if (!assignment) {
+					throw new Error("Failed to update tip claim manager");
 				}
 
 				return ctx.json({
