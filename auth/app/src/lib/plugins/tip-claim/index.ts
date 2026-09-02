@@ -368,6 +368,11 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					required: true,
 					defaultValue: false,
 				},
+				assignmentManagerEnabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
 				bartenderEnabled: {
 					type: "boolean",
 					required: true,
