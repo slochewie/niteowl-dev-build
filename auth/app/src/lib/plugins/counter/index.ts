@@ -1,0 +1,510 @@
+import type { BetterAuthPlugin } from "better-auth";
+import {
+	createAuthEndpoint,
+	sessionMiddleware,
+} from "better-auth/api";
+import type { Pool } from "pg";
+import * as z from "zod";
+
+type CounterOptions = {
+	pool: Pool;
+};
+
+type UserRoleRow = {
+	role: string | null;
+};
+
+type OrganizationStatusRow = {
+	enabled: boolean;
+};
+
+type MembershipRow = {
+	memberId: string;
+	role: string;
+};
+
+type CounterAssignmentRow = {
+	userId: string;
+	counterId: string;
+};
+
+const organizationQuerySchema = z.object({
+	organizationId: z.string().min(1),
+});
+
+const accessQuerySchema = z.object({
+	organizationId: z.string().min(1),
+	counterId: z.string().min(1),
+});
+
+const updateAssignmentBodySchema = z.object({
+	organizationId: z.string().min(1),
+	userId: z.string().min(1),
+	counterId: z.string().min(1),
+	enabled: z.boolean(),
+});
+
+async function isGlobalAdmin(
+	pool: Pool,
+	userId: string,
+) {
+	const result =
+		await pool.query<UserRoleRow>(
+			`
+				SELECT role
+				FROM "user"
+				WHERE id = $1
+				LIMIT 1
+			`,
+			[userId],
+		);
+
+	return result.rows[0]?.role === "admin";
+}
+
+async function organizationIsEnabled(
+	pool: Pool,
+	organizationId: string,
+) {
+	const organization =
+		await pool.query<{
+			id: string;
+		}>(
+			`
+				SELECT id
+				FROM organization
+				WHERE id = $1
+				LIMIT 1
+			`,
+			[organizationId],
+		);
+
+	if (organization.rowCount !== 1) {
+		return false;
+	}
+
+	const status =
+		await pool.query<OrganizationStatusRow>(
+			`
+				SELECT enabled
+				FROM "organizationStatus"
+				WHERE "organizationId" = $1
+				LIMIT 1
+			`,
+			[organizationId],
+		);
+
+	return status.rows[0]?.enabled !== false;
+}
+
+async function getActiveMembership(
+	pool: Pool,
+	organizationId: string,
+	userId: string,
+) {
+	const result =
+		await pool.query<MembershipRow>(
+			`
+				SELECT
+					m.id AS "memberId",
+					m.role
+				FROM member m
+				INNER JOIN "user" u
+					ON u.id = m."userId"
+				LEFT JOIN "organizationMemberStatus" oms
+					ON oms."memberId" = m.id
+				WHERE
+					m."organizationId" = $1
+					AND m."userId" = $2
+					AND COALESCE(
+						u.banned,
+						false
+					) = false
+					AND COALESCE(
+						oms.active,
+						true
+					) = true
+				LIMIT 1
+			`,
+			[organizationId, userId],
+		);
+
+	return result.rows[0] ?? null;
+}
+
+async function canManageAssignments(
+	pool: Pool,
+	userId: string,
+	organizationId: string,
+) {
+	if (
+		!(await organizationIsEnabled(
+			pool,
+			organizationId,
+		))
+	) {
+		return false;
+	}
+
+	if (await isGlobalAdmin(pool, userId)) {
+		return true;
+	}
+
+	const membership =
+		await getActiveMembership(
+			pool,
+			organizationId,
+			userId,
+		);
+
+	if (!membership) {
+		return false;
+	}
+
+	return (
+		membership.role === "owner" ||
+		membership.role === "admin"
+	);
+}
+
+async function userHasCounterAccess(
+	pool: Pool,
+	userId: string,
+	organizationId: string,
+	counterId: string,
+) {
+	if (
+		!(await organizationIsEnabled(
+			pool,
+			organizationId,
+		))
+	) {
+		return false;
+	}
+
+	if (await isGlobalAdmin(pool, userId)) {
+		return true;
+	}
+
+	const membership =
+		await getActiveMembership(
+			pool,
+			organizationId,
+			userId,
+		);
+
+	if (!membership) {
+		return false;
+	}
+
+	const result =
+		await pool.query<{
+			enabled: boolean;
+		}>(
+			`
+				SELECT enabled
+				FROM "counterAssignment"
+				WHERE
+					"organizationId" = $1
+					AND "userId" = $2
+					AND "counterId" = $3
+					AND enabled = true
+				LIMIT 1
+			`,
+			[
+				organizationId,
+				userId,
+				counterId,
+			],
+		);
+
+	return result.rowCount === 1;
+}
+
+export const counterAccess = ({
+	pool,
+}: CounterOptions): BetterAuthPlugin => ({
+	id: "counter",
+
+	schema: {
+		counterAssignment: {
+			fields: {
+				organizationId: {
+					type: "string",
+					required: true,
+				},
+				userId: {
+					type: "string",
+					required: true,
+				},
+				counterId: {
+					type: "string",
+					required: true,
+				},
+				enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				createdAt: {
+					type: "date",
+					required: true,
+					defaultValue: () =>
+						new Date(),
+				},
+				updatedAt: {
+					type: "date",
+					required: true,
+					defaultValue: () =>
+						new Date(),
+				},
+			},
+			indexes: [
+				{
+					fields: [
+						"organizationId",
+						"userId",
+						"counterId",
+					],
+					unique: true,
+				},
+			],
+		},
+	},
+
+	endpoints: {
+		listCounterAssignments:
+			createAuthEndpoint(
+				"/counter/assignments",
+				{
+					method: "GET",
+					use: [sessionMiddleware],
+					query:
+						organizationQuerySchema,
+				},
+				async (ctx) => {
+					const organizationId =
+						ctx.query.organizationId;
+
+					if (
+						!(await canManageAssignments(
+							pool,
+							ctx.context.session.user.id,
+							organizationId,
+						))
+					) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
+
+					const result =
+						await pool.query<CounterAssignmentRow>(
+							`
+								SELECT
+									ca."userId",
+									ca."counterId"
+								FROM "counterAssignment" ca
+								INNER JOIN member m
+									ON m."organizationId" =
+										ca."organizationId"
+									AND m."userId" =
+										ca."userId"
+								INNER JOIN "user" u
+									ON u.id =
+										ca."userId"
+								LEFT JOIN
+									"organizationMemberStatus" oms
+									ON oms."memberId" =
+										m.id
+								WHERE
+									ca."organizationId" = $1
+									AND ca.enabled = true
+									AND COALESCE(
+										u.banned,
+										false
+									) = false
+									AND COALESCE(
+										oms.active,
+										true
+									) = true
+								ORDER BY
+									ca."userId",
+									ca."counterId"
+							`,
+							[organizationId],
+						);
+
+					const assignments =
+						new Map<
+							string,
+							string[]
+						>();
+
+					for (
+						const row of result.rows
+					) {
+						const counterIds =
+							assignments.get(
+								row.userId,
+							) ?? [];
+
+						counterIds.push(
+							row.counterId,
+						);
+
+						assignments.set(
+							row.userId,
+							counterIds,
+						);
+					}
+
+					return ctx.json({
+						assignments:
+							Array.from(
+								assignments.entries(),
+							).map(
+								([
+									userId,
+									counterIds,
+								]) => ({
+									userId,
+									counterIds,
+								}),
+							),
+					});
+				},
+			),
+
+		updateCounterAssignment:
+			createAuthEndpoint(
+				"/counter/assignments",
+				{
+					method: "PATCH",
+					use: [sessionMiddleware],
+					body:
+						updateAssignmentBodySchema,
+				},
+				async (ctx) => {
+					const {
+						organizationId,
+						userId,
+						counterId,
+						enabled,
+					} = ctx.body;
+
+					if (
+						!(await canManageAssignments(
+							pool,
+							ctx.context.session.user.id,
+							organizationId,
+						))
+					) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
+
+					const targetMembership =
+						await getActiveMembership(
+							pool,
+							organizationId,
+							userId,
+						);
+
+					if (!targetMembership) {
+						return ctx.json(
+							{
+								error:
+									"Active organization member not found",
+							},
+							{
+								status: 404,
+							},
+						);
+					}
+
+					await pool.query(
+						`
+							INSERT INTO
+								"counterAssignment" (
+									id,
+									"organizationId",
+									"userId",
+									"counterId",
+									enabled,
+									"createdAt",
+									"updatedAt"
+								)
+							VALUES (
+								gen_random_uuid()::text,
+								$1,
+								$2,
+								$3,
+								$4,
+								CURRENT_TIMESTAMP,
+								CURRENT_TIMESTAMP
+							)
+							ON CONFLICT (
+								"organizationId",
+								"userId",
+								"counterId"
+							)
+							DO UPDATE SET
+								enabled =
+									EXCLUDED.enabled,
+								"updatedAt" =
+									CURRENT_TIMESTAMP
+						`,
+						[
+							organizationId,
+							userId,
+							counterId,
+							enabled,
+						],
+					);
+
+					return ctx.json({
+						assignment: {
+							userId,
+							counterId,
+							enabled,
+						},
+					});
+				},
+			),
+
+		getCounterAccess:
+			createAuthEndpoint(
+				"/counter/access",
+				{
+					method: "GET",
+					use: [sessionMiddleware],
+					query: accessQuerySchema,
+				},
+				async (ctx) => {
+					const allowed =
+						await userHasCounterAccess(
+							pool,
+							ctx.context.session.user.id,
+							ctx.query.organizationId,
+							ctx.query.counterId,
+						);
+
+					return ctx.json({
+						allowed,
+					});
+				},
+			),
+	},
+});

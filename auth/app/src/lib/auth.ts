@@ -25,6 +25,7 @@ import {
 	adminViewerRole,
 	userRole,
 } from "./admin/permissions.js";
+import { counterAccess } from "./plugins/counter/index.js";
 import { integrationManager } from "./plugins/integration-manager/index.js";
 import { glauth } from "./plugins/glauth/index.js";
 import { organizationStatus } from "./plugins/organization-status/index.js";
@@ -187,6 +188,10 @@ export const auth = betterAuth({
 		}),
 
 		organizationMemberStatus({
+			pool,
+		}),
+
+		counterAccess({
 			pool,
 		}),
 
