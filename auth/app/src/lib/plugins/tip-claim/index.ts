@@ -529,6 +529,73 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 			},
 		),
 
+		listTipClaimEmployees: createAuthEndpoint(
+			"/tip-claim/employees",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const { organizationId } = ctx.query;
+
+				if (!(await canSaveShift(pool, userId, organizationId))) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					userId: string;
+					name: string;
+					email: string;
+					bartenderEnabled: boolean | null;
+					managerEnabled: boolean | null;
+					barbackEnabled: boolean | null;
+					doorEnabled: boolean | null;
+				}>(
+					`
+						SELECT
+							m."userId",
+							u.name,
+							u.email,
+							a."bartenderEnabled",
+							a."managerEnabled",
+							a."barbackEnabled",
+							a."doorEnabled"
+						FROM member m
+						INNER JOIN "user" u
+							ON u.id = m."userId"
+						LEFT JOIN "organizationMemberStatus" oms
+							ON oms."memberId" = m.id
+						LEFT JOIN "tipClaimEmployeeAssignment" a
+							ON a."organizationId" = m."organizationId"
+							AND a."userId" = m."userId"
+						WHERE
+							m."organizationId" = $1
+							AND COALESCE(u.banned, false) = false
+							AND COALESCE(oms.active, true) = true
+						ORDER BY LOWER(u.name), LOWER(u.email)
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					employees: result.rows.map((row) => ({
+						userId: row.userId,
+						name: row.name,
+						email: row.email,
+						bartenderEnabled: row.bartenderEnabled ?? true,
+						managerEnabled: row.managerEnabled ?? true,
+						barbackEnabled: row.barbackEnabled ?? true,
+						doorEnabled: row.doorEnabled ?? true,
+					})),
+				});
+			},
+		),
+
 		updateTipClaimAssignment: createAuthEndpoint(
 			"/tip-claim/assignments",
 			{
