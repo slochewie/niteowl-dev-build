@@ -174,6 +174,43 @@ async function getEligibleOrganizationUserIds(
 	return new Set(result.rows.map((row) => row.userId));
 }
 
+async function getEmployeeAssignmentRoles(
+	client: PoolClient,
+	organizationId: string,
+) {
+	const result = await client.query<{
+		userId: string;
+		bartenderEnabled: boolean;
+		managerEnabled: boolean;
+		barbackEnabled: boolean;
+		doorEnabled: boolean;
+	}>(
+		`
+			SELECT
+				"userId",
+				"bartenderEnabled",
+				"managerEnabled",
+				"barbackEnabled",
+				"doorEnabled"
+			FROM "tipClaimEmployeeAssignment"
+			WHERE "organizationId" = $1
+		`,
+		[organizationId],
+	);
+
+	return new Map(
+		result.rows.map((row) => [
+			row.userId,
+			{
+				bartender: row.bartenderEnabled,
+				manager: row.managerEnabled,
+				barback: row.barbackEnabled,
+				door: row.doorEnabled,
+			},
+		]),
+	);
+}
+
 export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 	id: "tip-claim",
 
@@ -720,6 +757,28 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							return ctx.json(
 								{
 									error: `${staffMember.name} is not an active organization member`,
+								},
+								{
+									status: 400,
+								},
+							);
+						}
+					}
+
+					const assignmentRoles = await getEmployeeAssignmentRoles(
+						client,
+						body.organizationId,
+					);
+
+					for (const staffMember of body.staff) {
+						const roles = assignmentRoles.get(staffMember.userId);
+
+						if (roles && !roles[staffMember.role]) {
+							await client.query("ROLLBACK");
+
+							return ctx.json(
+								{
+									error: `${staffMember.name} is not assigned to the ${staffMember.role} role`,
 								},
 								{
 									status: 400,
