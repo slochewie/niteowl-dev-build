@@ -549,7 +549,7 @@ export const counterAccess = ({ pool }: CounterOptions): BetterAuthPlugin => ({
 		),
 
 		listCounterManagers: createAuthEndpoint(
-			"/counter/managers",
+			"/counter/manager-list",
 			{
 				method: "GET",
 				use: [sessionMiddleware],
