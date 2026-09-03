@@ -34,7 +34,7 @@ const staffSchema = z.object({
 	email: z.string().email(),
 	role: roleSchema,
 	registerKey: z.string().min(1).nullable().optional(),
-	weight: z.number().int().min(0),
+	weight: z.number().min(0).max(10).multipleOf(0.1),
 	claimCents: z.number().int().min(0),
 });
 
@@ -43,12 +43,12 @@ const saveShiftBodySchema = z.object({
 	claimPercent: z.number().min(0).max(100),
 	totalSalesCents: z.number().int().min(0),
 	requiredClaimCents: z.number().int().min(0),
-	totalWeightUnits: z.number().int().min(0),
+	totalWeightUnits: z.number().min(0),
 	weights: z.object({
-		bartender: z.number().int().min(0),
-		manager: z.number().int().min(0),
-		barback: z.number().int().min(0),
-		door: z.number().int().min(0),
+		bartender: z.number().min(0).max(10).multipleOf(0.1),
+		manager: z.number().min(0).max(10).multipleOf(0.1),
+		barback: z.number().min(0).max(10).multipleOf(0.1),
+		door: z.number().min(0).max(10).multipleOf(0.1),
 	}),
 	completedAt: z.coerce.date(),
 	registers: z.array(registerSchema).min(1),
@@ -1702,8 +1702,16 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				return ctx.json({
 					shifts: shiftResult.rows.map((shift) => ({
 						...shift,
+						totalWeightUnits: Number(shift.totalWeightUnits),
+						bartenderWeight: Number(shift.bartenderWeight),
+						managerWeight: Number(shift.managerWeight),
+						barbackWeight: Number(shift.barbackWeight),
+						doorWeight: Number(shift.doorWeight),
 						registers: registersByShift.get(shift.id) ?? [],
-						staff: staffByShift.get(shift.id) ?? [],
+						staff: (staffByShift.get(shift.id) ?? []).map((staffMember) => ({
+							...staffMember,
+							weight: Number(staffMember.weight),
+						})),
 					})),
 				});
 			},
