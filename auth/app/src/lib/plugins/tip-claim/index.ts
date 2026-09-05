@@ -1939,6 +1939,12 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					staffByShift.set(staffMember.shiftId, current);
 				}
 
+				const correctionContext = await getAssignmentManagementContext(
+					pool,
+					userId,
+					organizationId,
+				);
+
 				return ctx.json({
 					shifts: shiftResult.rows.map((shift) => ({
 						...shift,
@@ -1947,6 +1953,10 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 						managerWeight: Number(shift.managerWeight),
 						barbackWeight: Number(shift.barbackWeight),
 						doorWeight: Number(shift.doorWeight),
+						canCorrect:
+							shift.savedByUserId === userId ||
+							correctionContext.isGlobalAdmin ||
+							correctionContext.isOrganizationManager,
 						registers: registersByShift.get(shift.id) ?? [],
 						staff: (staffByShift.get(shift.id) ?? []).map((staffMember) => ({
 							...staffMember,
