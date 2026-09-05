@@ -68,6 +68,38 @@ const deleteShiftBodySchema = z.object({
 	shiftId: z.string().min(1),
 });
 
+const tipPoolStaffSchema = z.object({
+	userId: z.string().min(1),
+	name: z.string().trim().min(1),
+	email: z.string().email(),
+	role: roleSchema,
+	weightTenths: z.number().int().min(0).max(100),
+	shareCents: z.number().int().min(0),
+});
+
+const saveTipPoolBodySchema = z.object({
+	organizationId: z.string().min(1),
+	totalTipsCents: z.number().int().min(0),
+	totalWeightTenths: z.number().int().min(0),
+	weights: z.object({
+		managerTenths: z.number().int().min(0).max(100),
+		bartenderTenths: z.number().int().min(0).max(100),
+		barbackTenths: z.number().int().min(0).max(100),
+		doorTenths: z.number().int().min(0).max(100),
+	}),
+	completedAt: z.coerce.date(),
+	staff: z.array(tipPoolStaffSchema).min(1),
+});
+
+const correctTipPoolBodySchema = saveTipPoolBodySchema.extend({
+	shiftId: z.string().min(1),
+});
+
+const deleteTipPoolBodySchema = z.object({
+	organizationId: z.string().min(1),
+	shiftId: z.string().min(1),
+});
+
 const updateAssignmentBodySchema = z.object({
 	organizationId: z.string().min(1),
 	userId: z.string().min(1),
@@ -169,6 +201,51 @@ async function canSaveShift(
 			LIMIT 1
 		`,
 		[organizationId, userId],
+	);
+
+	return result.rowCount === 1;
+}
+
+async function canCorrectTipPoolShift(
+	pool: Pool,
+	userId: string,
+	organizationId: string,
+	shiftId: string,
+) {
+	if (!(await organizationIsEnabled(pool, organizationId))) {
+		return false;
+	}
+
+	if (await isGlobalAdmin(pool, userId)) {
+		return true;
+	}
+
+	const result = await pool.query(
+		`
+			SELECT p.id
+			FROM "tipPoolShift" p
+			LEFT JOIN member m
+				ON m."organizationId" = p."organizationId"
+				AND m."userId" = $3
+			LEFT JOIN "user" u
+				ON u.id = m."userId"
+			LEFT JOIN "organizationMemberStatus" oms
+				ON oms."memberId" = m.id
+			WHERE
+				p.id = $1
+				AND p."organizationId" = $2
+				AND (
+					p."savedByUserId" = $3
+					OR (
+						m.id IS NOT NULL
+						AND COALESCE(u.banned, false) = false
+						AND COALESCE(oms.active, true) = true
+						AND m.role IN ('owner', 'admin')
+					)
+				)
+			LIMIT 1
+		`,
+		[shiftId, organizationId, userId],
 	);
 
 	return result.rowCount === 1;
@@ -487,6 +564,80 @@ async function getEmployeeAssignmentRoles(
 	);
 }
 
+async function validateTipPoolStaffEligibility(
+	client: PoolClient,
+	organizationId: string,
+	staff: z.infer<typeof tipPoolStaffSchema>[],
+) {
+	const eligibleUserIds = await getEligibleOrganizationUserIds(
+		client,
+		organizationId,
+	);
+
+	for (const staffMember of staff) {
+		if (!eligibleUserIds.has(staffMember.userId)) {
+			return `${staffMember.name} is not an active organization member`;
+		}
+	}
+
+	const assignmentRoles = await getEmployeeAssignmentRoles(
+		client,
+		organizationId,
+	);
+
+	for (const staffMember of staff) {
+		const roles = assignmentRoles.get(staffMember.userId);
+
+		if (roles && !roles[staffMember.role]) {
+			return `${staffMember.name} is not assigned to the ${staffMember.role} role`;
+		}
+	}
+
+	return null;
+}
+
+function validateTipPoolBody(
+	body: z.infer<typeof saveTipPoolBodySchema>,
+) {
+	const staffUserIds = new Set<string>();
+
+	for (const staffMember of body.staff) {
+		if (staffUserIds.has(staffMember.userId)) {
+			return `Duplicate staff user: ${staffMember.userId}`;
+		}
+
+		staffUserIds.add(staffMember.userId);
+
+		const expectedWeightTenths = body.weights[
+			`${staffMember.role}Tenths` as keyof typeof body.weights
+		];
+
+		if (staffMember.weightTenths !== expectedWeightTenths) {
+			return `${staffMember.name} has an invalid role weight`;
+		}
+	}
+
+	const calculatedTipsCents = body.staff.reduce(
+		(sum, staffMember) => sum + staffMember.shareCents,
+		0,
+	);
+
+	if (calculatedTipsCents !== body.totalTipsCents) {
+		return "Staff shares do not match total tips";
+	}
+
+	const calculatedWeightTenths = body.staff.reduce(
+		(sum, staffMember) => sum + staffMember.weightTenths,
+		0,
+	);
+
+	if (calculatedWeightTenths !== body.totalWeightTenths) {
+		return "Staff weights do not match total weight";
+	}
+
+	return null;
+}
+
 async function validateShiftStaffEligibility(
 	client: PoolClient,
 	organizationId: string,
@@ -665,6 +816,96 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					unique: true,
 				},
 			],
+		},
+
+
+		tipPoolShift: {
+			fields: {
+				organizationId: {
+					type: "string",
+					required: true,
+				},
+				savedByUserId: {
+					type: "string",
+					required: true,
+				},
+				totalTipsCents: {
+					type: "number",
+					required: true,
+				},
+				totalWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				managerWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				bartenderWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				barbackWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				doorWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				completedAt: {
+					type: "date",
+					required: true,
+				},
+				createdAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+			},
+		},
+
+		tipPoolStaff: {
+			fields: {
+				shiftId: {
+					type: "string",
+					required: true,
+					references: {
+						model: "tipPoolShift",
+						field: "id",
+						onDelete: "cascade",
+					},
+				},
+				userId: {
+					type: "string",
+					required: true,
+				},
+				name: {
+					type: "string",
+					required: true,
+				},
+				email: {
+					type: "string",
+					required: true,
+				},
+				role: {
+					type: "string",
+					required: true,
+				},
+				weightTenths: {
+					type: "number",
+					required: true,
+				},
+				shareCents: {
+					type: "number",
+					required: true,
+				},
+				createdAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+			},
 		},
 
 		tipClaimStaff: {
@@ -1338,6 +1579,458 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 						...assignment,
 					},
 				});
+			},
+		),
+
+		listTipPoolShifts: createAuthEndpoint(
+			"/tip-claim/tip-pool-shifts",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const { organizationId } = ctx.query;
+
+				if (!(await canSaveShift(pool, userId, organizationId))) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const shiftResult = await pool.query<{
+					id: string;
+					organizationId: string;
+					savedByUserId: string;
+					totalTipsCents: number;
+					totalWeightTenths: number;
+					managerWeightTenths: number;
+					bartenderWeightTenths: number;
+					barbackWeightTenths: number;
+					doorWeightTenths: number;
+					completedAt: Date;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"organizationId",
+							"savedByUserId",
+							"totalTipsCents",
+							"totalWeightTenths",
+							"managerWeightTenths",
+							"bartenderWeightTenths",
+							"barbackWeightTenths",
+							"doorWeightTenths",
+							"completedAt",
+							"createdAt"
+						FROM "tipPoolShift"
+						WHERE "organizationId" = $1
+						ORDER BY "completedAt" DESC, "createdAt" DESC
+					`,
+					[organizationId],
+				);
+
+				const shiftIds = shiftResult.rows.map((shift) => shift.id);
+
+				if (shiftIds.length === 0) {
+					return ctx.json({ shifts: [] });
+				}
+
+				const staffResult = await pool.query<{
+					id: string;
+					shiftId: string;
+					userId: string;
+					name: string;
+					email: string;
+					role: string;
+					weightTenths: number;
+					shareCents: number;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"shiftId",
+							"userId",
+							name,
+							email,
+							role,
+							"weightTenths",
+							"shareCents",
+							"createdAt"
+						FROM "tipPoolStaff"
+						WHERE "shiftId" = ANY($1::text[])
+						ORDER BY "createdAt", id
+					`,
+					[shiftIds],
+				);
+
+				const staffByShift = new Map<string, typeof staffResult.rows>();
+
+				for (const staffMember of staffResult.rows) {
+					const current = staffByShift.get(staffMember.shiftId) ?? [];
+					current.push(staffMember);
+					staffByShift.set(staffMember.shiftId, current);
+				}
+
+				const correctionContext = await getAssignmentManagementContext(
+					pool,
+					userId,
+					organizationId,
+				);
+
+				return ctx.json({
+					shifts: shiftResult.rows.map((shift) => ({
+						...shift,
+						canCorrect:
+							shift.savedByUserId === userId ||
+							correctionContext.isGlobalAdmin ||
+							correctionContext.isOrganizationManager,
+						staff: staffByShift.get(shift.id) ?? [],
+					})),
+				});
+			},
+		),
+
+		deleteTipPoolShift: createAuthEndpoint(
+			"/tip-claim/tip-pool-shifts",
+			{
+				method: "DELETE",
+				use: [sessionMiddleware],
+				body: deleteTipPoolBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const body = ctx.body;
+
+				if (
+					!(await canCorrectTipPoolShift(
+						pool,
+						userId,
+						body.organizationId,
+						body.shiftId,
+					))
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query(
+					`
+						DELETE FROM "tipPoolShift"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+					`,
+					[body.shiftId, body.organizationId],
+				);
+
+				if (result.rowCount !== 1) {
+					return ctx.json(
+						{ error: "Tip Pool report not found" },
+						{ status: 404 },
+					);
+				}
+
+				return ctx.json({ success: true });
+			},
+		),
+
+		correctTipPoolShift: createAuthEndpoint(
+			"/tip-claim/tip-pool-shifts",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: correctTipPoolBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const body = ctx.body;
+
+				if (
+					!(await canCorrectTipPoolShift(
+						pool,
+						userId,
+						body.organizationId,
+						body.shiftId,
+					))
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const validationError = validateTipPoolBody(body);
+
+				if (validationError) {
+					return ctx.json(
+						{ error: validationError },
+						{ status: 400 },
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const eligibilityError =
+						await validateTipPoolStaffEligibility(
+							client,
+							body.organizationId,
+							body.staff,
+						);
+
+					if (eligibilityError) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{ error: eligibilityError },
+							{ status: 400 },
+						);
+					}
+
+					const updateResult = await client.query<{ id: string }>(
+						`
+							UPDATE "tipPoolShift"
+							SET
+								"totalTipsCents" = $3,
+								"totalWeightTenths" = $4,
+								"managerWeightTenths" = $5,
+								"bartenderWeightTenths" = $6,
+								"barbackWeightTenths" = $7,
+								"doorWeightTenths" = $8,
+								"completedAt" = $9
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							RETURNING id
+						`,
+						[
+							body.shiftId,
+							body.organizationId,
+							body.totalTipsCents,
+							body.totalWeightTenths,
+							body.weights.managerTenths,
+							body.weights.bartenderTenths,
+							body.weights.barbackTenths,
+							body.weights.doorTenths,
+							body.completedAt,
+						],
+					);
+
+					if (updateResult.rowCount !== 1) {
+						throw new Error("Failed to update tip pool shift");
+					}
+
+					await client.query(
+						`
+							DELETE FROM "tipPoolStaff"
+							WHERE "shiftId" = $1
+						`,
+						[body.shiftId],
+					);
+
+					for (const staffMember of body.staff) {
+						await client.query(
+							`
+								INSERT INTO "tipPoolStaff" (
+									id,
+									"shiftId",
+									"userId",
+									name,
+									email,
+									role,
+									"weightTenths",
+									"shareCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									$5,
+									$6,
+									$7,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								body.shiftId,
+								staffMember.userId,
+								staffMember.name,
+								staffMember.email,
+								staffMember.role,
+								staffMember.weightTenths,
+								staffMember.shareCents,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+
+					return ctx.json({ shiftId: body.shiftId });
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
+		saveTipPoolShift: createAuthEndpoint(
+			"/tip-claim/tip-pool-shifts",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: saveTipPoolBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const body = ctx.body;
+
+				if (!(await canSaveShift(pool, userId, body.organizationId))) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const validationError = validateTipPoolBody(body);
+
+				if (validationError) {
+					return ctx.json(
+						{ error: validationError },
+						{ status: 400 },
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const eligibilityError =
+						await validateTipPoolStaffEligibility(
+							client,
+							body.organizationId,
+							body.staff,
+						);
+
+					if (eligibilityError) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{ error: eligibilityError },
+							{ status: 400 },
+						);
+					}
+
+					const shiftResult = await client.query<{ id: string }>(
+						`
+							INSERT INTO "tipPoolShift" (
+								id,
+								"organizationId",
+								"savedByUserId",
+								"totalTipsCents",
+								"totalWeightTenths",
+								"managerWeightTenths",
+								"bartenderWeightTenths",
+								"barbackWeightTenths",
+								"doorWeightTenths",
+								"completedAt",
+								"createdAt"
+							)
+							VALUES (
+								gen_random_uuid()::text,
+								$1,
+								$2,
+								$3,
+								$4,
+								$5,
+								$6,
+								$7,
+								$8,
+								$9,
+								CURRENT_TIMESTAMP
+							)
+							RETURNING id
+						`,
+						[
+							body.organizationId,
+							userId,
+							body.totalTipsCents,
+							body.totalWeightTenths,
+							body.weights.managerTenths,
+							body.weights.bartenderTenths,
+							body.weights.barbackTenths,
+							body.weights.doorTenths,
+							body.completedAt,
+						],
+					);
+
+					const shiftId = shiftResult.rows[0]?.id;
+
+					if (!shiftId) {
+						throw new Error("Failed to create tip pool shift");
+					}
+
+					for (const staffMember of body.staff) {
+						await client.query(
+							`
+								INSERT INTO "tipPoolStaff" (
+									id,
+									"shiftId",
+									"userId",
+									name,
+									email,
+									role,
+									"weightTenths",
+									"shareCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									$5,
+									$6,
+									$7,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								shiftId,
+								staffMember.userId,
+								staffMember.name,
+								staffMember.email,
+								staffMember.role,
+								staffMember.weightTenths,
+								staffMember.shareCents,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+
+					return ctx.json({ shiftId });
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
 			},
 		),
 
