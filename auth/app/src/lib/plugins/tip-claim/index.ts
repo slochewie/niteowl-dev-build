@@ -59,6 +59,10 @@ const organizationQuerySchema = z.object({
 	organizationId: z.string().min(1),
 });
 
+const correctShiftBodySchema = saveShiftBodySchema.extend({
+	shiftId: z.string().min(1),
+});
+
 const deleteShiftBodySchema = z.object({
 	organizationId: z.string().min(1),
 	shiftId: z.string().min(1),
@@ -168,6 +172,118 @@ async function canSaveShift(
 	);
 
 	return result.rowCount === 1;
+}
+
+async function canCorrectShift(
+	pool: Pool,
+	userId: string,
+	organizationId: string,
+	shiftId: string,
+) {
+	if (!(await organizationIsEnabled(pool, organizationId))) {
+		return false;
+	}
+
+	if (await isGlobalAdmin(pool, userId)) {
+		return true;
+	}
+
+	const result = await pool.query<{
+		savedByUserId: string;
+		memberRole: string | null;
+	}>(`
+		SELECT
+			s."savedByUserId",
+			m.role AS "memberRole"
+		FROM "tipClaimShift" s
+		LEFT JOIN member m
+			ON m."organizationId" = s."organizationId"
+			AND m."userId" = $3
+		LEFT JOIN "user" u
+			ON u.id = m."userId"
+		LEFT JOIN "organizationMemberStatus" oms
+			ON oms."memberId" = m.id
+		WHERE
+			s.id = $1
+			AND s."organizationId" = $2
+			AND (
+				s."savedByUserId" = $3
+				OR (
+					m.id IS NOT NULL
+					AND COALESCE(u.banned, false) = false
+					AND COALESCE(oms.active, true) = true
+					AND m.role IN ('owner', 'admin')
+				)
+			)
+		LIMIT 1
+	`, [shiftId, organizationId, userId]);
+
+	return result.rowCount === 1;
+}
+
+function validateShiftBody(body: z.infer<typeof saveShiftBodySchema>) {
+	const registerKeys = new Set<string>();
+
+	for (const register of body.registers) {
+		if (registerKeys.has(register.registerKey)) {
+			return `Duplicate register key: ${register.registerKey}`;
+		}
+
+		registerKeys.add(register.registerKey);
+	}
+
+	const calculatedSalesCents = body.registers.reduce(
+		(sum, register) => sum + register.salesCents,
+		0,
+	);
+
+	if (calculatedSalesCents !== body.totalSalesCents) {
+		return "Register sales do not match total sales";
+	}
+
+	const calculatedClaimCents = body.staff.reduce(
+		(sum, staffMember) => sum + staffMember.claimCents,
+		0,
+	);
+
+	if (calculatedClaimCents !== body.requiredClaimCents) {
+		return "Staff claims do not match required claim";
+	}
+
+	const staffUserIds = new Set<string>();
+	const assignedRegisterKeys = new Set<string>();
+
+	for (const staffMember of body.staff) {
+		if (staffUserIds.has(staffMember.userId)) {
+			return `Duplicate staff user: ${staffMember.userId}`;
+		}
+
+		staffUserIds.add(staffMember.userId);
+
+		if (
+			staffMember.role !== "bartender" &&
+			staffMember.role !== "manager" &&
+			staffMember.registerKey != null
+		) {
+			return "Only bartenders and managers may be assigned a register";
+		}
+
+		if (staffMember.registerKey == null) {
+			continue;
+		}
+
+		if (!registerKeys.has(staffMember.registerKey)) {
+			return `Unknown register: ${staffMember.registerKey}`;
+		}
+
+		if (assignedRegisterKeys.has(staffMember.registerKey)) {
+			return `Register ${staffMember.registerKey} is assigned more than once`;
+		}
+
+		assignedRegisterKeys.add(staffMember.registerKey);
+	}
+
+	return null;
 }
 
 async function getAssignmentManagementContext(
@@ -369,6 +485,38 @@ async function getEmployeeAssignmentRoles(
 			},
 		]),
 	);
+}
+
+async function validateShiftStaffEligibility(
+	client: PoolClient,
+	organizationId: string,
+	staff: z.infer<typeof staffSchema>[],
+) {
+	const eligibleUserIds = await getEligibleOrganizationUserIds(
+		client,
+		organizationId,
+	);
+
+	for (const staffMember of staff) {
+		if (!eligibleUserIds.has(staffMember.userId)) {
+			return `${staffMember.name} is not an active organization member`;
+		}
+	}
+
+	const assignmentRoles = await getEmployeeAssignmentRoles(
+		client,
+		organizationId,
+	);
+
+	for (const staffMember of staff) {
+		const roles = assignmentRoles.get(staffMember.userId);
+
+		if (roles && !roles[staffMember.role]) {
+			return `${staffMember.name} is not assigned to the ${staffMember.role} role`;
+		}
+	}
+
+	return null;
 }
 
 export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
@@ -1215,114 +1363,17 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					);
 				}
 
-				const registerKeys = new Set<string>();
+				const validationError = validateShiftBody(body);
 
-				for (const register of body.registers) {
-					if (registerKeys.has(register.registerKey)) {
-						return ctx.json(
-							{
-								error: `Duplicate register key: ${register.registerKey}`,
-							},
-							{
-								status: 400,
-							},
-						);
-					}
-
-					registerKeys.add(register.registerKey);
-				}
-
-				const calculatedSalesCents = body.registers.reduce(
-					(sum, register) => sum + register.salesCents,
-					0,
-				);
-
-				if (calculatedSalesCents !== body.totalSalesCents) {
+				if (validationError) {
 					return ctx.json(
 						{
-							error: "Register sales do not match total sales",
+							error: validationError,
 						},
 						{
 							status: 400,
 						},
 					);
-				}
-
-				const calculatedClaimCents = body.staff.reduce(
-					(sum, staffMember) => sum + staffMember.claimCents,
-					0,
-				);
-
-				if (calculatedClaimCents !== body.requiredClaimCents) {
-					return ctx.json(
-						{
-							error: "Staff claims do not match required claim",
-						},
-						{
-							status: 400,
-						},
-					);
-				}
-
-				const staffUserIds = new Set<string>();
-				const assignedRegisterKeys = new Set<string>();
-
-				for (const staffMember of body.staff) {
-					if (staffUserIds.has(staffMember.userId)) {
-						return ctx.json(
-							{
-								error: `Duplicate staff user: ${staffMember.userId}`,
-							},
-							{
-								status: 400,
-							},
-						);
-					}
-
-					staffUserIds.add(staffMember.userId);
-
-					if (
-						staffMember.role !== "bartender" &&
-						staffMember.role !== "manager" &&
-						staffMember.registerKey != null
-					) {
-						return ctx.json(
-							{
-								error: "Only bartenders and managers may be assigned a register",
-							},
-							{
-								status: 400,
-							},
-						);
-					}
-
-					if (staffMember.registerKey == null) {
-						continue;
-					}
-
-					if (!registerKeys.has(staffMember.registerKey)) {
-						return ctx.json(
-							{
-								error: `Unknown register: ${staffMember.registerKey}`,
-							},
-							{
-								status: 400,
-							},
-						);
-					}
-
-					if (assignedRegisterKeys.has(staffMember.registerKey)) {
-						return ctx.json(
-							{
-								error: `Register ${staffMember.registerKey} is assigned more than once`,
-							},
-							{
-								status: 400,
-							},
-						);
-					}
-
-					assignedRegisterKeys.add(staffMember.registerKey);
 				}
 
 				const client = await pool.connect();
@@ -1330,46 +1381,23 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				try {
 					await client.query("BEGIN");
 
-					const eligibleUserIds = await getEligibleOrganizationUserIds(
+					const eligibilityError = await validateShiftStaffEligibility(
 						client,
 						body.organizationId,
+						body.staff,
 					);
 
-					for (const staffMember of body.staff) {
-						if (!eligibleUserIds.has(staffMember.userId)) {
-							await client.query("ROLLBACK");
+					if (eligibilityError) {
+						await client.query("ROLLBACK");
 
-							return ctx.json(
-								{
-									error: `${staffMember.name} is not an active organization member`,
-								},
-								{
-									status: 400,
-								},
-							);
-						}
-					}
-
-					const assignmentRoles = await getEmployeeAssignmentRoles(
-						client,
-						body.organizationId,
-					);
-
-					for (const staffMember of body.staff) {
-						const roles = assignmentRoles.get(staffMember.userId);
-
-						if (roles && !roles[staffMember.role]) {
-							await client.query("ROLLBACK");
-
-							return ctx.json(
-								{
-									error: `${staffMember.name} is not assigned to the ${staffMember.role} role`,
-								},
-								{
-									status: 400,
-								},
-							);
-						}
+						return ctx.json(
+							{
+								error: eligibilityError,
+							},
+							{
+								status: 400,
+							},
+						);
 					}
 
 					const shiftResult = await client.query<{
@@ -1503,6 +1531,218 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 
 					return ctx.json({
 						shiftId,
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
+		correctTipClaimShift: createAuthEndpoint(
+			"/tip-claim/shifts",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: correctShiftBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const body = ctx.body;
+
+				if (
+					!(await canCorrectShift(
+						pool,
+						userId,
+						body.organizationId,
+						body.shiftId,
+					))
+				) {
+					return ctx.json(
+						{
+							error: "Forbidden",
+						},
+						{
+							status: 403,
+						},
+					);
+				}
+
+				const validationError = validateShiftBody(body);
+
+				if (validationError) {
+					return ctx.json(
+						{
+							error: validationError,
+						},
+						{
+							status: 400,
+						},
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const eligibilityError = await validateShiftStaffEligibility(
+						client,
+						body.organizationId,
+						body.staff,
+					);
+
+					if (eligibilityError) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{
+								error: eligibilityError,
+							},
+							{
+								status: 400,
+							},
+						);
+					}
+
+					const shiftResult = await client.query<{ id: string }>(
+						`
+							UPDATE "tipClaimShift"
+							SET
+								"claimPercent" = $3,
+								"totalSalesCents" = $4,
+								"requiredClaimCents" = $5,
+								"totalWeightUnits" = $6,
+								"bartenderWeight" = $7,
+								"managerWeight" = $8,
+								"barbackWeight" = $9,
+								"doorWeight" = $10,
+								"completedAt" = $11
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							RETURNING id
+						`,
+						[
+							body.shiftId,
+							body.organizationId,
+							body.claimPercent,
+							body.totalSalesCents,
+							body.requiredClaimCents,
+							body.totalWeightUnits,
+							body.weights.bartender,
+							body.weights.manager,
+							body.weights.barback,
+							body.weights.door,
+							body.completedAt,
+						],
+					);
+
+					if (shiftResult.rowCount !== 1) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{
+								error: "Shift not found",
+							},
+							{
+								status: 404,
+							},
+						);
+					}
+
+					await client.query(
+						`
+							DELETE FROM "tipClaimRegister"
+							WHERE "shiftId" = $1
+						`,
+						[body.shiftId],
+					);
+
+					await client.query(
+						`
+							DELETE FROM "tipClaimStaff"
+							WHERE "shiftId" = $1
+						`,
+						[body.shiftId],
+					);
+
+					for (const register of body.registers) {
+						await client.query(
+							`
+								INSERT INTO "tipClaimRegister" (
+									id,
+									"shiftId",
+									"registerKey",
+									name,
+									"salesCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								body.shiftId,
+								register.registerKey,
+								register.name,
+								register.salesCents,
+							],
+						);
+					}
+
+					for (const staffMember of body.staff) {
+						await client.query(
+							`
+								INSERT INTO "tipClaimStaff" (
+									id,
+									"shiftId",
+									"userId",
+									name,
+									email,
+									role,
+									"registerKey",
+									weight,
+									"claimCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									$5,
+									$6,
+									$7,
+									$8,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								body.shiftId,
+								staffMember.userId,
+								staffMember.name,
+								staffMember.email,
+								staffMember.role,
+								staffMember.registerKey ?? null,
+								staffMember.weight,
+								staffMember.claimCents,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						shiftId: body.shiftId,
 					});
 				} catch (error) {
 					await client.query("ROLLBACK");
