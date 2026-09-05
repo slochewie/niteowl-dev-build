@@ -370,6 +370,37 @@ type SevenShiftsApiSyncChange = {
 	after: string | null;
 };
 
+function recordProfileChange({
+	changes,
+	userId,
+	userName,
+	label,
+	before,
+	after,
+}: {
+	changes: SevenShiftsApiSyncChange[];
+	userId: string;
+	userName: string;
+	label: string;
+	before: string | null;
+	after: string | null;
+}) {
+	if (before === after) {
+		return false;
+	}
+
+	changes.push({
+		userId,
+		userName,
+		section: "Account",
+		label,
+		before,
+		after,
+	});
+
+	return true;
+}
+
 type SevenShiftsApiSyncReport = {
 	mappedOrganizations: number;
 	mappedLocations: number;
@@ -2032,8 +2063,10 @@ export const sevenShiftsApi = ({
 								!hasFromBetterAuth &&
 								!shouldPushProfileToSevenShifts;
 
+							let profileChanged = false;
+
 							if (allowInboundProfileSync) {
-								await upsertUserProfile(pool, userId, {
+								const desiredProfile = {
 									firstName: profileFirstName,
 									lastName: profileLastName,
 									preferredFirstName,
@@ -2046,7 +2079,131 @@ export const sevenShiftsApi = ({
 									city: nullableText(user.city),
 									stateProvince: nullableText(user.prov_state),
 									postalCode: nullableText(user.postal_zip),
-								});
+								};
+
+								if (!created) {
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "First Name",
+											before: profile?.firstName ?? null,
+											after: desiredProfile.firstName,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Last Name",
+											before: profile?.lastName ?? null,
+											after: desiredProfile.lastName,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Preferred First Name",
+											before: profile?.preferredFirstName ?? null,
+											after: desiredProfile.preferredFirstName,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Preferred Last Name",
+											before: profile?.preferredLastName ?? null,
+											after: desiredProfile.preferredLastName,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Pronouns",
+											before: profile?.pronouns ?? null,
+											after: desiredProfile.pronouns,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Birthdate",
+											before: profileDateValue(profile?.birthdate),
+											after: profileDateValue(desiredProfile.birthdate),
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Mobile Phone",
+											before: profile?.mobilePhone ?? null,
+											after: desiredProfile.mobilePhone,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Home Phone",
+											before: profile?.homePhone ?? null,
+											after: desiredProfile.homePhone,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Address",
+											before: profile?.address ?? null,
+											after: desiredProfile.address,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "City",
+											before: profile?.city ?? null,
+											after: desiredProfile.city,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "State / Province",
+											before: profile?.stateProvince ?? null,
+											after: desiredProfile.stateProvince,
+										}) || profileChanged;
+
+									profileChanged =
+										recordProfileChange({
+											changes,
+											userId,
+											userName: name,
+											label: "Postal Code",
+											before: profile?.postalCode ?? null,
+											after: desiredProfile.postalCode,
+										}) || profileChanged;
+								}
+
+								await upsertUserProfile(pool, userId, desiredProfile);
 							}
 
 							if (!created) {
@@ -2188,7 +2345,7 @@ export const sevenShiftsApi = ({
 									);
 								}
 
-								if (userChanged || employeeChanged) {
+								if (userChanged || employeeChanged || profileChanged) {
 									usersUpdated++;
 								}
 							}
