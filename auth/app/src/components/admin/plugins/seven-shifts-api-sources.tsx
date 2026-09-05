@@ -102,6 +102,15 @@ type SevenShiftsApiSyncPreview = {
   }>
 }
 
+type SevenShiftsApiSyncChange = {
+  userId: string
+  userName: string
+  section: "Account" | "Organizations"
+  label: string
+  before: string | null
+  after: string | null
+}
+
 type SevenShiftsApiSyncReport = {
   mappedOrganizations: number
   mappedLocations: number
@@ -117,6 +126,7 @@ type SevenShiftsApiSyncReport = {
   membershipsCreated: number
   assignmentsCreated: number
   assignmentsRemoved: number
+  changes: SevenShiftsApiSyncChange[]
   generatedCredentials: Array<{
     name: string
     email: string
@@ -997,6 +1007,15 @@ export function SevenShiftsApiSources({
                 )}
               </div>
 
+              <div className="text-xs text-muted-foreground">
+                Last successful sync{" "}
+                {selectedSource.lastSyncAt
+                  ? new Date(
+                      selectedSource.lastSyncAt
+                    ).toLocaleString()
+                  : "Never"}
+              </div>
+
             {selectedSource.companyId !==
               null && (
               <div className="space-y-4 rounded-lg border p-4">
@@ -1254,6 +1273,15 @@ export function SevenShiftsApiSources({
                       : " users were skipped because no email address was available."}
                   </div>
                 )}
+
+                <SyncChanges
+                  changes={
+                    syncReport.changes
+                  }
+                  usersSeen={
+                    syncReport.usersSeen
+                  }
+                />
 
                 {syncReport.generatedCredentials.length >
                   0 && (
@@ -1631,6 +1659,202 @@ export function SevenShiftsApiSources({
           </div>
         </CardContent>
       </Card>
+    </div>
+  )
+}
+
+function SyncChanges({
+  changes,
+  usersSeen
+}: {
+  changes: SevenShiftsApiSyncChange[]
+  usersSeen: number
+}) {
+  const userIds =
+    Array.from(
+      new Set(
+        changes.map(
+          (change) =>
+            change.userId
+        )
+      )
+    )
+
+  if (
+    changes.length ===
+    0
+  ) {
+    return (
+      <div className="space-y-2">
+        <div className="font-medium">
+          Changes
+        </div>
+
+        <div className="rounded-lg border p-4 text-sm text-muted-foreground">
+          {usersSeen}
+          {" users checked · No changes"}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="font-medium">
+          Changes
+        </div>
+
+        <Badge variant="secondary">
+          {usersSeen}
+          {" users checked · "}
+          {changes.length}
+          {" "}
+          {changes.length ===
+          1
+            ? "change"
+            : "changes"}
+          {" across "}
+          {userIds.length}
+          {" "}
+          {userIds.length ===
+          1
+            ? "user"
+            : "users"}
+        </Badge>
+      </div>
+
+      <div className="space-y-3">
+        {userIds.map(
+          (userId) => {
+            const userChanges =
+              changes.filter(
+                (change) =>
+                  change.userId ===
+                  userId
+              )
+
+            const userName =
+              userChanges[0]
+                ?.userName ??
+              userId
+
+            return (
+              <div
+                key={
+                  userId
+                }
+                className="rounded-lg border"
+              >
+                <div className="border-b px-4 py-3 font-medium">
+                  {userName}
+                </div>
+
+                <div className="space-y-4 p-4">
+                  {(
+                    [
+                      "Account",
+                      "Organizations"
+                    ] as const
+                  ).map(
+                    (
+                      section
+                    ) => {
+                      const sectionChanges =
+                        userChanges.filter(
+                          (
+                            change
+                          ) =>
+                            change.section ===
+                            section
+                        )
+
+                      if (
+                        sectionChanges.length ===
+                        0
+                      ) {
+                        return null
+                      }
+
+                      return (
+                        <div
+                          key={
+                            section
+                          }
+                          className="space-y-2"
+                        >
+                          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            {
+                              section
+                            }
+                          </div>
+
+                          <div className="space-y-1 font-mono text-sm">
+                            {sectionChanges.map(
+                              (
+                                change,
+                                index
+                              ) => (
+                                <div
+                                  key={
+                                    change.label +
+                                    String(
+                                      index
+                                    )
+                                  }
+                                  className="space-y-1"
+                                >
+                                  {change.before !==
+                                    null && (
+                                    <div>
+                                      <span className="mr-2 text-destructive">
+                                        -
+                                      </span>
+
+                                      <span>
+                                        {
+                                          change.label
+                                        }
+                                        {": "}
+                                        {
+                                          change.before
+                                        }
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {change.after !==
+                                    null && (
+                                    <div>
+                                      <span className="mr-2 text-emerald-600 dark:text-emerald-400">
+                                        +
+                                      </span>
+
+                                      <span>
+                                        {
+                                          change.label
+                                        }
+                                        {": "}
+                                        {
+                                          change.after
+                                        }
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )
+                    }
+                  )}
+                </div>
+              </div>
+            )
+          }
+        )}
+      </div>
     </div>
   )
 }

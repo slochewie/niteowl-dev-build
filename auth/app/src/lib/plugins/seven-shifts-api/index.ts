@@ -361,6 +361,15 @@ function profileDateValue(value: Date | string | null | undefined) {
 	return date.toISOString().slice(0, 10);
 }
 
+type SevenShiftsApiSyncChange = {
+	userId: string;
+	userName: string;
+	section: "Account" | "Organizations";
+	label: string;
+	before: string | null;
+	after: string | null;
+};
+
 type SevenShiftsApiSyncReport = {
 	mappedOrganizations: number;
 	mappedLocations: number;
@@ -376,6 +385,7 @@ type SevenShiftsApiSyncReport = {
 	membershipsCreated: number;
 	assignmentsCreated: number;
 	assignmentsRemoved: number;
+	changes: SevenShiftsApiSyncChange[];
 	generatedCredentials: Array<{
 		name: string;
 		email: string;
@@ -1565,6 +1575,10 @@ export const sevenShiftsApi = ({
 
 						let assignmentsRemoved = 0;
 
+						const changes: SevenShiftsApiSyncChange[] = [];
+
+						const syncUserNameByUserId = new Map<string, string>();
+
 						const generatedCredentials: SevenShiftsApiSyncReport["generatedCredentials"] =
 							[];
 
@@ -1811,6 +1825,15 @@ export const sevenShiftsApi = ({
 									created = true;
 
 									usersCreated++;
+
+									changes.push({
+										userId,
+										userName: name,
+										section: "Account",
+										label: "Account",
+										before: null,
+										after: "Created",
+									});
 								}
 							}
 
@@ -2059,6 +2082,28 @@ export const sevenShiftsApi = ({
 									(username !== null && current.username !== username);
 
 								if (userChanged) {
+									if (current.name !== name) {
+										changes.push({
+											userId,
+											userName: name,
+											section: "Account",
+											label: "Name",
+											before: current.name,
+											after: name,
+										});
+									}
+
+									if (username !== null && current.username !== username) {
+										changes.push({
+											userId,
+											userName: name,
+											section: "Account",
+											label: "Username",
+											before: current.username,
+											after: username,
+										});
+									}
+
 									await pool.query(
 										`
                       UPDATE
@@ -2148,6 +2193,8 @@ export const sevenShiftsApi = ({
 								}
 							}
 
+							syncUserNameByUserId.set(userId, name);
+
 							resolvedEmployees.set(user.id, {
 								employeeRecordId,
 								userId,
@@ -2171,6 +2218,7 @@ export const sevenShiftsApi = ({
 								memberId: string;
 								organizationId: string;
 								userId: string;
+								created: boolean;
 							}
 						>();
 
@@ -2224,10 +2272,24 @@ export const sevenShiftsApi = ({
 										memberId: membership.memberId,
 										organizationId: location.organizationId,
 										userId: employee.userId,
+										created: membership.created,
 									});
 
 									if (membership.created) {
 										membershipsCreated++;
+
+										changes.push({
+											userId: employee.userId,
+											userName:
+												syncUserNameByUserId.get(employee.userId) ??
+												employee.userId,
+											section: "Organizations",
+											label: "Organization",
+											before: null,
+											after:
+												mappingByLocationId.get(assignment.location_id)
+													?.organizationName ?? location.name,
+										});
 									}
 								}
 
@@ -2257,6 +2319,42 @@ export const sevenShiftsApi = ({
 								throw new Error(
 									`Unable to resolve Better Auth membership ${membershipKey}`,
 								);
+							}
+
+							if (!membership.created) {
+								const currentDesiredMemberStatus = await pool.query<{
+									active: boolean;
+								}>(
+									`
+                    SELECT active
+                    FROM "organizationMemberStatus"
+                    WHERE "memberId" = $1
+                    LIMIT 1
+                  `,
+									[membership.memberId],
+								);
+
+								const previousActive =
+									currentDesiredMemberStatus.rows[0]?.active ?? true;
+
+								if (previousActive !== desiredStatus.active) {
+									const organizationName =
+										mappings.rows.find(
+											(mapping) =>
+												mapping.organizationId === desiredStatus.organizationId,
+										)?.organizationName ?? desiredStatus.organizationId;
+
+									changes.push({
+										userId: desiredStatus.userId,
+										userName:
+											syncUserNameByUserId.get(desiredStatus.userId) ??
+											desiredStatus.userId,
+										section: "Organizations",
+										label: organizationName,
+										before: previousActive ? "Active" : "Inactive",
+										after: desiredStatus.active ? "Active" : "Inactive",
+									});
+								}
 							}
 
 							await setOrganizationMemberStatus({
@@ -2294,6 +2392,50 @@ export const sevenShiftsApi = ({
 						for (const [membershipKey, membership] of previousMemberships) {
 							if (desiredMembershipStatuses.has(membershipKey)) {
 								continue;
+							}
+
+							const currentRemovedMemberStatus = await pool.query<{
+								active: boolean;
+							}>(
+								`
+                  SELECT active
+                  FROM "organizationMemberStatus"
+                  WHERE "memberId" = $1
+                  LIMIT 1
+                `,
+								[membership.memberId],
+							);
+
+							const previousActive =
+								currentRemovedMemberStatus.rows[0]?.active ?? true;
+
+							if (previousActive) {
+								const betterAuthUser = await pool.query<{
+									name: string;
+								}>(
+									`
+                    SELECT name
+                    FROM "user"
+                    WHERE id = $1
+                    LIMIT 1
+                  `,
+									[membership.userId],
+								);
+
+								const organizationName =
+									mappings.rows.find(
+										(mapping) =>
+											mapping.organizationId === membership.organizationId,
+									)?.organizationName ?? membership.organizationId;
+
+								changes.push({
+									userId: membership.userId,
+									userName: betterAuthUser.rows[0]?.name ?? membership.userId,
+									section: "Organizations",
+									label: organizationName,
+									before: "Active",
+									after: "Inactive",
+								});
 							}
 
 							await setOrganizationMemberStatus({
@@ -2449,6 +2591,8 @@ export const sevenShiftsApi = ({
 							assignmentsCreated,
 
 							assignmentsRemoved,
+
+							changes,
 
 							generatedCredentials,
 
