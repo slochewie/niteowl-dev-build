@@ -102,6 +102,7 @@ const deleteTipPoolBodySchema = z.object({
 
 const weightPresetValuesSchema = z.object({
 	name: z.string().trim().min(1).max(100),
+	registerCount: z.number().int().min(0).max(50),
 	staff: z
 		.object({
 			manager: z.number().int().min(0).max(50),
@@ -869,6 +870,11 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				name: {
 					type: "string",
 					required: true,
+				},
+				registerCount: {
+					type: "number",
+					required: true,
+					defaultValue: 0,
 				},
 				managerCount: {
 					type: "number",
@@ -1720,6 +1726,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					id: string;
 					organizationId: string;
 					name: string;
+					registerCount: number;
 					managerCount: number;
 					bartenderCount: number;
 					barbackCount: number;
@@ -1737,6 +1744,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							id,
 							"organizationId",
 							name,
+							"registerCount",
 							"managerCount",
 							"bartenderCount",
 							"barbackCount",
@@ -1761,6 +1769,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 						id: preset.id,
 						organizationId: preset.organizationId,
 						name: preset.name,
+						registerCount: preset.registerCount,
 						staff: {
 							manager: preset.managerCount,
 							bartender: preset.bartenderCount,
@@ -1790,7 +1799,13 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 			},
 			async (ctx) => {
 				const userId = ctx.context.session.user.id;
-				const { organizationId, name, staff, weights } = ctx.body;
+				const {
+					organizationId,
+					name,
+					registerCount,
+					staff,
+					weights,
+				} = ctx.body;
 
 				if (!(await canManageAssignments(pool, userId, organizationId))) {
 					return ctx.json(
@@ -1803,6 +1818,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					id: string;
 					organizationId: string;
 					name: string;
+					registerCount: number;
 					managerCount: number;
 					bartenderCount: number;
 					barbackCount: number;
@@ -1820,6 +1836,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							id,
 							"organizationId",
 							name,
+							"registerCount",
 							"managerCount",
 							"bartenderCount",
 							"barbackCount",
@@ -1845,6 +1862,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							$9,
 							$10,
 							$11,
+							$12,
 							CURRENT_TIMESTAMP,
 							CURRENT_TIMESTAMP
 						)
@@ -1853,6 +1871,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					[
 						organizationId,
 						name.trim(),
+						registerCount,
 						staff.manager,
 						staff.bartender,
 						staff.barback,
@@ -1876,6 +1895,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 						id: preset.id,
 						organizationId: preset.organizationId,
 						name: preset.name,
+						registerCount: preset.registerCount,
 						staff: {
 							manager: preset.managerCount,
 							bartender: preset.bartenderCount,
@@ -1909,6 +1929,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					organizationId,
 					presetId,
 					name,
+					registerCount,
 					staff,
 					weights,
 				} = ctx.body;
@@ -1924,6 +1945,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					id: string;
 					organizationId: string;
 					name: string;
+					registerCount: number;
 					managerCount: number;
 					bartenderCount: number;
 					barbackCount: number;
@@ -1940,14 +1962,15 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 						UPDATE "tipWeightPreset"
 						SET
 							name = $3,
-							"managerCount" = $4,
-							"bartenderCount" = $5,
-							"barbackCount" = $6,
-							"doorCount" = $7,
-							"managerWeightTenths" = $8,
-							"bartenderWeightTenths" = $9,
-							"barbackWeightTenths" = $10,
-							"doorWeightTenths" = $11,
+							"registerCount" = $4,
+							"managerCount" = $5,
+							"bartenderCount" = $6,
+							"barbackCount" = $7,
+							"doorCount" = $8,
+							"managerWeightTenths" = $9,
+							"bartenderWeightTenths" = $10,
+							"barbackWeightTenths" = $11,
+							"doorWeightTenths" = $12,
 							"updatedAt" = CURRENT_TIMESTAMP
 						WHERE
 							id = $1
@@ -1958,6 +1981,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 						presetId,
 						organizationId,
 						name.trim(),
+						registerCount,
 						staff.manager,
 						staff.bartender,
 						staff.barback,
@@ -1983,6 +2007,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 						id: preset.id,
 						organizationId: preset.organizationId,
 						name: preset.name,
+						registerCount: preset.registerCount,
 						staff: {
 							manager: preset.managerCount,
 							bartender: preset.bartenderCount,
