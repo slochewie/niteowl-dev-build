@@ -100,6 +100,47 @@ const deleteTipPoolBodySchema = z.object({
 	shiftId: z.string().min(1),
 });
 
+const weightPresetValuesSchema = z.object({
+	name: z.string().trim().min(1).max(100),
+	staff: z
+		.object({
+			manager: z.number().int().min(0).max(50),
+			bartender: z.number().int().min(0).max(50),
+			barback: z.number().int().min(0).max(50),
+			door: z.number().int().min(0).max(50),
+		})
+		.refine(
+			(staff) =>
+				staff.manager +
+					staff.bartender +
+					staff.barback +
+					staff.door >
+				0,
+			{
+				message: "At least one staff member is required",
+			},
+		),
+	weights: z.object({
+		manager: z.number().min(0).max(10).multipleOf(0.1),
+		bartender: z.number().min(0).max(10).multipleOf(0.1),
+		barback: z.number().min(0).max(10).multipleOf(0.1),
+		door: z.number().min(0).max(10).multipleOf(0.1),
+	}),
+});
+
+const saveWeightPresetBodySchema = weightPresetValuesSchema.safeExtend({
+	organizationId: z.string().min(1),
+});
+
+const updateWeightPresetBodySchema = saveWeightPresetBodySchema.safeExtend({
+	presetId: z.string().min(1),
+});
+
+const deleteWeightPresetBodySchema = z.object({
+	organizationId: z.string().min(1),
+	presetId: z.string().min(1),
+});
+
 const updateAssignmentBodySchema = z.object({
 	organizationId: z.string().min(1),
 	userId: z.string().min(1),
@@ -813,6 +854,72 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 			indexes: [
 				{
 					fields: ["organizationId", "userId"],
+					unique: true,
+				},
+			],
+		},
+
+
+		tipWeightPreset: {
+			fields: {
+				organizationId: {
+					type: "string",
+					required: true,
+				},
+				name: {
+					type: "string",
+					required: true,
+				},
+				managerCount: {
+					type: "number",
+					required: true,
+				},
+				bartenderCount: {
+					type: "number",
+					required: true,
+				},
+				barbackCount: {
+					type: "number",
+					required: true,
+				},
+				doorCount: {
+					type: "number",
+					required: true,
+				},
+				managerWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				bartenderWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				barbackWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				doorWeightTenths: {
+					type: "number",
+					required: true,
+				},
+				createdByUserId: {
+					type: "string",
+					required: true,
+				},
+				createdAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+				updatedAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+			},
+			indexes: [
+				{
+					fields: ["organizationId", "name"],
 					unique: true,
 				},
 			],
@@ -1579,6 +1686,354 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 						...assignment,
 					},
 				});
+			},
+		),
+
+		listTipWeightPresets: createAuthEndpoint(
+			"/tip-claim/weight-presets",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const { organizationId } = ctx.query;
+
+				const canReadPresets =
+					(await canSaveShift(pool, userId, organizationId)) ||
+					(await canManageAssignments(pool, userId, organizationId));
+
+				if (!canReadPresets) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					id: string;
+					organizationId: string;
+					name: string;
+					managerCount: number;
+					bartenderCount: number;
+					barbackCount: number;
+					doorCount: number;
+					managerWeightTenths: number;
+					bartenderWeightTenths: number;
+					barbackWeightTenths: number;
+					doorWeightTenths: number;
+					createdByUserId: string;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"organizationId",
+							name,
+							"managerCount",
+							"bartenderCount",
+							"barbackCount",
+							"doorCount",
+							"managerWeightTenths",
+							"bartenderWeightTenths",
+							"barbackWeightTenths",
+							"doorWeightTenths",
+							"createdByUserId",
+							"createdAt",
+							"updatedAt"
+						FROM "tipWeightPreset"
+						WHERE "organizationId" = $1
+						ORDER BY LOWER(name), "createdAt"
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					presets: result.rows.map((preset) => ({
+						id: preset.id,
+						organizationId: preset.organizationId,
+						name: preset.name,
+						staff: {
+							manager: preset.managerCount,
+							bartender: preset.bartenderCount,
+							barback: preset.barbackCount,
+							door: preset.doorCount,
+						},
+						weights: {
+							manager: preset.managerWeightTenths / 10,
+							bartender: preset.bartenderWeightTenths / 10,
+							barback: preset.barbackWeightTenths / 10,
+							door: preset.doorWeightTenths / 10,
+						},
+						createdByUserId: preset.createdByUserId,
+						createdAt: preset.createdAt,
+						updatedAt: preset.updatedAt,
+					})),
+				});
+			},
+		),
+
+		createTipWeightPreset: createAuthEndpoint(
+			"/tip-claim/weight-presets",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: saveWeightPresetBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const { organizationId, name, staff, weights } = ctx.body;
+
+				if (!(await canManageAssignments(pool, userId, organizationId))) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					id: string;
+					organizationId: string;
+					name: string;
+					managerCount: number;
+					bartenderCount: number;
+					barbackCount: number;
+					doorCount: number;
+					managerWeightTenths: number;
+					bartenderWeightTenths: number;
+					barbackWeightTenths: number;
+					doorWeightTenths: number;
+					createdByUserId: string;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						INSERT INTO "tipWeightPreset" (
+							id,
+							"organizationId",
+							name,
+							"managerCount",
+							"bartenderCount",
+							"barbackCount",
+							"doorCount",
+							"managerWeightTenths",
+							"bartenderWeightTenths",
+							"barbackWeightTenths",
+							"doorWeightTenths",
+							"createdByUserId",
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							gen_random_uuid()::text,
+							$1,
+							$2,
+							$3,
+							$4,
+							$5,
+							$6,
+							$7,
+							$8,
+							$9,
+							$10,
+							$11,
+							CURRENT_TIMESTAMP,
+							CURRENT_TIMESTAMP
+						)
+						RETURNING *
+					`,
+					[
+						organizationId,
+						name.trim(),
+						staff.manager,
+						staff.bartender,
+						staff.barback,
+						staff.door,
+						Math.round(weights.manager * 10),
+						Math.round(weights.bartender * 10),
+						Math.round(weights.barback * 10),
+						Math.round(weights.door * 10),
+						userId,
+					],
+				);
+
+				const preset = result.rows[0];
+
+				if (!preset) {
+					throw new Error("Failed to create weight preset");
+				}
+
+				return ctx.json({
+					preset: {
+						id: preset.id,
+						organizationId: preset.organizationId,
+						name: preset.name,
+						staff: {
+							manager: preset.managerCount,
+							bartender: preset.bartenderCount,
+							barback: preset.barbackCount,
+							door: preset.doorCount,
+						},
+						weights: {
+							manager: preset.managerWeightTenths / 10,
+							bartender: preset.bartenderWeightTenths / 10,
+							barback: preset.barbackWeightTenths / 10,
+							door: preset.doorWeightTenths / 10,
+						},
+						createdByUserId: preset.createdByUserId,
+						createdAt: preset.createdAt,
+						updatedAt: preset.updatedAt,
+					},
+				});
+			},
+		),
+
+		updateTipWeightPreset: createAuthEndpoint(
+			"/tip-claim/weight-presets",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: updateWeightPresetBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const {
+					organizationId,
+					presetId,
+					name,
+					staff,
+					weights,
+				} = ctx.body;
+
+				if (!(await canManageAssignments(pool, userId, organizationId))) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					id: string;
+					organizationId: string;
+					name: string;
+					managerCount: number;
+					bartenderCount: number;
+					barbackCount: number;
+					doorCount: number;
+					managerWeightTenths: number;
+					bartenderWeightTenths: number;
+					barbackWeightTenths: number;
+					doorWeightTenths: number;
+					createdByUserId: string;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						UPDATE "tipWeightPreset"
+						SET
+							name = $3,
+							"managerCount" = $4,
+							"bartenderCount" = $5,
+							"barbackCount" = $6,
+							"doorCount" = $7,
+							"managerWeightTenths" = $8,
+							"bartenderWeightTenths" = $9,
+							"barbackWeightTenths" = $10,
+							"doorWeightTenths" = $11,
+							"updatedAt" = CURRENT_TIMESTAMP
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						RETURNING *
+					`,
+					[
+						presetId,
+						organizationId,
+						name.trim(),
+						staff.manager,
+						staff.bartender,
+						staff.barback,
+						staff.door,
+						Math.round(weights.manager * 10),
+						Math.round(weights.bartender * 10),
+						Math.round(weights.barback * 10),
+						Math.round(weights.door * 10),
+					],
+				);
+
+				const preset = result.rows[0];
+
+				if (!preset) {
+					return ctx.json(
+						{ error: "Weight preset not found" },
+						{ status: 404 },
+					);
+				}
+
+				return ctx.json({
+					preset: {
+						id: preset.id,
+						organizationId: preset.organizationId,
+						name: preset.name,
+						staff: {
+							manager: preset.managerCount,
+							bartender: preset.bartenderCount,
+							barback: preset.barbackCount,
+							door: preset.doorCount,
+						},
+						weights: {
+							manager: preset.managerWeightTenths / 10,
+							bartender: preset.bartenderWeightTenths / 10,
+							barback: preset.barbackWeightTenths / 10,
+							door: preset.doorWeightTenths / 10,
+						},
+						createdByUserId: preset.createdByUserId,
+						createdAt: preset.createdAt,
+						updatedAt: preset.updatedAt,
+					},
+				});
+			},
+		),
+
+		deleteTipWeightPreset: createAuthEndpoint(
+			"/tip-claim/weight-presets",
+			{
+				method: "DELETE",
+				use: [sessionMiddleware],
+				body: deleteWeightPresetBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const { organizationId, presetId } = ctx.body;
+
+				if (!(await canManageAssignments(pool, userId, organizationId))) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query(
+					`
+						DELETE FROM "tipWeightPreset"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						RETURNING id
+					`,
+					[presetId, organizationId],
+				);
+
+				if (result.rowCount !== 1) {
+					return ctx.json(
+						{ error: "Weight preset not found" },
+						{ status: 404 },
+					);
+				}
+
+				return ctx.json({ success: true });
 			},
 		),
 
