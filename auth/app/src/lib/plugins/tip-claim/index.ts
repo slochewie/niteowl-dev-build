@@ -1700,9 +1700,14 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				const userId = ctx.context.session.user.id;
 				const { organizationId } = ctx.query;
 
+				const canManage = await canManageAssignments(
+					pool,
+					userId,
+					organizationId,
+				);
 				const canReadPresets =
 					(await canSaveShift(pool, userId, organizationId)) ||
-					(await canManageAssignments(pool, userId, organizationId));
+					canManage;
 
 				if (!canReadPresets) {
 					return ctx.json(
@@ -1751,6 +1756,7 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				);
 
 				return ctx.json({
+					canManage,
 					presets: result.rows.map((preset) => ({
 						id: preset.id,
 						organizationId: preset.organizationId,
