@@ -41,7 +41,7 @@ function getAppLinks() {
 
   return {
     counter: "https://counter." + domain,
-    tipCalculator: "https://tip-calculator." + domain + "/app",
+    tipCalculator: "https://tip-calculator." + domain,
     networkStatus: "https://unifi." + domain,
   };
 }
