@@ -2,6 +2,7 @@ import { apiKey } from "@better-auth/api-key";
 import { dash, sentinel } from "@better-auth/infra";
 import { redisStorage } from "@better-auth/redis-storage";
 import { betterAuth } from "better-auth";
+import { haveIBeenPwned } from "better-auth/plugins";
 import {
 	admin,
 	emailOTP,
@@ -253,6 +254,7 @@ export const auth = betterAuth({
 			},
 		}),
 
+                haveIBeenPwned(),
 		dash(),
 
 		sentinel({
