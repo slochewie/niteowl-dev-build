@@ -14,7 +14,7 @@ import { UserAdminActions } from "@/components/auth/admin/user-admin-actions";
 import { UserOrganizations } from "@/components/auth/admin/user-organizations";
 import { UserSessions } from "@/components/auth/admin/user-sessions";
 import { UserProfileCard } from "@/components/auth/admin/user-profile-card";
-import { UserAvatar } from "@/components/auth/user/user-avatar";
+import { NiteOwlUserAvatar } from "@/components/niteowl/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -92,7 +92,7 @@ function UserPage() {
 			<div className="grid min-w-0 flex-1 gap-6 p-4 sm:p-6 lg:grid-cols-[280px_minmax(0,1fr)]">
 				<aside className="min-w-0 space-y-6">
 					<div className="space-y-4">
-						<UserAvatar
+						<NiteOwlUserAvatar
 							user={{
 								id: user.id,
 								name: user.name,

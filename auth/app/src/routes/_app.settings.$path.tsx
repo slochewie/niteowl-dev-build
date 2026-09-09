@@ -9,6 +9,7 @@ import {
 import {
   Settings
 } from "@/components/auth/settings/settings"
+import { AccountSettings } from "@/components/niteowl/settings/account-settings"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -106,10 +107,14 @@ function SettingsPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <Settings
-        path={path}
-        hideNav
-      />
+      {path === "account" ? (
+        <AccountSettings />
+      ) : (
+        <Settings
+          path={path}
+          hideNav
+        />
+      )}
     </div>
   )
 }

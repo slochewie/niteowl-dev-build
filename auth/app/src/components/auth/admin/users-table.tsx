@@ -16,7 +16,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import { useAdminAccess } from "@/components/auth/admin/admin-access-context";
 import { AddUserDialog } from "@/components/auth/admin/add-user-dialog";
-import { UserView } from "@/components/auth/user/user-view";
+import { NiteOwlUserView } from "@/components/niteowl/user-view";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -302,7 +302,7 @@ export function UsersTable({ users }: UsersTableProps) {
 									}
 								>
 									<TableCell>
-										<UserView
+										<NiteOwlUserView
 											user={{
 												id: user.id,
 												name: user.name,

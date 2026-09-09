@@ -15,7 +15,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { useAdminAccess } from "@/components/auth/admin/admin-access-context";
-import { UserAvatar } from "@/components/auth/user/user-avatar";
+import { NiteOwlUserAvatar } from "@/components/niteowl/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -595,7 +595,7 @@ export function OrganizationsTable({
 
 											<div className="flex -space-x-2">
 												{organization.members.slice(0, 5).map((member) => (
-													<UserAvatar
+													<NiteOwlUserAvatar
 														key={member.id}
 														user={{
 															id: member.id,

@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 import { OrganizationPlugins } from "@/components/admin/plugins/organization-plugins";
 import { AdminWriteBoundary } from "@/components/auth/admin/admin-access-context";
-import { UserAvatar } from "@/components/auth/user/user-avatar";
+import { NiteOwlUserAvatar } from "@/components/niteowl/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -831,7 +831,7 @@ function MemberRow({
 		<>
 			<Item>
 				<ItemMedia>
-					<UserAvatar
+					<NiteOwlUserAvatar
 						user={{
 							id: member.userId,
 							name: member.name,
@@ -1431,7 +1431,7 @@ function ManageTeamMembersDialog({
 
 									<Item>
 										<ItemMedia>
-											<UserAvatar
+											<NiteOwlUserAvatar
 												user={{
 													id: member.userId,
 													name: member.name,

@@ -11,7 +11,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { AdminAccessProvider } from "@/components/auth/admin/admin-access-context";
-import { UserButton } from "@/components/auth/user/user-button";
+import { NiteOwlUserButton } from "@/components/niteowl/user-button";
 import {
 	SidebarInset,
 	SidebarProvider,
@@ -79,7 +79,7 @@ function AppLayout() {
 						</Link>
 
 						<div className="ml-auto flex items-center gap-2">
-							<UserButton size="icon" align="end" />
+							<NiteOwlUserButton size="icon" align="end" />
 						</div>
 					</header>
 

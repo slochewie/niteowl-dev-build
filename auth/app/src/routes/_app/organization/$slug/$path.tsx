@@ -12,6 +12,7 @@ import {
 import {
   Organization
 } from "@/components/auth/organization/organization"
+import { OrganizationPeople } from "@/components/niteowl/organization/organization-people"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -135,10 +136,14 @@ function OrganizationPage() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <Organization
-        path={path}
-        hideNav
-      />
+      {path === "people" ? (
+        <OrganizationPeople />
+      ) : (
+        <Organization
+          path={path}
+          hideNav
+        />
+      )}
     </div>
   )
 }
