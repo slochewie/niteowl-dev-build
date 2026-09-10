@@ -25,6 +25,7 @@ type ScheduleRow = {
 	sevenShiftsUserId: number | null;
 	userId: string | null;
 	userName: string | null;
+	userImage: string | null;
 	sevenShiftsDepartmentId: number | null;
 	departmentName: string | null;
 	sevenShiftsRoleId: number | null;
@@ -225,6 +226,7 @@ export const createReadSevenShiftsScheduleWeekEndpoint = ({
 							s."sevenShiftsUserId",
 							s."userId",
 							u.name AS "userName",
+							u.image AS "userImage",
 							s."sevenShiftsDepartmentId",
 							d.name AS "departmentName",
 							s."sevenShiftsRoleId",
@@ -295,6 +297,7 @@ export const createReadSevenShiftsScheduleWeekEndpoint = ({
 							: {
 									id: row.userId,
 									name: row.userName,
+									image: row.userImage,
 								},
 					department:
 						row.sevenShiftsDepartmentId === null

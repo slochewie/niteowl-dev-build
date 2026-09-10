@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppSchedulesRouteImport } from './routes/_app/schedules'
 import { Route as ApiSplatRouteImport } from './routes/api/$'
 import { Route as AuthPathRouteImport } from './routes/auth/$path'
 import { Route as DotwellKnownOauthAuthorizationServerSplatRouteImport } from './routes/[.]well-known/oauth-authorization-server/$'
@@ -36,6 +37,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSchedulesRoute = AppSchedulesRouteImport.update({
+  id: '/schedules',
+  path: '/schedules',
   getParentRoute: () => AppRoute,
 } as any)
 const ApiSplatRoute = ApiSplatRouteImport.update({
@@ -99,6 +105,7 @@ const AppOrganizationSlugPathRoute = AppOrganizationSlugPathRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/dashboard': typeof DashboardRoute
+  '/schedules': typeof AppSchedulesRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/$path': typeof AuthPathRoute
   '/.well-known/oauth-authorization-server/$': typeof DotwellKnownOauthAuthorizationServerSplatRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
+  '/schedules': typeof AppSchedulesRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/$path': typeof AuthPathRoute
   '/': typeof AppIndexRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/dashboard': typeof DashboardRoute
+  '/_app/schedules': typeof AppSchedulesRoute
   '/api/$': typeof ApiSplatRoute
   '/auth/$path': typeof AuthPathRoute
   '/_app/': typeof AppIndexRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/schedules'
     | '/api/$'
     | '/auth/$path'
     | '/.well-known/oauth-authorization-server/$'
@@ -162,6 +172,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/dashboard'
+    | '/schedules'
     | '/api/$'
     | '/auth/$path'
     | '/'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/dashboard'
+    | '/_app/schedules'
     | '/api/$'
     | '/auth/$path'
     | '/_app/'
@@ -221,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/schedules': {
+      id: '/_app/schedules'
+      path: '/schedules'
+      fullPath: '/schedules'
+      preLoaderRoute: typeof AppSchedulesRouteImport
       parentRoute: typeof AppRoute
     }
     '/api/$': {
@@ -304,6 +323,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppSchedulesRoute: typeof AppSchedulesRoute
   AppIndexRoute: typeof AppIndexRoute
   AppOrganizationsOrganizationIdRoute: typeof AppOrganizationsOrganizationIdRoute
   AppPluginsPluginIdRoute: typeof AppPluginsPluginIdRoute
@@ -316,6 +336,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppSchedulesRoute: AppSchedulesRoute,
   AppIndexRoute: AppIndexRoute,
   AppOrganizationsOrganizationIdRoute: AppOrganizationsOrganizationIdRoute,
   AppPluginsPluginIdRoute: AppPluginsPluginIdRoute,

@@ -6,6 +6,7 @@ import {
 	LayoutDashboard,
 	Gauge,
 	Calculator,
+	CalendarDays,
 	Network,
 	ShieldCheck,
 	UserCircle,
@@ -148,6 +149,12 @@ export function AppSidebar() {
 								title: "Dashboard",
 								to: "/",
 								icon: LayoutDashboard,
+							})}
+
+							{navigationItem({
+								title: "Schedules",
+								to: "/schedules",
+								icon: CalendarDays,
 							})}
 						</SidebarMenu>
 					</SidebarGroupContent>
