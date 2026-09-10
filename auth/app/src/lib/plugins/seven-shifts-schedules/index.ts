@@ -8,6 +8,7 @@ import {
 	SevenShiftsApiError,
 } from "../seven-shifts-api/client.js";
 import { getSevenShiftsApiConnection } from "../seven-shifts-api/source.js";
+import { createSyncSevenShiftsSchedulesEndpoint } from "./sync.js";
 
 type SevenShiftsSchedulesOptions = {
 	pool: Pool;
@@ -222,5 +223,238 @@ export const sevenShiftsSchedules = ({
 					}
 				},
 			),
+
+			syncSevenShiftsSchedules:
+				createSyncSevenShiftsSchedulesEndpoint({
+					pool,
+					encryptionKey,
+				}),
+		},
+
+		schema: {
+			sevenShiftsScheduledShift: {
+				modelName:
+					"sevenShiftsScheduledShift",
+
+				fields: {
+					sourceId: {
+						type: "string",
+						required: true,
+						index: true,
+						references: {
+							model:
+								"sevenShiftsApiSource",
+							field: "id",
+							onDelete:
+								"cascade",
+						},
+					},
+
+					organizationId: {
+						type: "string",
+						required: true,
+						index: true,
+						references: {
+							model:
+								"organization",
+							field: "id",
+							onDelete:
+								"cascade",
+						},
+					},
+
+					sevenShiftsShiftId: {
+						type: "number",
+						required: true,
+						unique: true,
+					},
+
+					sevenShiftsLocationId: {
+						type: "number",
+						required: true,
+						index: true,
+					},
+
+					sevenShiftsUserId: {
+						type: "number",
+						required: false,
+						index: true,
+					},
+
+					userId: {
+						type: "string",
+						required: false,
+						index: true,
+						references: {
+							model: "user",
+							field: "id",
+							onDelete:
+								"set null",
+						},
+					},
+
+					sevenShiftsDepartmentId: {
+						type: "number",
+						required: false,
+						index: true,
+					},
+
+					sevenShiftsRoleId: {
+						type: "number",
+						required: false,
+						index: true,
+					},
+
+					stationNumber: {
+						type: "number",
+						required: false,
+					},
+
+					stationId: {
+						type: "number",
+						required: false,
+					},
+
+					stationName: {
+						type: "string",
+						required: false,
+					},
+
+					locationTimezone: {
+						type: "string",
+						required: true,
+					},
+
+					scheduleDate: {
+						type: "string",
+						required: true,
+						index: true,
+					},
+
+					scheduledStartAt: {
+						type: "date",
+						required: true,
+						index: true,
+					},
+
+					scheduledEndAt: {
+						type: "date",
+						required: false,
+					},
+
+					closesLocation: {
+						type: "boolean",
+						required: true,
+						defaultValue: false,
+					},
+
+					endsAtBusinessDecline: {
+						type: "boolean",
+						required: true,
+						defaultValue: false,
+					},
+
+					notes: {
+						type: "string",
+						required: false,
+					},
+
+					draft: {
+						type: "boolean",
+						required: true,
+						defaultValue: false,
+					},
+
+					notified: {
+						type: "boolean",
+						required: true,
+						defaultValue: false,
+					},
+
+					open: {
+						type: "boolean",
+						required: true,
+						defaultValue: false,
+					},
+
+					unassigned: {
+						type: "boolean",
+						required: true,
+						defaultValue: false,
+					},
+
+					unassignedSkillLevel: {
+						type: "number",
+						required: false,
+					},
+
+					openOfferType: {
+						type: "string",
+						required: false,
+					},
+
+					publishStatus: {
+						type: "string",
+						required: false,
+					},
+
+					attendanceStatus: {
+						type: "string",
+						required: false,
+					},
+
+					lateMinutes: {
+						type: "number",
+						required: false,
+					},
+
+					breaksJson: {
+						type: "string",
+						required: false,
+					},
+
+					deleted: {
+						type: "boolean",
+						required: true,
+						defaultValue: false,
+					},
+
+					softDeletedAt: {
+						type: "date",
+						required: false,
+					},
+
+					sourceCreatedAt: {
+						type: "date",
+						required: false,
+					},
+
+					sourceUpdatedAt: {
+						type: "date",
+						required: false,
+					},
+
+					lastSeenAt: {
+						type: "date",
+						required: true,
+						defaultValue:
+							() => new Date(),
+					},
+
+					createdAt: {
+						type: "date",
+						required: true,
+						defaultValue:
+							() => new Date(),
+					},
+
+					updatedAt: {
+						type: "date",
+						required: true,
+						defaultValue:
+							() => new Date(),
+					},
+				},
+			},
 		},
 	}) satisfies BetterAuthPlugin;
