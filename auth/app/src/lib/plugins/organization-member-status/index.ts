@@ -8,19 +8,15 @@ import {
 import type { Pool } from "pg";
 import * as z from "zod";
 
+import {
+	canAccessOrganization,
+	canManageOrganization,
+	getOrganizationMembership,
+	isGlobalAdmin,
+} from "./access.js";
+
 type OrganizationMemberStatusOptions = {
 	pool: Pool;
-};
-
-type UserRoleRow = {
-	role: string | null;
-};
-
-type MembershipRow = {
-	memberId: string;
-	organizationId: string;
-	userId: string;
-	role: string;
 };
 
 type OrganizationMemberStatusRow = {
@@ -43,104 +39,6 @@ const setMemberStatusBodySchema = z.object({
 const organizationQuerySchema = z.object({
 	organizationId: z.string().min(1),
 });
-
-async function isGlobalAdmin(pool: Pool, userId: string) {
-	const result = await pool.query<UserRoleRow>(
-		`
-        SELECT role
-        FROM "user"
-        WHERE id = $1
-        LIMIT 1
-      `,
-		[userId],
-	);
-
-	return result.rows[0]?.role === "admin";
-}
-
-async function getMembership(
-	pool: Pool,
-	organizationId: string,
-	userId: string,
-) {
-	const result = await pool.query<MembershipRow>(
-		`
-        SELECT
-          id AS "memberId",
-          "organizationId",
-          "userId",
-          role
-        FROM member
-        WHERE
-          "organizationId" = $1
-          AND "userId" = $2
-        LIMIT 1
-      `,
-		[organizationId, userId],
-	);
-
-	return result.rows[0] ?? null;
-}
-
-async function getMemberStatus(pool: Pool, memberId: string) {
-	const result = await pool.query<{
-		active: boolean;
-	}>(
-		`
-        SELECT active
-        FROM "organizationMemberStatus"
-        WHERE "memberId" = $1
-        LIMIT 1
-      `,
-		[memberId],
-	);
-
-	return result.rows[0] ?? null;
-}
-
-async function canAccessOrganization(
-	pool: Pool,
-	userId: string,
-	organizationId: string,
-) {
-	if (await isGlobalAdmin(pool, userId)) {
-		return true;
-	}
-
-	const membership = await getMembership(pool, organizationId, userId);
-
-	if (!membership) {
-		return false;
-	}
-
-	const status = await getMemberStatus(pool, membership.memberId);
-
-	return status?.active !== false;
-}
-
-async function canManageOrganization(
-	pool: Pool,
-	userId: string,
-	organizationId: string,
-) {
-	if (await isGlobalAdmin(pool, userId)) {
-		return true;
-	}
-
-	const membership = await getMembership(pool, organizationId, userId);
-
-	if (!membership) {
-		return false;
-	}
-
-	const status = await getMemberStatus(pool, membership.memberId);
-
-	if (status?.active === false) {
-		return false;
-	}
-
-	return membership.role === "owner" || membership.role === "admin";
-}
 
 export async function setOrganizationMemberStatus({
 	pool,
@@ -319,7 +217,7 @@ export const organizationMemberStatus = ({
 							return;
 						}
 
-						const membership = await getMembership(
+						const membership = await getOrganizationMembership(
 							pool,
 							organizationId,
 							userId,
@@ -329,9 +227,7 @@ export const organizationMemberStatus = ({
 							return;
 						}
 
-						const status = await getMemberStatus(pool, membership.memberId);
-
-						if (status?.active === false) {
+						if (!membership.active) {
 							throw new APIError("FORBIDDEN", {
 								message: "Your membership in this organization is inactive",
 							});
@@ -537,7 +433,7 @@ export const organizationMemberStatus = ({
 						);
 					}
 
-					const membership = await getMembership(
+					const membership = await getOrganizationMembership(
 						pool,
 						ctx.body.organizationId,
 						ctx.body.userId,

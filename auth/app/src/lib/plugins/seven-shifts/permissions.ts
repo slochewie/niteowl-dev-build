@@ -1,10 +1,10 @@
-export type NiteOwlApp = "counter" | "unifi";
+export type NiteOwlApp = "counter" | "unifi" | "schedules";
 
 export const roleAppPermissions: Record<
   string,
   readonly NiteOwlApp[]
 > = {
-  Manager: ["counter", "unifi"],
+  Manager: ["counter", "unifi", "schedules"],
   Door: ["counter"],
   "Counter Viewer": ["counter"],
   "Cover Charge": ["counter"],

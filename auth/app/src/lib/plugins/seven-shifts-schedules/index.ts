@@ -8,6 +8,7 @@ import {
 	SevenShiftsApiError,
 } from "../seven-shifts-api/client.js";
 import { getSevenShiftsApiConnection } from "../seven-shifts-api/source.js";
+import { createReadSevenShiftsScheduleWeekEndpoint } from "./read.js";
 import { createSyncSevenShiftsSchedulesEndpoint } from "./sync.js";
 
 type SevenShiftsSchedulesOptions = {
@@ -223,6 +224,11 @@ export const sevenShiftsSchedules = ({
 					}
 				},
 			),
+
+			readSevenShiftsScheduleWeek:
+				createReadSevenShiftsScheduleWeekEndpoint({
+					pool,
+				}),
 
 			syncSevenShiftsSchedules:
 				createSyncSevenShiftsSchedulesEndpoint({
