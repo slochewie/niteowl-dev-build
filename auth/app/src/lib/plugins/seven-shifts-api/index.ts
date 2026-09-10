@@ -24,6 +24,7 @@ import {
 	SevenShiftsApiError,
 	updateSevenShiftsUser,
 } from "./client.js";
+import { getSevenShiftsApiSource } from "./source.js";
 
 type SevenShiftsApiOptions = {
 	pool: Pool;
@@ -32,19 +33,6 @@ type SevenShiftsApiOptions = {
 
 type UserRoleRow = {
 	role: string | null;
-};
-
-type ApiSourceRow = {
-	id: string;
-	name: string;
-	accessToken: string;
-	companyId: number | null;
-	companyName: string | null;
-	apiVersion: string;
-	lastTestedAt: Date | null;
-	lastSyncAt: Date | null;
-	createdAt: Date;
-	updatedAt: Date;
 };
 
 const createSourceBodySchema = z.object({
@@ -102,32 +90,6 @@ async function isGlobalAdmin(
 
 	return role === "admin" || (allowReadOnly && role === "admin-viewer");
 }
-async function getSource(pool: Pool, sourceId: string) {
-	const result = await pool.query<ApiSourceRow>(
-		`
-        SELECT
-          id,
-          name,
-          "accessToken",
-          "companyId",
-          "companyName",
-          "apiVersion",
-          "lastTestedAt",
-          "lastSyncAt",
-          "createdAt",
-          "updatedAt"
-        FROM
-          "sevenShiftsApiSource"
-        WHERE
-          id = $1
-        LIMIT 1
-      `,
-		[sourceId],
-	);
-
-	return result.rows[0] ?? null;
-}
-
 function apiErrorMessage(error: unknown) {
 	if (error instanceof SevenShiftsApiError) {
 		return `7shifts API returned HTTP ${error.status}`;
@@ -646,7 +608,7 @@ export const sevenShiftsApi = ({
 						);
 					}
 
-					const existing = await getSource(pool, ctx.body.sourceId);
+					const existing = await getSevenShiftsApiSource(pool, ctx.body.sourceId);
 
 					if (!existing) {
 						return ctx.json(
@@ -739,7 +701,7 @@ export const sevenShiftsApi = ({
 						);
 					}
 
-					const source = await getSource(pool, ctx.body.sourceId);
+					const source = await getSevenShiftsApiSource(pool, ctx.body.sourceId);
 
 					if (!source) {
 						return ctx.json(
@@ -842,7 +804,7 @@ export const sevenShiftsApi = ({
 						);
 					}
 
-					const source = await getSource(pool, ctx.body.sourceId);
+					const source = await getSevenShiftsApiSource(pool, ctx.body.sourceId);
 
 					if (!source || source.companyId === null) {
 						return ctx.json(
@@ -940,7 +902,7 @@ export const sevenShiftsApi = ({
 						);
 					}
 
-					const source = await getSource(pool, ctx.body.sourceId);
+					const source = await getSevenShiftsApiSource(pool, ctx.body.sourceId);
 
 					if (!source || source.companyId === null) {
 						return ctx.json(
@@ -1112,7 +1074,7 @@ export const sevenShiftsApi = ({
 						);
 					}
 
-					const source = await getSource(pool, ctx.body.sourceId);
+					const source = await getSevenShiftsApiSource(pool, ctx.body.sourceId);
 
 					if (!source || source.companyId === null) {
 						return ctx.json(
@@ -2927,7 +2889,7 @@ export const sevenShiftsApi = ({
 						);
 					}
 
-					const source = await getSource(pool, ctx.body.sourceId);
+					const source = await getSevenShiftsApiSource(pool, ctx.body.sourceId);
 
 					if (!source) {
 						return ctx.json(
@@ -3007,7 +2969,7 @@ export const sevenShiftsApi = ({
 						);
 					}
 
-					const source = await getSource(pool, ctx.body.sourceId);
+					const source = await getSevenShiftsApiSource(pool, ctx.body.sourceId);
 
 					if (!source || source.companyId === null) {
 						return ctx.json(

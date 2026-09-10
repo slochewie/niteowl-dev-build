@@ -540,3 +540,83 @@ export async function listSevenShiftsUserRoleAssignments({
 
   return response.data ?? []
 }
+
+export type SevenShiftsShift = {
+  id: number
+  user_id?: number | null
+  department_id?: number | null
+  location_id: number
+  company_id: number
+  role_id?: number | null
+  station?: number | null
+  station_name?: string | null
+  station_id?: number | null
+  start: string
+  end?: string | null
+  close?: boolean
+  business_decline?: boolean
+  hourly_wage?: number | null
+  notes?: string | null
+  draft?: boolean
+  notified?: boolean
+  open?: boolean
+  unassigned?: boolean
+  unassigned_skill_level?: number | null
+  open_offer_type?: string | number | null
+  publish_status?: string | null
+  attendance_status?: string | null
+  late_minutes?: number | null
+  created?: string | null
+  modified?: string | null
+  soft_deleted?: string | null
+  deleted?: boolean
+  breaks?: unknown[]
+}
+
+export async function listSevenShiftsShifts({
+  accessToken,
+  companyId,
+  start,
+  end,
+  includeDeleted = true,
+  includeDraft = false,
+  apiVersion,
+  baseUrl
+}: {
+  accessToken: string
+  companyId: number
+  start: string
+  end: string
+  includeDeleted?: boolean
+  includeDraft?: boolean
+  apiVersion?: string
+  baseUrl?: string
+}) {
+  return listAll<
+    SevenShiftsShift
+  >({
+    accessToken,
+    apiVersion,
+    baseUrl,
+    path:
+      "/company/" +
+      companyId +
+      "/shifts",
+    params: {
+      "start[gte]":
+        start,
+      "start[lte]":
+        end,
+      consider_tz_in_ranges:
+        true,
+      include_deleted:
+        includeDeleted,
+      include_draft:
+        includeDraft,
+      sort_by:
+        "start",
+      sort_dir:
+        "asc"
+    }
+  })
+}

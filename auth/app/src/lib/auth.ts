@@ -36,6 +36,7 @@ import { userProfile } from "./plugins/user-profile/index.js";
 import { sevenShifts } from "./plugins/seven-shifts/index.js";
 import { sevenShiftsCsv } from "./plugins/seven-shifts-csv/index.js";
 import { sevenShiftsApi } from "./plugins/seven-shifts-api/index.js";
+import { sevenShiftsSchedules } from "./plugins/seven-shifts-schedules/index.js";
 import { unifiIdentity } from "./plugins/unifi-identity/index.js";
 import { unifiAccess } from "./plugins/unifi-access/index.js";
 
@@ -285,6 +286,11 @@ export const auth = betterAuth({
 		}),
 
 		sevenShiftsApi({
+			pool,
+			encryptionKey: env.integrationEncryptionKey,
+		}),
+
+		sevenShiftsSchedules({
 			pool,
 			encryptionKey: env.integrationEncryptionKey,
 		}),
