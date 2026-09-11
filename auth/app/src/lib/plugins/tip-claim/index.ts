@@ -130,6 +130,38 @@ const weightPresetValuesSchema = z.object({
 	}),
 });
 
+const staffingSnapshotAssignmentSchema = z.object({
+	userId: z.string().min(1).nullable(),
+	name: z.string().trim().min(1).max(200),
+	role: roleSchema,
+	registerId: z.number().int().min(1).max(50).nullable(),
+});
+
+const saveStaffingSnapshotBodySchema = z.object({
+	organizationId: z.string().min(1),
+	name: z.string().trim().min(1).max(100),
+	registerCount: z.number().int().min(1).max(50),
+	claimPercent: z.number().min(0).max(100),
+	weights: z.object({
+		manager: z.number().min(0).max(10).multipleOf(0.1),
+		bartender: z.number().min(0).max(10).multipleOf(0.1),
+		barback: z.number().min(0).max(10).multipleOf(0.1),
+		door: z.number().min(0).max(10).multipleOf(0.1),
+	}),
+	assignments: z.array(staffingSnapshotAssignmentSchema).min(1).max(200),
+});
+
+function parseStaffingSnapshot(value: string | null) {
+	if (!value) return undefined;
+
+	try {
+		const parsed = JSON.parse(value);
+		return Array.isArray(parsed) ? parsed : undefined;
+	} catch {
+		return undefined;
+	}
+}
+
 const saveWeightPresetBodySchema = weightPresetValuesSchema.safeExtend({
 	organizationId: z.string().min(1),
 });
@@ -917,6 +949,19 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 				createdByUserId: {
 					type: "string",
 					required: true,
+				},
+				source: {
+					type: "string",
+					required: true,
+					defaultValue: "manual",
+				},
+				staffingJson: {
+					type: "string",
+					required: false,
+				},
+				expiresAt: {
+					type: "date",
+					required: false,
 				},
 				createdAt: {
 					type: "date",
@@ -1743,6 +1788,9 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 					barbackWeightTenths: number;
 					doorWeightTenths: number;
 					createdByUserId: string;
+					source: string;
+					staffingJson: string | null;
+					expiresAt: Date | null;
 					createdAt: Date;
 					updatedAt: Date;
 				}>(
@@ -1762,10 +1810,18 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							"barbackWeightTenths",
 							"doorWeightTenths",
 							"createdByUserId",
+							source,
+							"staffingJson",
+							"expiresAt",
 							"createdAt",
 							"updatedAt"
 						FROM "tipWeightPreset"
-						WHERE "organizationId" = $1
+						WHERE
+							"organizationId" = $1
+							AND (
+								"expiresAt" IS NULL
+								OR "expiresAt" > CURRENT_TIMESTAMP
+							)
 						ORDER BY LOWER(name), "createdAt"
 					`,
 					[organizationId],
@@ -1792,9 +1848,160 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 							door: preset.doorWeightTenths / 10,
 						},
 						createdByUserId: preset.createdByUserId,
+						source: preset.source,
+						assignments: parseStaffingSnapshot(
+							preset.staffingJson,
+						),
+						expiresAt: preset.expiresAt,
 						createdAt: preset.createdAt,
 						updatedAt: preset.updatedAt,
 					})),
+				});
+			},
+		),
+
+		saveTipStaffingSnapshot: createAuthEndpoint(
+			"/tip-claim/staffing-snapshots",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: saveStaffingSnapshotBodySchema,
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const {
+					organizationId,
+					name,
+					registerCount,
+					claimPercent,
+					weights,
+					assignments,
+				} = ctx.body;
+
+				if (
+					!(
+						await canManageAssignments(
+							pool,
+							userId,
+							organizationId,
+						)
+					)
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const staff = assignments.reduce(
+					(counts, assignment) => ({
+						...counts,
+						[assignment.role]:
+							counts[assignment.role] + 1,
+					}),
+					{
+						manager: 0,
+						bartender: 0,
+						barback: 0,
+						door: 0,
+					},
+				);
+				const expiresAt = new Date(
+					Date.now() + 24 * 60 * 60 * 1000,
+				);
+
+				await pool.query(
+					`
+						DELETE FROM "tipWeightPreset"
+						WHERE
+							"organizationId" = $1
+							AND source = 'seven-shifts'
+							AND (
+								"expiresAt" <= CURRENT_TIMESTAMP
+								OR name = $2
+							)
+					`,
+					[organizationId, name.trim()],
+				);
+
+				const result = await pool.query<{ id: string }>(
+					`
+						INSERT INTO "tipWeightPreset" (
+							id,
+							"organizationId",
+							name,
+							"registerCount",
+							"claimPercent",
+							"managerCount",
+							"bartenderCount",
+							"barbackCount",
+							"doorCount",
+							"managerWeightTenths",
+							"bartenderWeightTenths",
+							"barbackWeightTenths",
+							"doorWeightTenths",
+							"createdByUserId",
+							source,
+							"staffingJson",
+							"expiresAt",
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							gen_random_uuid()::text,
+							$1,
+							$2,
+							$3,
+							$4,
+							$5,
+							$6,
+							$7,
+							$8,
+							$9,
+							$10,
+							$11,
+							$12,
+							$13,
+							'seven-shifts',
+							$14,
+							$15,
+							CURRENT_TIMESTAMP,
+							CURRENT_TIMESTAMP
+						)
+						RETURNING id
+					`,
+					[
+						organizationId,
+						name.trim(),
+						registerCount,
+						claimPercent,
+						staff.manager,
+						staff.bartender,
+						staff.barback,
+						staff.door,
+						Math.round(weights.manager * 10),
+						Math.round(weights.bartender * 10),
+						Math.round(weights.barback * 10),
+						Math.round(weights.door * 10),
+						userId,
+						JSON.stringify(assignments),
+						expiresAt,
+					],
+				);
+
+				const snapshot = result.rows[0];
+
+				if (!snapshot) {
+					throw new Error(
+						"Failed to save temporary staffing snapshot",
+					);
+				}
+
+				return ctx.json({
+					snapshot: {
+						id: snapshot.id,
+						expiresAt,
+					},
 				});
 			},
 		),
