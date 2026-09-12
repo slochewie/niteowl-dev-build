@@ -8,9 +8,11 @@ import {
 	SevenShiftsApiError,
 } from "../seven-shifts-api/client.js";
 import { getSevenShiftsApiConnection } from "../seven-shifts-api/source.js";
+import { createCheckSevenShiftsScheduleUpdatesEndpoint } from "./check-updates.js";
 import { createListSevenShiftsScheduleOrganizationsEndpoint } from "./organizations.js";
 import { createReadSevenShiftsScheduleWeekEndpoint } from "./read.js";
 import { createSevenShiftsScheduleSyncControlsEndpoint } from "./sync-controls.js";
+import { createSyncSevenShiftsOrganizationEndpoint } from "./sync-organization.js";
 import { createSyncSevenShiftsSchedulesEndpoint } from "./sync.js";
 
 type SevenShiftsSchedulesOptions = {
@@ -240,6 +242,18 @@ export const sevenShiftsSchedules = ({
 			sevenShiftsScheduleSyncControls:
 				createSevenShiftsScheduleSyncControlsEndpoint({
 					pool,
+				}),
+
+			checkSevenShiftsScheduleUpdates:
+				createCheckSevenShiftsScheduleUpdatesEndpoint({
+					pool,
+					encryptionKey,
+				}),
+
+			syncSevenShiftsOrganization:
+				createSyncSevenShiftsOrganizationEndpoint({
+					pool,
+					encryptionKey,
 				}),
 
 			syncSevenShiftsSchedules:

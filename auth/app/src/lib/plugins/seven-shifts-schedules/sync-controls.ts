@@ -53,7 +53,7 @@ async function canReadSchedule(
 	);
 }
 
-async function canManageScheduleSync(
+export async function canManageScheduleSync(
 	pool: Pool,
 	userId: string,
 	organizationId: string,
