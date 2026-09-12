@@ -578,6 +578,7 @@ export async function listSevenShiftsShifts({
   companyId,
   start,
   end,
+  locationId,
   includeDeleted = true,
   includeDraft = false,
   apiVersion,
@@ -587,6 +588,7 @@ export async function listSevenShiftsShifts({
   companyId: number
   start: string
   end: string
+  locationId?: number
   includeDeleted?: boolean
   includeDraft?: boolean
   apiVersion?: string
@@ -603,6 +605,8 @@ export async function listSevenShiftsShifts({
       companyId +
       "/shifts",
     params: {
+      location_id:
+        locationId,
       "start[gte]":
         start,
       "start[lte]":
