@@ -54,7 +54,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="antialiased min-h-svh flex flex-col">
+      <body className="min-h-svh flex flex-col">
         <TooltipProvider>
         <Providers>
 

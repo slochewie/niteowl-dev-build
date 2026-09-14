@@ -4,15 +4,23 @@ import {
 	Blocks,
 	Building2,
 	LayoutDashboard,
-	Gauge,
-	Calculator,
-	CalendarDays,
-	Network,
 	ShieldCheck,
 	UserCircle,
 	Users,
 } from "lucide-react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import {
+	appDefinitionsById,
+	buildNavigation,
+	getDefaultAppUrls,
+	getDeploymentBrand,
+} from "@niteowl/app-config";
+import {
+	AppSidebarIdentity,
+	NiteOwlNavigationIcon,
+	useCurrentHostname,
+} from "@niteowl/ui";
+
 import { useAdminAccess } from "@/components/auth/admin/admin-access-context";
 import {
 	Sidebar,
@@ -20,6 +28,7 @@ import {
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
+	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
@@ -31,43 +40,38 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 
-function getAppLinks() {
-  const hostname = window.location.hostname;
-  const isMccarthysDomain =
-    hostname === "mccarthysirishpub.com" ||
-    hostname.endsWith(".mccarthysirishpub.com");
-  const domain = isMccarthysDomain
-    ? "mccarthysirishpub.com"
-    : "niteowl.dev";
-
-  return {
-    counter: "https://counter." + domain,
-    tipCalculator: "https://tip-calculator." + domain,
-    networkStatus: "https://unifi." + domain,
-  };
-}
-
-const appsNavigation = [
-  { title: "Counter", key: "counter", icon: Gauge },
-  { title: "Tip Calculator", key: "tipCalculator", icon: Calculator },
-  { title: "Network Status", key: "networkStatus", icon: Network },
-] as const;
+const CONSOLE_APP = appDefinitionsById.console;
 
 export function AppSidebar() {
 	const { canView, readOnly } = useAdminAccess();
-
-	const { isMobile, setOpenMobile } = useSidebar();
+	const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
+	const hostname = useCurrentHostname();
 
 	const pathname = useRouterState({
 		select: (state) => state.location.pathname,
 	});
 
+	const appLinks = hostname ? getDefaultAppUrls(hostname) : null;
+	const brand = hostname ? getDeploymentBrand(hostname) : null;
+
+	const currentHref = appLinks
+		? `${appLinks.console.replace(/\/$/, "")}${pathname}`
+		: null;
+
+	const navigation = appLinks
+		? buildNavigation({
+				currentApp: "console",
+				currentPath: pathname,
+				urls: appLinks,
+			})
+		: null;
+
 	const organizationMatch =
-		/^\/organization\/([^/]+)\/(settings|people|teams)(?:\/|$)/.exec(pathname);
+		/^\/organization\/([^/]+)\/(settings|people|teams)(?:\/|$)/.exec(
+			pathname,
+		);
 
 	const activeOrganizationSlug = organizationMatch?.[1] ?? null;
-
-	const isAdmin = canView;
 
 	const settingsNavigation = [
 		{
@@ -126,10 +130,13 @@ export function AppSidebar() {
 
 		return (
 			<SidebarMenuItem key={item.to}>
-				<SidebarMenuButton className="text-base [&>svg]:size-5" asChild isActive={isActive} tooltip={item.title}>
+				<SidebarMenuButton
+					asChild
+					isActive={isActive}
+					tooltip={item.title}
+				>
 					<Link to={item.to} onClick={closeMobileSidebar}>
 						<item.icon />
-
 						<span>{item.title}</span>
 					</Link>
 				</SidebarMenuButton>
@@ -139,53 +146,59 @@ export function AppSidebar() {
 
 	return (
 		<Sidebar collapsible="icon">
+			<SidebarHeader>
+				{currentHref && brand ? (
+					<AppSidebarIdentity
+						href={currentHref}
+						brand={brand}
+						appName={CONSOLE_APP.label}
+						onToggle={toggleSidebar}
+					/>
+				) : (
+					<div className="h-12" aria-hidden="true" />
+				)}
+			</SidebarHeader>
+
+			<SidebarSeparator />
+
 			<SidebarContent>
-				<SidebarGroup>
-					<SidebarGroupLabel className="text-base font-semibold">NiteOwl</SidebarGroupLabel>
+				{navigation
+					? [...navigation.primary, ...navigation.apps].map((group) => (
+							<SidebarGroup key={group.id}>
+								{group.label ? (
+									<SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+								) : null}
 
-					<SidebarGroupContent>
-						<SidebarMenu>
-							{navigationItem({
-								title: "Dashboard",
-								to: "/",
-								icon: LayoutDashboard,
-							})}
-
-							{navigationItem({
-								title: "Schedules",
-								to: "/schedules",
-								icon: CalendarDays,
-							})}
-						</SidebarMenu>
-					</SidebarGroupContent>
-				</SidebarGroup>
+								<SidebarGroupContent>
+									<SidebarMenu>
+										{group.items.map((item) => (
+											<SidebarMenuItem key={item.id}>
+												<SidebarMenuButton
+													asChild
+													isActive={item.active}
+													tooltip={item.label}
+												>
+													{item.external ? (
+														<a href={item.href} onClick={closeMobileSidebar}>
+															<NiteOwlNavigationIcon icon={item.icon} />
+															<span>{item.label}</span>
+														</a>
+													) : (
+														<Link to={item.href} onClick={closeMobileSidebar}>
+															<NiteOwlNavigationIcon icon={item.icon} />
+															<span>{item.label}</span>
+														</Link>
+													)}
+												</SidebarMenuButton>
+											</SidebarMenuItem>
+										))}
+									</SidebarMenu>
+								</SidebarGroupContent>
+							</SidebarGroup>
+						))
+					: null}
 
 				<SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sm">Apps</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {appsNavigation.map((item) => (
-                <SidebarMenuItem key={item.key}>
-                  <SidebarMenuButton className="text-base [&>svg]:size-5"
-                    type="button"
-                    tooltip={item.title}
-                    onClick={() => {
-                      closeMobileSidebar();
-                      window.location.assign(getAppLinks()[item.key]);
-                    }}
-                  >
-                    <item.icon />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarSeparator />
 
 				<SidebarGroup>
 					<SidebarGroupLabel className="text-sm">Settings</SidebarGroupLabel>
@@ -203,14 +216,13 @@ export function AppSidebar() {
 
 								return (
 									<SidebarMenuItem key={item.to}>
-										<SidebarMenuButton className="text-base [&>svg]:size-5"
+										<SidebarMenuButton
 											asChild
 											isActive={isActive}
 											tooltip={item.title}
 										>
 											<Link to={item.to} onClick={closeMobileSidebar}>
 												<item.icon />
-
 												<span>{item.title}</span>
 											</Link>
 										</SidebarMenuButton>
@@ -288,7 +300,7 @@ export function AppSidebar() {
 					</SidebarGroupContent>
 				</SidebarGroup>
 
-				{isAdmin && (
+				{canView && (
 					<>
 						<SidebarSeparator />
 
@@ -298,7 +310,9 @@ export function AppSidebar() {
 							</SidebarGroupLabel>
 
 							<SidebarGroupContent>
-								<SidebarMenu>{adminNavigation.map(navigationItem)}</SidebarMenu>
+								<SidebarMenu>
+									{adminNavigation.map(navigationItem)}
+								</SidebarMenu>
 							</SidebarGroupContent>
 						</SidebarGroup>
 					</>

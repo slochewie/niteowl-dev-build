@@ -66,6 +66,8 @@ services:
     tty: true
     volumes:
       - './auth/app:/app'
+      - '../niteowl-app-config:/app/packages/niteowl-app-config'
+      - '../niteowl-ui:/app/packages/niteowl-ui'
     restart: unless-stopped
     networks: [niteowl-dev]
     ports:
