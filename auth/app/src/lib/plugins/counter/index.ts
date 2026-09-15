@@ -5,6 +5,7 @@ import * as z from "zod";
 
 type CounterOptions = {
 	pool: Pool;
+	internalSecret?: string;
 };
 
 type UserRoleRow = {
@@ -32,6 +33,14 @@ const organizationQuerySchema = z.object({
 const accessQuerySchema = z.object({
 	organizationId: z.string().min(1),
 	counterId: z.string().min(1),
+});
+
+const internalAccessQuerySchema = accessQuerySchema.extend({
+	userId: z.string().min(1),
+});
+
+const internalAvailableQuerySchema = z.object({
+	userId: z.string().min(1),
 });
 
 const updateAssignmentBodySchema = z.object({
@@ -256,7 +265,10 @@ async function userHasCounterAccess(
 	return result.rowCount === 1;
 }
 
-export const counterAccess = ({ pool }: CounterOptions): BetterAuthPlugin => ({
+export const counterAccess = ({
+	pool,
+	internalSecret,
+}: CounterOptions): BetterAuthPlugin => ({
 	id: "counter",
 
 	schema: {
@@ -794,6 +806,116 @@ export const counterAccess = ({ pool }: CounterOptions): BetterAuthPlugin => ({
 
 				return ctx.json({
 					allowed,
+				});
+			},
+		),
+
+		getCounterAccessInternal: createAuthEndpoint(
+			"/counter/access/internal",
+			{
+				method: "GET",
+				query: internalAccessQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-counter-internal-secret") !== internalSecret
+				) {
+					return ctx.json(
+						{ error: "Unauthorized" },
+						{ status: 401 },
+					);
+				}
+
+				const allowed = await userHasCounterAccess(
+					pool,
+					ctx.query.userId,
+					ctx.query.organizationId,
+					ctx.query.counterId,
+				);
+
+				return ctx.json({
+					allowed,
+				});
+			},
+		),
+
+
+		getAvailableCountersInternal: createAuthEndpoint(
+			"/counter/available/internal",
+			{
+				method: "GET",
+				query: internalAvailableQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-counter-internal-secret") !== internalSecret
+				) {
+					return ctx.json(
+						{ error: "Unauthorized" },
+						{ status: 401 },
+					);
+				}
+
+				const userId = ctx.query.userId;
+				const globalAdmin = await isGlobalAdmin(pool, userId);
+
+				const result = await pool.query<{
+					organizationId: string;
+					organizationName: string;
+					counterId: string;
+				}>(
+					globalAdmin
+						? `
+							SELECT DISTINCT
+								ca."organizationId",
+								o.name AS "organizationName",
+								ca."counterId"
+							FROM "counterAssignment" ca
+							INNER JOIN organization o
+								ON o.id = ca."organizationId"
+							LEFT JOIN "organizationStatus" os
+								ON os."organizationId" = o.id
+							WHERE
+								ca.enabled = true
+								AND COALESCE(os.enabled, true) = true
+							ORDER BY
+								o.name,
+								ca."counterId"
+						`
+						: `
+							SELECT DISTINCT
+								ca."organizationId",
+								o.name AS "organizationName",
+								ca."counterId"
+							FROM "counterAssignment" ca
+							INNER JOIN organization o
+								ON o.id = ca."organizationId"
+							INNER JOIN member m
+								ON m."organizationId" = ca."organizationId"
+								AND m."userId" = ca."userId"
+							INNER JOIN "user" u
+								ON u.id = ca."userId"
+							LEFT JOIN "organizationStatus" os
+								ON os."organizationId" = o.id
+							LEFT JOIN "organizationMemberStatus" oms
+								ON oms."memberId" = m.id
+							WHERE
+								ca."userId" = $1
+								AND ca.enabled = true
+								AND COALESCE(os.enabled, true) = true
+								AND COALESCE(u.banned, false) = false
+								AND COALESCE(oms.active, true) = true
+							ORDER BY
+								o.name,
+								ca."counterId"
+						`,
+					globalAdmin ? [] : [userId],
+				);
+
+				return ctx.json({
+					counters: result.rows,
 				});
 			},
 		),

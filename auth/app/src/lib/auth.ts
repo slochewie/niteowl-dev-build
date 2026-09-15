@@ -195,6 +195,7 @@ export const auth = betterAuth({
 
 		counterAccess({
 			pool,
+			internalSecret: process.env.COUNTER_AUTH_INTERNAL_SECRET,
 		}),
 
 		tipClaim({
@@ -219,7 +220,23 @@ export const auth = betterAuth({
 				page: "/auth/select-account",
 				shouldRedirect: async () => true,
 			},
-			// ...other options
+			scopes: [
+				"openid",
+				"offline_access",
+				"counter:read",
+				"counter:write",
+			],
+			resources: [
+				{
+					identifier: "https://counter.mccarthysirishpub.com",
+					allowedScopes: ["counter:read", "counter:write"],
+				},
+				{
+					identifier: "https://counter.niteowl.dev",
+					allowedScopes: ["counter:read", "counter:write"],
+				},
+			],
+			refreshTokenReuseInterval: 30,
 		}),
 
 		emailOTP({
