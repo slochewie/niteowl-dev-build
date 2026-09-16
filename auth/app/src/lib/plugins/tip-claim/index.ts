@@ -1225,6 +1225,608 @@ export const tipClaim = ({
 			},
 		),
 
+		listTipClaimAssignmentsInternal: createAuthEndpoint(
+			"/tip-claim/assignments/internal",
+			{
+				method: "GET",
+				query: internalTipClaimAccessQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const { organizationId, userId } = ctx.query;
+
+				const managementContext = await getAssignmentManagementContext(
+					pool,
+					userId,
+					organizationId,
+				);
+
+				if (!managementContext.allowed) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const result = await pool.query<{
+					memberId: string;
+					userId: string;
+					name: string;
+					email: string;
+					systemRole: string | null;
+					accessEnabled: boolean | null;
+					assignmentManagerEnabled: boolean | null;
+					bartenderEnabled: boolean | null;
+					managerEnabled: boolean | null;
+					barbackEnabled: boolean | null;
+					doorEnabled: boolean | null;
+				}>(
+					`
+						SELECT
+							m.id AS "memberId",
+							m."userId",
+							u.name,
+							u.email,
+							u.role AS "systemRole",
+							a."accessEnabled",
+							a."assignmentManagerEnabled",
+							a."bartenderEnabled",
+							a."managerEnabled",
+							a."barbackEnabled",
+							a."doorEnabled"
+						FROM member m
+						INNER JOIN "user" u
+							ON u.id = m."userId"
+						LEFT JOIN "organizationMemberStatus" oms
+							ON oms."memberId" = m.id
+						LEFT JOIN "tipClaimEmployeeAssignment" a
+							ON a."organizationId" = m."organizationId"
+							AND a."userId" = m."userId"
+						WHERE
+							m."organizationId" = $1
+							AND COALESCE(u.banned, false) = false
+							AND COALESCE(oms.active, true) = true
+						ORDER BY LOWER(u.name), LOWER(u.email)
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					assignments: result.rows.map((row) => {
+						const accessEnabled = row.accessEnabled ?? false;
+						const systemAdmin = row.systemRole === "admin";
+						const isSelf = row.userId === userId;
+
+						const canUpdateAccess =
+							managementContext.isGlobalAdmin ||
+							(!systemAdmin &&
+								(managementContext.isOrganizationManager ||
+									!managementContext.isAssignmentManager ||
+									!isSelf ||
+									!accessEnabled));
+
+						const canUpdateRoles =
+							managementContext.isGlobalAdmin ||
+							(!systemAdmin &&
+								(managementContext.isOrganizationManager ||
+									!managementContext.isAssignmentManager ||
+									!isSelf));
+
+						const canUpdateManager =
+							managementContext.isGlobalAdmin ||
+							(!systemAdmin && managementContext.isOrganizationManager);
+
+						return {
+							memberId: row.memberId,
+							userId: row.userId,
+							name: row.name,
+							email: row.email,
+							systemAdmin,
+							accessEnabled,
+							assignmentManagerEnabled:
+								row.assignmentManagerEnabled ?? false,
+							bartenderEnabled: row.bartenderEnabled ?? true,
+							managerEnabled: row.managerEnabled ?? true,
+							barbackEnabled: row.barbackEnabled ?? true,
+							doorEnabled: row.doorEnabled ?? true,
+							canUpdateAccess,
+							canUpdateManager,
+							canUpdateRoles,
+						};
+					}),
+				});
+			},
+		),
+
+
+		listTipClaimEmployeesInternal: createAuthEndpoint(
+			"/tip-claim/employees/internal",
+			{
+				method: "GET",
+				query: internalTipClaimAccessQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const { organizationId, userId } = ctx.query;
+
+				if (!(await canSaveShift(pool, userId, organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const result = await pool.query<{
+					userId: string;
+					name: string;
+					email: string;
+					bartenderEnabled: boolean | null;
+					managerEnabled: boolean | null;
+					barbackEnabled: boolean | null;
+					doorEnabled: boolean | null;
+				}>(
+					`
+						SELECT
+							m."userId",
+							u.name,
+							u.email,
+							a."bartenderEnabled",
+							a."managerEnabled",
+							a."barbackEnabled",
+							a."doorEnabled"
+						FROM member m
+						INNER JOIN "user" u
+							ON u.id = m."userId"
+						LEFT JOIN "organizationMemberStatus" oms
+							ON oms."memberId" = m.id
+						LEFT JOIN "tipClaimEmployeeAssignment" a
+							ON a."organizationId" = m."organizationId"
+							AND a."userId" = m."userId"
+						WHERE
+							m."organizationId" = $1
+							AND COALESCE(u.banned, false) = false
+							AND COALESCE(oms.active, true) = true
+						ORDER BY LOWER(u.name), LOWER(u.email)
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					employees: result.rows.map((row) => ({
+						userId: row.userId,
+						name: row.name,
+						email: row.email,
+						bartenderEnabled: row.bartenderEnabled ?? true,
+						managerEnabled: row.managerEnabled ?? true,
+						barbackEnabled: row.barbackEnabled ?? true,
+						doorEnabled: row.doorEnabled ?? true,
+					})),
+				});
+			},
+		),
+
+
+		listTipWeightPresetsInternal: createAuthEndpoint(
+			"/tip-claim/weight-presets/internal",
+			{
+				method: "GET",
+				query: internalTipClaimAccessQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const { organizationId, userId } = ctx.query;
+
+				const canManage = await canManageAssignments(
+					pool,
+					userId,
+					organizationId,
+				);
+				const canReadPresets =
+					(await canSaveShift(pool, userId, organizationId)) ||
+					canManage;
+
+				if (!canReadPresets) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const result = await pool.query<{
+					id: string;
+					organizationId: string;
+					name: string;
+					registerCount: number;
+					claimPercent: number;
+					managerCount: number;
+					bartenderCount: number;
+					barbackCount: number;
+					doorCount: number;
+					managerWeightTenths: number;
+					bartenderWeightTenths: number;
+					barbackWeightTenths: number;
+					doorWeightTenths: number;
+					createdByUserId: string;
+					source: string;
+					staffingJson: string | null;
+					expiresAt: Date | null;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"organizationId",
+							name,
+							"registerCount",
+							"claimPercent",
+							"managerCount",
+							"bartenderCount",
+							"barbackCount",
+							"doorCount",
+							"managerWeightTenths",
+							"bartenderWeightTenths",
+							"barbackWeightTenths",
+							"doorWeightTenths",
+							"createdByUserId",
+							source,
+							"staffingJson",
+							"expiresAt",
+							"createdAt",
+							"updatedAt"
+						FROM "tipWeightPreset"
+						WHERE
+							"organizationId" = $1
+							AND (
+								"expiresAt" IS NULL
+								OR "expiresAt" > CURRENT_TIMESTAMP
+							)
+						ORDER BY LOWER(name), "createdAt"
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					canManage,
+					presets: result.rows.map((preset) => ({
+						id: preset.id,
+						organizationId: preset.organizationId,
+						name: preset.name,
+						registerCount: preset.registerCount,
+						claimPercent: Number(preset.claimPercent),
+						staff: {
+							manager: preset.managerCount,
+							bartender: preset.bartenderCount,
+							barback: preset.barbackCount,
+							door: preset.doorCount,
+						},
+						weights: {
+							manager: preset.managerWeightTenths / 10,
+							bartender: preset.bartenderWeightTenths / 10,
+							barback: preset.barbackWeightTenths / 10,
+							door: preset.doorWeightTenths / 10,
+						},
+						createdByUserId: preset.createdByUserId,
+						source: preset.source,
+						assignments: parseStaffingSnapshot(
+							preset.staffingJson,
+						),
+						expiresAt: preset.expiresAt,
+						createdAt: preset.createdAt,
+						updatedAt: preset.updatedAt,
+					})),
+				});
+			},
+		),
+
+
+		listTipPoolShiftsInternal: createAuthEndpoint(
+			"/tip-claim/tip-pool-shifts/internal",
+			{
+				method: "GET",
+				query: internalTipClaimAccessQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const { organizationId, userId } = ctx.query;
+
+				if (!(await canSaveShift(pool, userId, organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const shiftResult = await pool.query<{
+					id: string;
+					organizationId: string;
+					savedByUserId: string;
+					totalTipsCents: number;
+					totalWeightTenths: number;
+					managerWeightTenths: number;
+					bartenderWeightTenths: number;
+					barbackWeightTenths: number;
+					doorWeightTenths: number;
+					completedAt: Date;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"organizationId",
+							"savedByUserId",
+							"totalTipsCents",
+							"totalWeightTenths",
+							"managerWeightTenths",
+							"bartenderWeightTenths",
+							"barbackWeightTenths",
+							"doorWeightTenths",
+							"completedAt",
+							"createdAt"
+						FROM "tipPoolShift"
+						WHERE "organizationId" = $1
+						ORDER BY "completedAt" DESC, "createdAt" DESC
+					`,
+					[organizationId],
+				);
+
+				const shiftIds = shiftResult.rows.map((shift) => shift.id);
+
+				if (shiftIds.length === 0) {
+					return ctx.json({ shifts: [] });
+				}
+
+				const staffResult = await pool.query<{
+					id: string;
+					shiftId: string;
+					userId: string;
+					name: string;
+					email: string;
+					role: string;
+					weightTenths: number;
+					shareCents: number;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"shiftId",
+							"userId",
+							name,
+							email,
+							role,
+							"weightTenths",
+							"shareCents",
+							"createdAt"
+						FROM "tipPoolStaff"
+						WHERE "shiftId" = ANY($1::text[])
+						ORDER BY "createdAt", id
+					`,
+					[shiftIds],
+				);
+
+				const staffByShift = new Map<string, typeof staffResult.rows>();
+
+				for (const staffMember of staffResult.rows) {
+					const current = staffByShift.get(staffMember.shiftId) ?? [];
+					current.push(staffMember);
+					staffByShift.set(staffMember.shiftId, current);
+				}
+
+				const correctionContext = await getAssignmentManagementContext(
+					pool,
+					userId,
+					organizationId,
+				);
+
+				return ctx.json({
+					shifts: shiftResult.rows.map((shift) => ({
+						...shift,
+						canCorrect:
+							shift.savedByUserId === userId ||
+							correctionContext.isGlobalAdmin ||
+							correctionContext.isOrganizationManager,
+						staff: staffByShift.get(shift.id) ?? [],
+					})),
+				});
+			},
+		),
+
+
+		listTipClaimShiftsInternal: createAuthEndpoint(
+			"/tip-claim/shifts/internal",
+			{
+				method: "GET",
+				query: internalTipClaimAccessQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const { organizationId, userId } = ctx.query;
+
+				if (!(await canSaveShift(pool, userId, organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const shiftResult = await pool.query<{
+					id: string;
+					organizationId: string;
+					savedByUserId: string;
+					claimPercent: number;
+					totalSalesCents: number;
+					requiredClaimCents: number;
+					totalWeightUnits: number;
+					bartenderWeight: number;
+					managerWeight: number;
+					barbackWeight: number;
+					doorWeight: number;
+					completedAt: Date;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"organizationId",
+							"savedByUserId",
+							"claimPercent",
+							"totalSalesCents",
+							"requiredClaimCents",
+							"totalWeightUnits",
+							"bartenderWeight",
+							"managerWeight",
+							"barbackWeight",
+							"doorWeight",
+							"completedAt",
+							"createdAt"
+						FROM "tipClaimShift"
+						WHERE "organizationId" = $1
+						ORDER BY "completedAt" DESC, "createdAt" DESC
+					`,
+					[organizationId],
+				);
+
+				if (shiftResult.rows.length === 0) {
+					return ctx.json({
+						shifts: [],
+					});
+				}
+
+				const shiftIds = shiftResult.rows.map((shift) => shift.id);
+
+				const registerResult = await pool.query<{
+					id: string;
+					shiftId: string;
+					registerKey: string;
+					name: string;
+					salesCents: number;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"shiftId",
+							"registerKey",
+							name,
+							"salesCents",
+							"createdAt"
+						FROM "tipClaimRegister"
+						WHERE "shiftId" = ANY($1::text[])
+						ORDER BY "createdAt", id
+					`,
+					[shiftIds],
+				);
+
+				const staffResult = await pool.query<{
+					id: string;
+					shiftId: string;
+					userId: string;
+					name: string;
+					email: string;
+					role: string;
+					registerKey: string | null;
+					weight: number;
+					claimCents: number;
+					createdAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							"shiftId",
+							"userId",
+							name,
+							email,
+							role,
+							"registerKey",
+							weight,
+							"claimCents",
+							"createdAt"
+						FROM "tipClaimStaff"
+						WHERE "shiftId" = ANY($1::text[])
+						ORDER BY "createdAt", id
+					`,
+					[shiftIds],
+				);
+
+				const registersByShift = new Map<string, typeof registerResult.rows>();
+				const staffByShift = new Map<string, typeof staffResult.rows>();
+
+				for (const register of registerResult.rows) {
+					const current = registersByShift.get(register.shiftId) ?? [];
+					current.push(register);
+					registersByShift.set(register.shiftId, current);
+				}
+
+				for (const staffMember of staffResult.rows) {
+					const current = staffByShift.get(staffMember.shiftId) ?? [];
+					current.push(staffMember);
+					staffByShift.set(staffMember.shiftId, current);
+				}
+
+				const correctionContext = await getAssignmentManagementContext(
+					pool,
+					userId,
+					organizationId,
+				);
+
+				return ctx.json({
+					shifts: shiftResult.rows.map((shift) => ({
+						...shift,
+						totalWeightUnits: Number(shift.totalWeightUnits),
+						bartenderWeight: Number(shift.bartenderWeight),
+						managerWeight: Number(shift.managerWeight),
+						barbackWeight: Number(shift.barbackWeight),
+						doorWeight: Number(shift.doorWeight),
+						canCorrect:
+							shift.savedByUserId === userId ||
+							correctionContext.isGlobalAdmin ||
+							correctionContext.isOrganizationManager,
+						registers: registersByShift.get(shift.id) ?? [],
+						staff: (staffByShift.get(shift.id) ?? []).map((staffMember) => ({
+							...staffMember,
+							weight: Number(staffMember.weight),
+						})),
+					})),
+				});
+			},
+		),
+
 		listTipClaimAssignments: createAuthEndpoint(
 			"/tip-claim/assignments",
 			{
