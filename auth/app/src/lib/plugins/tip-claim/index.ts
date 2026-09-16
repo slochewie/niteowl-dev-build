@@ -1,10 +1,11 @@
 import type { BetterAuthPlugin } from "better-auth";
-import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
+import { APIError, createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import type { Pool, PoolClient } from "pg";
 import * as z from "zod";
 
 type TipClaimOptions = {
 	pool: Pool;
+	internalSecret?: string;
 };
 
 type UserRoleRow = {
@@ -57,6 +58,14 @@ const saveShiftBodySchema = z.object({
 
 const organizationQuerySchema = z.object({
 	organizationId: z.string().min(1),
+});
+
+const internalTipClaimAvailableQuerySchema = z.object({
+	userId: z.string().min(1),
+});
+
+const internalTipClaimAccessQuerySchema = organizationQuerySchema.extend({
+	userId: z.string().min(1),
 });
 
 const correctShiftBodySchema = saveShiftBodySchema.extend({
@@ -745,7 +754,10 @@ async function validateShiftStaffEligibility(
 	return null;
 }
 
-export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
+export const tipClaim = ({
+	pool,
+	internalSecret,
+}: TipClaimOptions): BetterAuthPlugin => ({
 	id: "tip-claim",
 
 	schema: {
@@ -1121,6 +1133,98 @@ export const tipClaim = ({ pool }: TipClaimOptions): BetterAuthPlugin => ({
 	},
 
 	endpoints: {
+		getAvailableTipClaimOrganizationsInternal: createAuthEndpoint(
+			"/tip-claim/available/internal",
+			{
+				method: "GET",
+				query: internalTipClaimAvailableQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const globalAdmin = await isGlobalAdmin(pool, userId);
+
+				const result = await pool.query<{
+					organizationId: string;
+					organizationName: string;
+				}>(
+					globalAdmin
+						? `
+							SELECT
+								o.id AS "organizationId",
+								o.name AS "organizationName"
+							FROM organization o
+							LEFT JOIN "organizationStatus" os
+								ON os."organizationId" = o.id
+							WHERE COALESCE(os.enabled, true) = true
+							ORDER BY "organizationName"
+						`
+						: `
+							SELECT DISTINCT
+								m."organizationId" AS "organizationId",
+								o.name AS "organizationName"
+							FROM member m
+							INNER JOIN organization o
+								ON o.id = m."organizationId"
+							INNER JOIN "user" u
+								ON u.id = m."userId"
+							LEFT JOIN "organizationStatus" os
+								ON os."organizationId" = o.id
+							LEFT JOIN "organizationMemberStatus" oms
+								ON oms."memberId" = m.id
+							INNER JOIN "tipClaimEmployeeAssignment" a
+								ON a."organizationId" = m."organizationId"
+								AND a."userId" = m."userId"
+							WHERE
+								m."userId" = $1
+								AND a."accessEnabled" = true
+								AND COALESCE(os.enabled, true) = true
+								AND COALESCE(u.banned, false) = false
+								AND COALESCE(oms.active, true) = true
+							ORDER BY "organizationName"
+						`,
+					globalAdmin ? [] : [userId],
+				);
+
+				return ctx.json({
+					organizations: result.rows,
+				});
+			},
+		),
+
+		getTipClaimAccessInternal: createAuthEndpoint(
+			"/tip-claim/access/internal",
+			{
+				method: "GET",
+				query: internalTipClaimAccessQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const { organizationId, userId } = ctx.query;
+
+				return ctx.json({
+					allowed: await canSaveShift(pool, userId, organizationId),
+					canManage: await canManageAssignments(pool, userId, organizationId),
+				});
+			},
+		),
+
 		listTipClaimAssignments: createAuthEndpoint(
 			"/tip-claim/assignments",
 			{

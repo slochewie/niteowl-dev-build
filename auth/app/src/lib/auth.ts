@@ -200,6 +200,7 @@ export const auth = betterAuth({
 
 		tipClaim({
 			pool,
+			internalSecret: process.env.TIP_CLAIM_INTERNAL_SECRET,
 		}),
 
 		multiSession(),
@@ -225,6 +226,9 @@ export const auth = betterAuth({
 				"offline_access",
 				"counter:read",
 				"counter:write",
+				"tip-claim:read",
+				"tip-claim:write",
+				"tip-claim:manage",
 			],
 			resources: [
 				{
@@ -234,6 +238,22 @@ export const auth = betterAuth({
 				{
 					identifier: "https://counter.niteowl.dev",
 					allowedScopes: ["counter:read", "counter:write"],
+				},
+				{
+					identifier: "https://tip-calculator.mccarthysirishpub.com",
+					allowedScopes: [
+						"tip-claim:read",
+						"tip-claim:write",
+						"tip-claim:manage",
+					],
+				},
+				{
+					identifier: "https://tip-calculator.niteowl.dev",
+					allowedScopes: [
+						"tip-claim:read",
+						"tip-claim:write",
+						"tip-claim:manage",
+					],
 				},
 			],
 			refreshTokenReuseInterval: 30,
