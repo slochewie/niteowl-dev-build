@@ -68,6 +68,10 @@ const internalTipClaimAccessQuerySchema = organizationQuerySchema.extend({
 	userId: z.string().min(1),
 });
 
+const internalTipClaimUserQuerySchema = z.object({
+	userId: z.string().min(1),
+});
+
 const correctShiftBodySchema = saveShiftBodySchema.extend({
 	shiftId: z.string().min(1),
 });
@@ -1826,6 +1830,1320 @@ export const tipClaim = ({
 				});
 			},
 		),
+
+		saveTipStaffingSnapshotInternal: createAuthEndpoint(
+			"/tip-claim/staffing-snapshots/internal",
+			{
+				method: "POST",
+				query: internalTipClaimUserQuerySchema,
+				body: saveStaffingSnapshotBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const {
+					organizationId,
+					name,
+					registerCount,
+					claimPercent,
+					weights,
+					assignments,
+				} = ctx.body;
+
+				if (
+					!(
+						await canManageAssignments(
+							pool,
+							userId,
+							organizationId,
+						)
+					)
+				) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const staff = assignments.reduce(
+					(counts, assignment) => ({
+						...counts,
+						[assignment.role]:
+							counts[assignment.role] + 1,
+					}),
+					{
+						manager: 0,
+						bartender: 0,
+						barback: 0,
+						door: 0,
+					},
+				);
+				const expiresAt = new Date(
+					Date.now() + 24 * 60 * 60 * 1000,
+				);
+
+				await pool.query(
+					`
+						DELETE FROM "tipWeightPreset"
+						WHERE
+							"organizationId" = $1
+							AND source = 'seven-shifts'
+							AND (
+								"expiresAt" <= CURRENT_TIMESTAMP
+								OR name = $2
+							)
+					`,
+					[organizationId, name.trim()],
+				);
+
+				const result = await pool.query<{ id: string }>(
+					`
+						INSERT INTO "tipWeightPreset" (
+							id,
+							"organizationId",
+							name,
+							"registerCount",
+							"claimPercent",
+							"managerCount",
+							"bartenderCount",
+							"barbackCount",
+							"doorCount",
+							"managerWeightTenths",
+							"bartenderWeightTenths",
+							"barbackWeightTenths",
+							"doorWeightTenths",
+							"createdByUserId",
+							source,
+							"staffingJson",
+							"expiresAt",
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							gen_random_uuid()::text,
+							$1,
+							$2,
+							$3,
+							$4,
+							$5,
+							$6,
+							$7,
+							$8,
+							$9,
+							$10,
+							$11,
+							$12,
+							$13,
+							'seven-shifts',
+							$14,
+							$15,
+							CURRENT_TIMESTAMP,
+							CURRENT_TIMESTAMP
+						)
+						RETURNING id
+					`,
+					[
+						organizationId,
+						name.trim(),
+						registerCount,
+						claimPercent,
+						staff.manager,
+						staff.bartender,
+						staff.barback,
+						staff.door,
+						Math.round(weights.manager * 10),
+						Math.round(weights.bartender * 10),
+						Math.round(weights.barback * 10),
+						Math.round(weights.door * 10),
+						userId,
+						JSON.stringify(assignments),
+						expiresAt,
+					],
+				);
+
+				const snapshot = result.rows[0];
+
+				if (!snapshot) {
+					throw new Error(
+						"Failed to save temporary staffing snapshot",
+					);
+				}
+
+				return ctx.json({
+					snapshot: {
+						id: snapshot.id,
+						expiresAt,
+					},
+				});
+			},
+		),
+
+
+		createTipWeightPresetInternal: createAuthEndpoint(
+			"/tip-claim/weight-presets/internal",
+			{
+				method: "POST",
+				query: internalTipClaimUserQuerySchema,
+				body: saveWeightPresetBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const {
+					organizationId,
+					name,
+					registerCount,
+					claimPercent,
+					staff,
+					weights,
+				} = ctx.body;
+
+				if (!(await canManageAssignments(pool, userId, organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const result = await pool.query<{
+					id: string;
+					organizationId: string;
+					name: string;
+					registerCount: number;
+					claimPercent: number;
+					managerCount: number;
+					bartenderCount: number;
+					barbackCount: number;
+					doorCount: number;
+					managerWeightTenths: number;
+					bartenderWeightTenths: number;
+					barbackWeightTenths: number;
+					doorWeightTenths: number;
+					createdByUserId: string;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						INSERT INTO "tipWeightPreset" (
+							id,
+							"organizationId",
+							name,
+							"registerCount",
+							"claimPercent",
+							"managerCount",
+							"bartenderCount",
+							"barbackCount",
+							"doorCount",
+							"managerWeightTenths",
+							"bartenderWeightTenths",
+							"barbackWeightTenths",
+							"doorWeightTenths",
+							"createdByUserId",
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							gen_random_uuid()::text,
+							$1,
+							$2,
+							$3,
+							$4,
+							$5,
+							$6,
+							$7,
+							$8,
+							$9,
+							$10,
+							$11,
+							$12,
+							$13,
+							CURRENT_TIMESTAMP,
+							CURRENT_TIMESTAMP
+						)
+						RETURNING *
+					`,
+					[
+						organizationId,
+						name.trim(),
+						registerCount,
+						claimPercent,
+						staff.manager,
+						staff.bartender,
+						staff.barback,
+						staff.door,
+						Math.round(weights.manager * 10),
+						Math.round(weights.bartender * 10),
+						Math.round(weights.barback * 10),
+						Math.round(weights.door * 10),
+						userId,
+					],
+				);
+
+				const preset = result.rows[0];
+
+				if (!preset) {
+					throw new Error("Failed to create weight preset");
+				}
+
+				return ctx.json({
+					preset: {
+						id: preset.id,
+						organizationId: preset.organizationId,
+						name: preset.name,
+						registerCount: preset.registerCount,
+						claimPercent: Number(preset.claimPercent),
+						staff: {
+							manager: preset.managerCount,
+							bartender: preset.bartenderCount,
+							barback: preset.barbackCount,
+							door: preset.doorCount,
+						},
+						weights: {
+							manager: preset.managerWeightTenths / 10,
+							bartender: preset.bartenderWeightTenths / 10,
+							barback: preset.barbackWeightTenths / 10,
+							door: preset.doorWeightTenths / 10,
+						},
+						createdByUserId: preset.createdByUserId,
+						createdAt: preset.createdAt,
+						updatedAt: preset.updatedAt,
+					},
+				});
+			},
+		),
+
+
+		updateTipWeightPresetInternal: createAuthEndpoint(
+			"/tip-claim/weight-presets/internal",
+			{
+				method: "PATCH",
+				query: internalTipClaimUserQuerySchema,
+				body: updateWeightPresetBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const {
+					organizationId,
+					presetId,
+					name,
+					registerCount,
+					claimPercent,
+					staff,
+					weights,
+				} = ctx.body;
+
+				if (!(await canManageAssignments(pool, userId, organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const result = await pool.query<{
+					id: string;
+					organizationId: string;
+					name: string;
+					registerCount: number;
+					claimPercent: number;
+					managerCount: number;
+					bartenderCount: number;
+					barbackCount: number;
+					doorCount: number;
+					managerWeightTenths: number;
+					bartenderWeightTenths: number;
+					barbackWeightTenths: number;
+					doorWeightTenths: number;
+					createdByUserId: string;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						UPDATE "tipWeightPreset"
+						SET
+							name = $3,
+							"registerCount" = $4,
+							"claimPercent" = $5,
+							"managerCount" = $6,
+							"bartenderCount" = $7,
+							"barbackCount" = $8,
+							"doorCount" = $9,
+							"managerWeightTenths" = $10,
+							"bartenderWeightTenths" = $11,
+							"barbackWeightTenths" = $12,
+							"doorWeightTenths" = $13,
+							"updatedAt" = CURRENT_TIMESTAMP
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						RETURNING *
+					`,
+					[
+						presetId,
+						organizationId,
+						name.trim(),
+						registerCount,
+						claimPercent,
+						staff.manager,
+						staff.bartender,
+						staff.barback,
+						staff.door,
+						Math.round(weights.manager * 10),
+						Math.round(weights.bartender * 10),
+						Math.round(weights.barback * 10),
+						Math.round(weights.door * 10),
+					],
+				);
+
+				const preset = result.rows[0];
+
+				if (!preset) {
+					return ctx.json(
+						{ error: "Weight preset not found" },
+						{ status: 404 },
+					);
+				}
+
+				return ctx.json({
+					preset: {
+						id: preset.id,
+						organizationId: preset.organizationId,
+						name: preset.name,
+						registerCount: preset.registerCount,
+						claimPercent: Number(preset.claimPercent),
+						staff: {
+							manager: preset.managerCount,
+							bartender: preset.bartenderCount,
+							barback: preset.barbackCount,
+							door: preset.doorCount,
+						},
+						weights: {
+							manager: preset.managerWeightTenths / 10,
+							bartender: preset.bartenderWeightTenths / 10,
+							barback: preset.barbackWeightTenths / 10,
+							door: preset.doorWeightTenths / 10,
+						},
+						createdByUserId: preset.createdByUserId,
+						createdAt: preset.createdAt,
+						updatedAt: preset.updatedAt,
+					},
+				});
+			},
+		),
+
+
+		deleteTipWeightPresetInternal: createAuthEndpoint(
+			"/tip-claim/weight-presets/internal",
+			{
+				method: "DELETE",
+				query: internalTipClaimUserQuerySchema,
+				body: deleteWeightPresetBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const { organizationId, presetId } = ctx.body;
+
+				if (!(await canManageAssignments(pool, userId, organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const result = await pool.query(
+					`
+						DELETE FROM "tipWeightPreset"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						RETURNING id
+					`,
+					[presetId, organizationId],
+				);
+
+				if (result.rowCount !== 1) {
+					return ctx.json(
+						{ error: "Weight preset not found" },
+						{ status: 404 },
+					);
+				}
+
+				return ctx.json({ success: true });
+			},
+		),
+
+
+		saveTipClaimShiftInternal: createAuthEndpoint(
+			"/tip-claim/shifts/internal",
+			{
+				method: "POST",
+				query: internalTipClaimUserQuerySchema,
+				body: saveShiftBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const body = ctx.body;
+
+				if (!(await canSaveShift(pool, userId, body.organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const validationError = validateShiftBody(body);
+
+				if (validationError) {
+					return ctx.json(
+						{
+							error: validationError,
+						},
+						{
+							status: 400,
+						},
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const eligibilityError = await validateShiftStaffEligibility(
+						client,
+						body.organizationId,
+						body.staff,
+					);
+
+					if (eligibilityError) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{
+								error: eligibilityError,
+							},
+							{
+								status: 400,
+							},
+						);
+					}
+
+					const shiftResult = await client.query<{
+						id: string;
+					}>(
+						`
+							INSERT INTO "tipClaimShift" (
+								id,
+								"organizationId",
+								"savedByUserId",
+								"claimPercent",
+								"totalSalesCents",
+								"requiredClaimCents",
+								"totalWeightUnits",
+								"bartenderWeight",
+								"managerWeight",
+								"barbackWeight",
+								"doorWeight",
+								"completedAt",
+								"createdAt"
+							)
+							VALUES (
+								gen_random_uuid()::text,
+								$1,
+								$2,
+								$3,
+								$4,
+								$5,
+								$6,
+								$7,
+								$8,
+								$9,
+								$10,
+								$11,
+								CURRENT_TIMESTAMP
+							)
+							RETURNING id
+						`,
+						[
+							body.organizationId,
+							userId,
+							body.claimPercent,
+							body.totalSalesCents,
+							body.requiredClaimCents,
+							body.totalWeightUnits,
+							body.weights.bartender,
+							body.weights.manager,
+							body.weights.barback,
+							body.weights.door,
+							body.completedAt,
+						],
+					);
+
+					const shiftId = shiftResult.rows[0]?.id;
+
+					if (!shiftId) {
+						throw new Error("Failed to create tip claim shift");
+					}
+
+					for (const register of body.registers) {
+						await client.query(
+							`
+								INSERT INTO "tipClaimRegister" (
+									id,
+									"shiftId",
+									"registerKey",
+									name,
+									"salesCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								shiftId,
+								register.registerKey,
+								register.name,
+								register.salesCents,
+							],
+						);
+					}
+
+					for (const staffMember of body.staff) {
+						await client.query(
+							`
+								INSERT INTO "tipClaimStaff" (
+									id,
+									"shiftId",
+									"userId",
+									name,
+									email,
+									role,
+									"registerKey",
+									weight,
+									"claimCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									$5,
+									$6,
+									$7,
+									$8,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								shiftId,
+								staffMember.userId,
+								staffMember.name,
+								staffMember.email,
+								staffMember.role,
+								staffMember.registerKey ?? null,
+								staffMember.weight,
+								staffMember.claimCents,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						shiftId,
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
+
+		correctTipClaimShiftInternal: createAuthEndpoint(
+			"/tip-claim/shifts/internal",
+			{
+				method: "PATCH",
+				query: internalTipClaimUserQuerySchema,
+				body: correctShiftBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const body = ctx.body;
+
+				if (
+					!(await canCorrectShift(
+						pool,
+						userId,
+						body.organizationId,
+						body.shiftId,
+					))
+				) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const validationError = validateShiftBody(body);
+
+				if (validationError) {
+					return ctx.json(
+						{
+							error: validationError,
+						},
+						{
+							status: 400,
+						},
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const eligibilityError = await validateShiftStaffEligibility(
+						client,
+						body.organizationId,
+						body.staff,
+					);
+
+					if (eligibilityError) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{
+								error: eligibilityError,
+							},
+							{
+								status: 400,
+							},
+						);
+					}
+
+					const shiftResult = await client.query<{ id: string }>(
+						`
+							UPDATE "tipClaimShift"
+							SET
+								"claimPercent" = $3,
+								"totalSalesCents" = $4,
+								"requiredClaimCents" = $5,
+								"totalWeightUnits" = $6,
+								"bartenderWeight" = $7,
+								"managerWeight" = $8,
+								"barbackWeight" = $9,
+								"doorWeight" = $10,
+								"completedAt" = $11
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							RETURNING id
+						`,
+						[
+							body.shiftId,
+							body.organizationId,
+							body.claimPercent,
+							body.totalSalesCents,
+							body.requiredClaimCents,
+							body.totalWeightUnits,
+							body.weights.bartender,
+							body.weights.manager,
+							body.weights.barback,
+							body.weights.door,
+							body.completedAt,
+						],
+					);
+
+					if (shiftResult.rowCount !== 1) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{
+								error: "Shift not found",
+							},
+							{
+								status: 404,
+							},
+						);
+					}
+
+					await client.query(
+						`
+							DELETE FROM "tipClaimRegister"
+							WHERE "shiftId" = $1
+						`,
+						[body.shiftId],
+					);
+
+					await client.query(
+						`
+							DELETE FROM "tipClaimStaff"
+							WHERE "shiftId" = $1
+						`,
+						[body.shiftId],
+					);
+
+					for (const register of body.registers) {
+						await client.query(
+							`
+								INSERT INTO "tipClaimRegister" (
+									id,
+									"shiftId",
+									"registerKey",
+									name,
+									"salesCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								body.shiftId,
+								register.registerKey,
+								register.name,
+								register.salesCents,
+							],
+						);
+					}
+
+					for (const staffMember of body.staff) {
+						await client.query(
+							`
+								INSERT INTO "tipClaimStaff" (
+									id,
+									"shiftId",
+									"userId",
+									name,
+									email,
+									role,
+									"registerKey",
+									weight,
+									"claimCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									$5,
+									$6,
+									$7,
+									$8,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								body.shiftId,
+								staffMember.userId,
+								staffMember.name,
+								staffMember.email,
+								staffMember.role,
+								staffMember.registerKey ?? null,
+								staffMember.weight,
+								staffMember.claimCents,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						shiftId: body.shiftId,
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
+
+		deleteTipClaimShiftInternal: createAuthEndpoint(
+			"/tip-claim/shifts/internal",
+			{
+				method: "DELETE",
+				query: internalTipClaimUserQuerySchema,
+				body: deleteShiftBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const { organizationId, shiftId } = ctx.body;
+
+				if (!(await canSaveShift(pool, userId, organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const result = await pool.query<{ id: string }>(
+					`
+						DELETE FROM "tipClaimShift"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						RETURNING id
+					`,
+					[shiftId, organizationId],
+				);
+
+				if (result.rowCount !== 1) {
+					return ctx.json(
+						{
+							error: "Shift not found",
+						},
+						{
+							status: 404,
+						},
+					);
+				}
+
+				return ctx.json({
+					shiftId,
+				});
+			},
+		),
+
+
+		saveTipPoolShiftInternal: createAuthEndpoint(
+			"/tip-claim/tip-pool-shifts/internal",
+			{
+				method: "POST",
+				query: internalTipClaimUserQuerySchema,
+				body: saveTipPoolBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const body = ctx.body;
+
+				if (!(await canSaveShift(pool, userId, body.organizationId))) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const validationError = validateTipPoolBody(body);
+
+				if (validationError) {
+					return ctx.json(
+						{ error: validationError },
+						{ status: 400 },
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const eligibilityError =
+						await validateTipPoolStaffEligibility(
+							client,
+							body.organizationId,
+							body.staff,
+						);
+
+					if (eligibilityError) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{ error: eligibilityError },
+							{ status: 400 },
+						);
+					}
+
+					const shiftResult = await client.query<{ id: string }>(
+						`
+							INSERT INTO "tipPoolShift" (
+								id,
+								"organizationId",
+								"savedByUserId",
+								"totalTipsCents",
+								"totalWeightTenths",
+								"managerWeightTenths",
+								"bartenderWeightTenths",
+								"barbackWeightTenths",
+								"doorWeightTenths",
+								"completedAt",
+								"createdAt"
+							)
+							VALUES (
+								gen_random_uuid()::text,
+								$1,
+								$2,
+								$3,
+								$4,
+								$5,
+								$6,
+								$7,
+								$8,
+								$9,
+								CURRENT_TIMESTAMP
+							)
+							RETURNING id
+						`,
+						[
+							body.organizationId,
+							userId,
+							body.totalTipsCents,
+							body.totalWeightTenths,
+							body.weights.managerTenths,
+							body.weights.bartenderTenths,
+							body.weights.barbackTenths,
+							body.weights.doorTenths,
+							body.completedAt,
+						],
+					);
+
+					const shiftId = shiftResult.rows[0]?.id;
+
+					if (!shiftId) {
+						throw new Error("Failed to create tip pool shift");
+					}
+
+					for (const staffMember of body.staff) {
+						await client.query(
+							`
+								INSERT INTO "tipPoolStaff" (
+									id,
+									"shiftId",
+									"userId",
+									name,
+									email,
+									role,
+									"weightTenths",
+									"shareCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									$5,
+									$6,
+									$7,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								shiftId,
+								staffMember.userId,
+								staffMember.name,
+								staffMember.email,
+								staffMember.role,
+								staffMember.weightTenths,
+								staffMember.shareCents,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+
+					return ctx.json({ shiftId });
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
+
+		correctTipPoolShiftInternal: createAuthEndpoint(
+			"/tip-claim/tip-pool-shifts/internal",
+			{
+				method: "PATCH",
+				query: internalTipClaimUserQuerySchema,
+				body: correctTipPoolBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const body = ctx.body;
+
+				if (
+					!(await canCorrectTipPoolShift(
+						pool,
+						userId,
+						body.organizationId,
+						body.shiftId,
+					))
+				) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const validationError = validateTipPoolBody(body);
+
+				if (validationError) {
+					return ctx.json(
+						{ error: validationError },
+						{ status: 400 },
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const eligibilityError =
+						await validateTipPoolStaffEligibility(
+							client,
+							body.organizationId,
+							body.staff,
+						);
+
+					if (eligibilityError) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{ error: eligibilityError },
+							{ status: 400 },
+						);
+					}
+
+					const updateResult = await client.query<{ id: string }>(
+						`
+							UPDATE "tipPoolShift"
+							SET
+								"totalTipsCents" = $3,
+								"totalWeightTenths" = $4,
+								"managerWeightTenths" = $5,
+								"bartenderWeightTenths" = $6,
+								"barbackWeightTenths" = $7,
+								"doorWeightTenths" = $8,
+								"completedAt" = $9
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							RETURNING id
+						`,
+						[
+							body.shiftId,
+							body.organizationId,
+							body.totalTipsCents,
+							body.totalWeightTenths,
+							body.weights.managerTenths,
+							body.weights.bartenderTenths,
+							body.weights.barbackTenths,
+							body.weights.doorTenths,
+							body.completedAt,
+						],
+					);
+
+					if (updateResult.rowCount !== 1) {
+						throw new Error("Failed to update tip pool shift");
+					}
+
+					await client.query(
+						`
+							DELETE FROM "tipPoolStaff"
+							WHERE "shiftId" = $1
+						`,
+						[body.shiftId],
+					);
+
+					for (const staffMember of body.staff) {
+						await client.query(
+							`
+								INSERT INTO "tipPoolStaff" (
+									id,
+									"shiftId",
+									"userId",
+									name,
+									email,
+									role,
+									"weightTenths",
+									"shareCents",
+									"createdAt"
+								)
+								VALUES (
+									gen_random_uuid()::text,
+									$1,
+									$2,
+									$3,
+									$4,
+									$5,
+									$6,
+									$7,
+									CURRENT_TIMESTAMP
+								)
+							`,
+							[
+								body.shiftId,
+								staffMember.userId,
+								staffMember.name,
+								staffMember.email,
+								staffMember.role,
+								staffMember.weightTenths,
+								staffMember.shareCents,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+
+					return ctx.json({ shiftId: body.shiftId });
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
+
+		deleteTipPoolShiftInternal: createAuthEndpoint(
+			"/tip-claim/tip-pool-shifts/internal",
+			{
+				method: "DELETE",
+				query: internalTipClaimUserQuerySchema,
+				body: deleteTipPoolBodySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get("x-tip-claim-internal-secret") !== internalSecret
+				) {
+					throw new APIError("UNAUTHORIZED", {
+						message: "Unauthorized",
+					});
+				}
+
+				const userId = ctx.query.userId;
+				const body = ctx.body;
+
+				if (
+					!(await canCorrectTipPoolShift(
+						pool,
+						userId,
+						body.organizationId,
+						body.shiftId,
+					))
+				) {
+					throw new APIError("FORBIDDEN", {
+						message: "Forbidden",
+					});
+				}
+
+				const result = await pool.query(
+					`
+						DELETE FROM "tipPoolShift"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+					`,
+					[body.shiftId, body.organizationId],
+				);
+
+				if (result.rowCount !== 1) {
+					return ctx.json(
+						{ error: "Tip Pool report not found" },
+						{ status: 404 },
+					);
+				}
+
+				return ctx.json({ success: true });
+			},
+		),
+
 
 		listTipClaimAssignments: createAuthEndpoint(
 			"/tip-claim/assignments",
