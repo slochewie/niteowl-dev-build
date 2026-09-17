@@ -27,6 +27,7 @@ import {
 	userRole,
 } from "./admin/permissions.js";
 import { counterAccess } from "./plugins/counter/index.js";
+import { networkStatus } from "./plugins/network-status/index.js";
 import { integrationManager } from "./plugins/integration-manager/index.js";
 import { glauth } from "./plugins/glauth/index.js";
 import { organizationStatus } from "./plugins/organization-status/index.js";
@@ -196,6 +197,11 @@ export const auth = betterAuth({
 		counterAccess({
 			pool,
 			internalSecret: process.env.COUNTER_AUTH_INTERNAL_SECRET,
+		}),
+
+		networkStatus({
+			pool,
+			internalSecret: process.env.NETWORK_STATUS_INTERNAL_SECRET,
 		}),
 
 		tipClaim({
