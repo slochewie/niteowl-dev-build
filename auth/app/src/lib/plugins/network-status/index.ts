@@ -574,7 +574,14 @@ export const networkStatus = ({
 					ctx.query.organizationId,
 				);
 
-				return ctx.json({ allowed });
+				const organizationResult = await pool.query(
+					"SELECT name FROM organization WHERE id = $1 LIMIT 1",
+					[ctx.query.organizationId],
+				);
+				const organizationName =
+					organizationResult.rows[0]?.name ?? null;
+
+				return ctx.json({ allowed, organizationName });
 			},
 		),
 
