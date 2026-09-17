@@ -29,6 +29,7 @@ type AssignmentRow = {
 	systemAdmin: boolean;
 	accessEnabled: boolean | null;
 	assignmentManagerEnabled: boolean | null;
+	fabricOverviewEnabled: boolean | null;
 };
 
 const organizationQuerySchema = z.object({
@@ -216,7 +217,8 @@ async function getAssignment(
 				u.email,
 				(u.role = 'admin') AS "systemAdmin",
 				a."accessEnabled",
-				a."assignmentManagerEnabled"
+				a."assignmentManagerEnabled",
+				a."fabricOverviewEnabled"
 			FROM member m
 			INNER JOIN "user" u
 				ON u.id = m."userId"
@@ -242,6 +244,7 @@ function serializeAssignment(
 	row: AssignmentRow,
 	canUpdateAccess: boolean,
 	canUpdateManager: boolean,
+	canUpdateFabricOverview = canUpdateManager,
 ) {
 	return {
 		memberId: row.memberId,
@@ -252,8 +255,11 @@ function serializeAssignment(
 		accessEnabled: row.systemAdmin || (row.accessEnabled ?? false),
 		assignmentManagerEnabled:
 			row.systemAdmin || (row.assignmentManagerEnabled ?? false),
+		fabricOverviewEnabled: row.fabricOverviewEnabled ?? false,
 		canUpdateAccess: !row.systemAdmin && canUpdateAccess,
 		canUpdateManager: !row.systemAdmin && canUpdateManager,
+		canUpdateFabricOverview:
+			!row.systemAdmin && canUpdateFabricOverview,
 	};
 }
 
@@ -280,6 +286,11 @@ export const networkStatus = ({
 					defaultValue: false,
 				},
 				assignmentManagerEnabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				fabricOverviewEnabled: {
 					type: "boolean",
 					required: true,
 					defaultValue: false,
@@ -336,7 +347,8 @@ export const networkStatus = ({
 							u.email,
 							(u.role = 'admin') AS "systemAdmin",
 							a."accessEnabled",
-							a."assignmentManagerEnabled"
+							a."assignmentManagerEnabled",
+							a."fabricOverviewEnabled"
 						FROM member m
 						INNER JOIN "user" u
 							ON u.id = m."userId"
@@ -449,6 +461,7 @@ export const networkStatus = ({
 							"userId",
 							"accessEnabled",
 							"assignmentManagerEnabled",
+							"fabricOverviewEnabled",
 							"createdAt",
 							"updatedAt"
 						)
@@ -457,6 +470,7 @@ export const networkStatus = ({
 							$1,
 							$2,
 							$3,
+							false,
 							false,
 							CURRENT_TIMESTAMP,
 							CURRENT_TIMESTAMP
@@ -522,6 +536,7 @@ export const networkStatus = ({
 							"userId",
 							"accessEnabled",
 							"assignmentManagerEnabled",
+							"fabricOverviewEnabled",
 							"createdAt",
 							"updatedAt"
 						)
@@ -531,6 +546,7 @@ export const networkStatus = ({
 							$2,
 							false,
 							$3,
+							false,
 							CURRENT_TIMESTAMP,
 							CURRENT_TIMESTAMP
 						)
@@ -546,6 +562,78 @@ export const networkStatus = ({
 				const updated = await getAssignment(pool, organizationId, userId);
 				return ctx.json({
 					assignment: serializeAssignment(updated!, true, true),
+				});
+			},
+		),
+
+		updateNetworkStatusFabricOverview: createAuthEndpoint(
+			"/network-status/fabric-overview",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: updateFlagBodySchema,
+			},
+			async (ctx) => {
+				const { organizationId, userId, enabled } = ctx.body;
+				const management = await getManagementContext(
+					pool,
+					ctx.context.session.user.id,
+					organizationId,
+				);
+
+				if (!(management.isGlobalAdmin || management.isOrganizationManager)) {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const target = await getAssignment(pool, organizationId, userId);
+				if (!target) {
+					return ctx.json(
+						{ error: "Active organization member not found" },
+						{ status: 404 },
+					);
+				}
+
+				if (target.systemAdmin) {
+					return ctx.json(
+						{ error: "System administrator Fabric overview cannot be changed" },
+						{ status: 403 },
+					);
+				}
+
+				await pool.query(
+					`
+						INSERT INTO "networkStatusAssignment" (
+							id,
+							"organizationId",
+							"userId",
+							"accessEnabled",
+							"assignmentManagerEnabled",
+							"fabricOverviewEnabled",
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							gen_random_uuid()::text,
+							$1,
+							$2,
+							false,
+							false,
+							$3,
+							CURRENT_TIMESTAMP,
+							CURRENT_TIMESTAMP
+						)
+						ON CONFLICT ("organizationId", "userId")
+						DO UPDATE SET
+							"fabricOverviewEnabled" =
+								EXCLUDED."fabricOverviewEnabled",
+							"updatedAt" = CURRENT_TIMESTAMP
+					`,
+					[organizationId, userId, enabled],
+				);
+
+				const updated = await getAssignment(pool, organizationId, userId);
+				return ctx.json({
+					assignment: serializeAssignment(updated!, true, true, true),
 				});
 			},
 		),
@@ -581,7 +669,30 @@ export const networkStatus = ({
 				const organizationName =
 					organizationResult.rows[0]?.name ?? null;
 
-				return ctx.json({ allowed, organizationName });
+				const systemAdmin = await isGlobalAdmin(pool, ctx.query.userId);
+				const fabricOverviewResult = systemAdmin
+					? null
+					: await pool.query<{ fabricOverviewEnabled: boolean }>(
+						`
+							SELECT "fabricOverviewEnabled"
+							FROM "networkStatusAssignment"
+							WHERE
+								"organizationId" = $1
+								AND "userId" = $2
+								AND "fabricOverviewEnabled" = true
+							LIMIT 1
+						`,
+						[ctx.query.organizationId, ctx.query.userId],
+					);
+
+				const fabricOverviewEnabled =
+					systemAdmin || fabricOverviewResult?.rowCount === 1;
+
+				return ctx.json({
+					allowed,
+					organizationName,
+					fabricOverviewEnabled,
+				});
 			},
 		),
 
