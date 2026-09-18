@@ -50,6 +50,22 @@ const updateAssignmentBodySchema = z.object({
 	enabled: z.boolean(),
 });
 
+const listCountersQuerySchema = z.object({
+	organizationId: z.string().min(1),
+});
+
+const createCounterBodySchema = z.object({
+	organizationId: z.string().min(1),
+	name: z.string().trim().min(1).max(100),
+});
+
+const updateCounterBodySchema = z.object({
+	organizationId: z.string().min(1),
+	counterId: z.string().min(1),
+	name: z.string().trim().min(1).max(100).optional(),
+	enabled: z.boolean().optional(),
+});
+
 const updateManagerBodySchema = z.object({
 	organizationId: z.string().min(1),
 	userId: z.string().min(1),
@@ -226,6 +242,35 @@ async function canManageManagers(
 	return context.isGlobalAdmin || context.isOrganizationManager;
 }
 
+async function canManageCounterDefinitions(
+	pool: Pool,
+	userId: string,
+	organizationId: string,
+) {
+	return canManageManagers(pool, userId, organizationId);
+}
+
+async function counterIsEnabledForOrganization(
+	pool: Pool,
+	organizationId: string,
+	counterId: string,
+) {
+	const result = await pool.query(
+		`
+			SELECT 1
+			FROM counter
+			WHERE
+				id = $1
+				AND "organizationId" = $2
+				AND enabled = true
+			LIMIT 1
+		`,
+		[counterId, organizationId],
+	);
+
+	return result.rowCount === 1;
+}
+
 async function userHasCounterAccess(
 	pool: Pool,
 	userId: string,
@@ -233,6 +278,16 @@ async function userHasCounterAccess(
 	counterId: string,
 ) {
 	if (!(await organizationIsEnabled(pool, organizationId))) {
+		return false;
+	}
+
+	if (
+		!(await counterIsEnabledForOrganization(
+			pool,
+			organizationId,
+			counterId,
+		))
+	) {
 		return false;
 	}
 
@@ -272,6 +327,38 @@ export const counterAccess = ({
 	id: "counter",
 
 	schema: {
+		counter: {
+			fields: {
+				organizationId: {
+					type: "string",
+					required: true,
+				},
+				name: {
+					type: "string",
+					required: true,
+				},
+				enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: true,
+				},
+				createdAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+				updatedAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+			},
+			indexes: [
+				{
+					fields: ["organizationId", "name"],
+				},
+			],
+		},
 		counterAssignment: {
 			fields: {
 				organizationId: {
@@ -345,6 +432,269 @@ export const counterAccess = ({
 	},
 
 	endpoints: {
+		listCounters: createAuthEndpoint(
+			"/counter/list",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: listCountersQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+
+				if (
+					!(await canManageAssignments(
+						pool,
+						ctx.context.session.user.id,
+						organizationId,
+					))
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					id: string;
+					name: string;
+					enabled: boolean;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						SELECT
+							id,
+							name,
+							enabled,
+							"createdAt",
+							"updatedAt"
+						FROM counter
+						WHERE "organizationId" = $1
+						ORDER BY
+							enabled DESC,
+							name,
+							id
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					counters: result.rows,
+				});
+			},
+		),
+
+		createCounter: createAuthEndpoint(
+			"/counter/create",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: createCounterBodySchema,
+			},
+			async (ctx) => {
+				const { organizationId, name } = ctx.body;
+
+				if (
+					!(await canManageCounterDefinitions(
+						pool,
+						ctx.context.session.user.id,
+						organizationId,
+					))
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				if (!(await organizationIsEnabled(pool, organizationId))) {
+					return ctx.json(
+						{ error: "Organization not found or disabled" },
+						{ status: 404 },
+					);
+				}
+
+				const duplicate = await pool.query(
+					`
+						SELECT 1
+						FROM counter
+						WHERE
+							"organizationId" = $1
+							AND lower(name) = lower($2)
+						LIMIT 1
+					`,
+					[organizationId, name],
+				);
+
+				if (duplicate.rowCount) {
+					return ctx.json(
+						{ error: "A counter with that name already exists" },
+						{ status: 409 },
+					);
+				}
+
+				const result = await pool.query<{
+					id: string;
+					organizationId: string;
+					name: string;
+					enabled: boolean;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						INSERT INTO counter (
+							id,
+							"organizationId",
+							name,
+							enabled,
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							gen_random_uuid()::text,
+							$1,
+							$2,
+							true,
+							CURRENT_TIMESTAMP,
+							CURRENT_TIMESTAMP
+						)
+						RETURNING
+							id,
+							"organizationId",
+							name,
+							enabled,
+							"createdAt",
+							"updatedAt"
+					`,
+					[organizationId, name],
+				);
+
+				return ctx.json(
+					{ counter: result.rows[0] },
+					{ status: 201 },
+				);
+			},
+		),
+
+		updateCounter: createAuthEndpoint(
+			"/counter/update",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: updateCounterBodySchema,
+			},
+			async (ctx) => {
+				const {
+					organizationId,
+					counterId,
+					name,
+					enabled,
+				} = ctx.body;
+
+				if (
+					!(await canManageCounterDefinitions(
+						pool,
+						ctx.context.session.user.id,
+						organizationId,
+					))
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				if (name === undefined && enabled === undefined) {
+					return ctx.json(
+						{ error: "No counter changes supplied" },
+						{ status: 400 },
+					);
+				}
+
+				const existing = await pool.query(
+					`
+						SELECT 1
+						FROM counter
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						LIMIT 1
+					`,
+					[counterId, organizationId],
+				);
+
+				if (!existing.rowCount) {
+					return ctx.json(
+						{ error: "Counter not found for organization" },
+						{ status: 404 },
+					);
+				}
+
+				if (name !== undefined) {
+					const duplicate = await pool.query(
+						`
+							SELECT 1
+							FROM counter
+							WHERE
+								"organizationId" = $1
+								AND lower(name) = lower($2)
+								AND id <> $3
+							LIMIT 1
+						`,
+						[organizationId, name, counterId],
+					);
+
+					if (duplicate.rowCount) {
+						return ctx.json(
+							{
+								error:
+									"A counter with that name already exists",
+							},
+							{ status: 409 },
+						);
+					}
+				}
+
+				const result = await pool.query<{
+					id: string;
+					organizationId: string;
+					name: string;
+					enabled: boolean;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						UPDATE counter
+						SET
+							name = COALESCE($3, name),
+							enabled = COALESCE($4, enabled),
+							"updatedAt" = CURRENT_TIMESTAMP
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						RETURNING
+							id,
+							"organizationId",
+							name,
+							enabled,
+							"createdAt",
+							"updatedAt"
+					`,
+					[
+						counterId,
+						organizationId,
+						name ?? null,
+						enabled ?? null,
+					],
+				);
+
+				return ctx.json({
+					counter: result.rows[0],
+				});
+			},
+		),
+
 		listCounterAssignments: createAuthEndpoint(
 			"/counter/assignments",
 			{
@@ -378,6 +728,11 @@ export const counterAccess = ({
 									ca."userId",
 									ca."counterId"
 								FROM "counterAssignment" ca
+							INNER JOIN counter c
+								ON c.id = ca."counterId"
+								AND c."organizationId" =
+									ca."organizationId"
+								AND c.enabled = true
 								INNER JOIN member m
 									ON m."organizationId" =
 										ca."organizationId"
@@ -452,6 +807,23 @@ export const counterAccess = ({
 						},
 						{
 							status: 403,
+						},
+					);
+				}
+
+				if (
+					!(await counterIsEnabledForOrganization(
+						pool,
+						organizationId,
+						counterId,
+					))
+				) {
+					return ctx.json(
+						{
+							error: "Counter not found for organization",
+						},
+						{
+							status: 404,
 						},
 					);
 				}
@@ -865,35 +1237,42 @@ export const counterAccess = ({
 					organizationId: string;
 					organizationName: string;
 					counterId: string;
+					counterName: string;
 				}>(
 					globalAdmin
 						? `
-							SELECT DISTINCT
-								ca."organizationId",
+							SELECT
+								c."organizationId",
 								o.name AS "organizationName",
-								ca."counterId"
-							FROM "counterAssignment" ca
+								c.id AS "counterId",
+								c.name AS "counterName"
+							FROM counter c
 							INNER JOIN organization o
-								ON o.id = ca."organizationId"
+								ON o.id = c."organizationId"
 							LEFT JOIN "organizationStatus" os
 								ON os."organizationId" = o.id
 							WHERE
-								ca.enabled = true
+								c.enabled = true
 								AND COALESCE(os.enabled, true) = true
 							ORDER BY
 								o.name,
-								ca."counterId"
+								c.name,
+								c.id
 						`
 						: `
 							SELECT DISTINCT
-								ca."organizationId",
+								c."organizationId",
 								o.name AS "organizationName",
-								ca."counterId"
-							FROM "counterAssignment" ca
+								c.id AS "counterId",
+								c.name AS "counterName"
+							FROM counter c
+							INNER JOIN "counterAssignment" ca
+								ON ca."organizationId" = c."organizationId"
+								AND ca."counterId" = c.id
 							INNER JOIN organization o
-								ON o.id = ca."organizationId"
+								ON o.id = c."organizationId"
 							INNER JOIN member m
-								ON m."organizationId" = ca."organizationId"
+								ON m."organizationId" = c."organizationId"
 								AND m."userId" = ca."userId"
 							INNER JOIN "user" u
 								ON u.id = ca."userId"
@@ -903,13 +1282,15 @@ export const counterAccess = ({
 								ON oms."memberId" = m.id
 							WHERE
 								ca."userId" = $1
+								AND c.enabled = true
 								AND ca.enabled = true
 								AND COALESCE(os.enabled, true) = true
 								AND COALESCE(u.banned, false) = false
 								AND COALESCE(oms.active, true) = true
 							ORDER BY
 								o.name,
-								ca."counterId"
+								c.name,
+								c.id
 						`,
 					globalAdmin ? [] : [userId],
 				);
