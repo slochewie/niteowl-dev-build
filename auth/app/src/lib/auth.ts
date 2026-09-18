@@ -109,11 +109,11 @@ export const auth = betterAuth({
 				to: user.email,
 				subject: setup ? "Set up your account" : "Reset your password",
 				text: setup
-          ? "Set up your NiteOwl account by choosing a password: " + url +
+          ? "Set up your account by choosing a password: " + url +
             "\nThen sign in with your email and new password."
           : "Reset your password: " + url,
         html: setup
-          ? '<p>Set up your NiteOwl account by choosing a password.</p>' +
+          ? '<p>Set up your account by choosing a password.</p>' +
             '<p><a href="' + safeURL + '">Set up your account</a></p>' +
             '<p>Then sign in with your email and new password. ' +
             'If the link expires, ask your administrator to send another.</p>'
