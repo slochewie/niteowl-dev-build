@@ -66,6 +66,11 @@ const updateCounterBodySchema = z.object({
 	enabled: z.boolean().optional(),
 });
 
+const deleteCounterBodySchema = z.object({
+	organizationId: z.string().min(1),
+	counterId: z.string().min(1),
+});
+
 const updateManagerBodySchema = z.object({
 	organizationId: z.string().min(1),
 	userId: z.string().min(1),
@@ -695,6 +700,86 @@ export const counterAccess = ({
 			},
 		),
 
+		deleteCounter: createAuthEndpoint(
+			"/counter/delete",
+			{
+				method: "DELETE",
+				use: [sessionMiddleware],
+				body: deleteCounterBodySchema,
+			},
+			async (ctx) => {
+				const { organizationId, counterId } = ctx.body;
+
+				if (
+					!(await canManageCounterDefinitions(
+						pool,
+						ctx.context.session.user.id,
+						organizationId,
+					))
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const existing = await client.query(
+						`
+							SELECT 1
+							FROM counter
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							LIMIT 1
+						`,
+						[counterId, organizationId],
+					);
+
+					if (!existing.rowCount) {
+						await client.query("ROLLBACK");
+						return ctx.json(
+							{ error: "Counter not found for organization" },
+							{ status: 404 },
+						);
+					}
+
+					await client.query(
+						`
+							DELETE FROM "counterAssignment"
+							WHERE
+								"organizationId" = $1
+								AND "counterId" = $2
+						`,
+						[organizationId, counterId],
+					);
+
+					await client.query(
+						`
+							DELETE FROM counter
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+						`,
+						[counterId, organizationId],
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({ deleted: true });
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
 		listCounterAssignments: createAuthEndpoint(
 			"/counter/assignments",
 			{
@@ -1208,6 +1293,85 @@ export const counterAccess = ({
 
 				return ctx.json({
 					allowed,
+				});
+			},
+		),
+
+
+		getAvailableCounters: createAuthEndpoint(
+			"/counter/available",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+			},
+			async (ctx) => {
+				const userId = ctx.context.session.user.id;
+				const globalAdmin = await isGlobalAdmin(pool, userId);
+
+				const result = await pool.query<{
+					organizationId: string;
+					organizationName: string;
+					counterId: string;
+					counterName: string;
+				}>(
+					globalAdmin
+						? `
+							SELECT
+								c."organizationId",
+								o.name AS "organizationName",
+								c.id AS "counterId",
+								c.name AS "counterName"
+							FROM counter c
+							INNER JOIN organization o
+								ON o.id = c."organizationId"
+							LEFT JOIN "organizationStatus" os
+								ON os."organizationId" = o.id
+							WHERE
+								c.enabled = true
+								AND COALESCE(os.enabled, true) = true
+							ORDER BY
+								o.name,
+								c.name,
+								c.id
+						`
+						: `
+							SELECT DISTINCT
+								c."organizationId",
+								o.name AS "organizationName",
+								c.id AS "counterId",
+								c.name AS "counterName"
+							FROM counter c
+							INNER JOIN "counterAssignment" ca
+								ON ca."organizationId" = c."organizationId"
+								AND ca."counterId" = c.id
+							INNER JOIN organization o
+								ON o.id = c."organizationId"
+							INNER JOIN member m
+								ON m."organizationId" = c."organizationId"
+								AND m."userId" = ca."userId"
+							INNER JOIN "user" u
+								ON u.id = ca."userId"
+							LEFT JOIN "organizationStatus" os
+								ON os."organizationId" = o.id
+							LEFT JOIN "organizationMemberStatus" oms
+								ON oms."memberId" = m.id
+							WHERE
+								ca."userId" = $1
+								AND c.enabled = true
+								AND ca.enabled = true
+								AND COALESCE(os.enabled, true) = true
+								AND COALESCE(u.banned, false) = false
+								AND COALESCE(oms.active, true) = true
+							ORDER BY
+								o.name,
+								c.name,
+								c.id
+						`,
+					globalAdmin ? [] : [userId],
+				);
+
+				return ctx.json({
+					counters: result.rows,
 				});
 			},
 		),
