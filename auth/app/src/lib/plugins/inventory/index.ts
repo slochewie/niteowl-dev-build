@@ -976,6 +976,8 @@ export const inventoryAccess = ({
 
 					const itemIds = new Set();
 					const variantIds = new Set();
+					const seenVariantIds = new Set();
+					const importConflicts = [];
 
 					for (const item of body.items) {
 						if (item.status === "ignored") continue;
@@ -1224,13 +1226,87 @@ export const inventoryAccess = ({
 
 						variantIds.add(variantId);
 
-						const priceOverrideCents =
-							item.basePriceCents !==
-							defaultPriceCents
-								? item.basePriceCents
-								: null;
+						const duplicateVariantInImport =
+							seenVariantIds.has(variantId);
 
-						await client.query(
+						if (duplicateVariantInImport) {
+							const existingOrganizationVariant =
+								await client.query(
+									`
+										SELECT
+											"priceOverrideCents",
+											"happyHourPriceCents",
+											"toastCategoryOverride",
+											"toastDestinationOverride"
+										FROM "inventoryOrganizationVariant"
+										WHERE
+											"organizationId" = $1
+											AND "inventoryItemVariantId" = $2
+										LIMIT 1
+									`,
+									[
+										body.organizationId,
+										variantId,
+									],
+								);
+
+							const existingOverride =
+								existingOrganizationVariant.rows[0]
+									?.priceOverrideCents ?? null;
+
+							const existingEffectivePrice =
+								existingOverride ??
+								defaultPriceCents;
+
+							if (
+								item.basePriceCents !==
+								existingEffectivePrice
+							) {
+								importConflicts.push({
+									type: "duplicate-variant-price",
+									sourceKey:
+										item.sourceItemNumber?.trim() ||
+										item.id,
+									sourceName: item.name,
+									variantId,
+									existingPriceCents:
+										existingEffectivePrice,
+									incomingPriceCents:
+										item.basePriceCents,
+									category:
+										item.category ?? null,
+								});
+							}
+
+							const existingCategory =
+								existingOrganizationVariant.rows[0]
+									?.toastCategoryOverride ?? null;
+
+							if (
+								existingCategory &&
+								existingCategory !==
+									item.toastCategory
+							) {
+								importConflicts.push({
+									type: "duplicate-variant-category",
+									sourceKey:
+										item.sourceItemNumber?.trim() ||
+										item.id,
+									sourceName: item.name,
+									variantId,
+									existingCategory,
+									incomingCategory:
+										item.toastCategory,
+								});
+							}
+						} else {
+							const priceOverrideCents =
+								item.basePriceCents !==
+								defaultPriceCents
+									? item.basePriceCents
+									: null;
+
+							await client.query(
 							`
 								INSERT INTO "inventoryOrganizationVariant" (
 									id,
@@ -1283,6 +1359,9 @@ export const inventoryAccess = ({
 								now,
 							],
 						);
+						}
+
+						seenVariantIds.add(variantId);
 
 						const sourceKey =
 							item.sourceItemNumber?.trim() ||
@@ -1358,6 +1437,8 @@ export const inventoryAccess = ({
 							JSON.stringify({
 								itemCount: itemIds.size,
 								variantCount: variantIds.size,
+								conflictCount: importConflicts.length,
+								conflicts: importConflicts,
 							}),
 							now,
 							importId,
