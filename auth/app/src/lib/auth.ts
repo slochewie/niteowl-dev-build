@@ -28,6 +28,7 @@ import {
 } from "./admin/permissions.js";
 import { counterAccess } from "./plugins/counter/index.js";
 import { networkStatus } from "./plugins/network-status/index.js";
+import { inventoryAccess } from "./plugins/inventory/index.js";
 import { integrationManager } from "./plugins/integration-manager/index.js";
 import { glauth } from "./plugins/glauth/index.js";
 import { organizationStatus } from "./plugins/organization-status/index.js";
@@ -209,6 +210,11 @@ export const auth = betterAuth({
 			internalSecret: process.env.NETWORK_STATUS_INTERNAL_SECRET,
 		}),
 
+		inventoryAccess({
+			pool,
+			internalSecret: process.env.INVENTORY_AUTH_INTERNAL_SECRET,
+		}),
+
 		tipClaim({
 			pool,
 			internalSecret: process.env.TIP_CLAIM_INTERNAL_SECRET,
@@ -240,6 +246,9 @@ export const auth = betterAuth({
 				"tip-claim:read",
 				"tip-claim:write",
 				"tip-claim:manage",
+				"inventory:read",
+				"inventory:write",
+				"inventory:manage",
 			],
 			resources: [
 				{
@@ -264,6 +273,22 @@ export const auth = betterAuth({
 						"tip-claim:read",
 						"tip-claim:write",
 						"tip-claim:manage",
+					],
+				},
+				{
+					identifier: "https://inventory.mccarthysirishpub.com",
+					allowedScopes: [
+						"inventory:read",
+						"inventory:write",
+						"inventory:manage",
+					],
+				},
+				{
+					identifier: "https://inventory.niteowl.dev",
+					allowedScopes: [
+						"inventory:read",
+						"inventory:write",
+						"inventory:manage",
 					],
 				},
 			],
