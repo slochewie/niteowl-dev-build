@@ -437,10 +437,6 @@ export const inventoryAccess = ({
 					type: "string",
 					required: true,
 				},
-				defaultPriceCents: {
-					type: "number",
-					required: false,
-				},
 				active: {
 					type: "boolean",
 					required: true,
