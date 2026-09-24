@@ -1005,6 +1005,41 @@ export const inventoryAccess = ({
 					for (const item of body.items) {
 						if (item.status === "ignored") continue;
 
+						const sourceKey =
+							item.sourceItemNumber?.trim() ||
+							item.id;
+
+						const existingSourceMapping =
+							await client.query<{
+								inventoryItemId: string | null;
+								inventoryItemVariantId: string | null;
+							}>(
+								`
+									SELECT
+										"inventoryItemId",
+										"inventoryItemVariantId"
+									FROM "inventorySourceItem"
+									WHERE
+										"organizationId" = $1
+										AND "sourceType" = $2
+										AND "sourceKey" = $3
+									LIMIT 1
+								`,
+								[
+									body.organizationId,
+									body.sourceType,
+									sourceKey,
+								],
+							);
+
+						const mappedInventoryItemId =
+							existingSourceMapping.rows[0]
+								?.inventoryItemId ?? null;
+
+						const mappedInventoryVariantId =
+							existingSourceMapping.rows[0]
+								?.inventoryItemVariantId ?? null;
+
 						const categoryName =
 							item.category?.trim() ||
 							item.toastCategory.trim() ||
@@ -1068,15 +1103,26 @@ export const inventoryAccess = ({
 
 						let inventoryItemId;
 
-						const existingItem = await client.query(
-							`
-								SELECT id
-								FROM "inventoryItem"
-								WHERE "normalizedName" = $1
-								LIMIT 1
-							`,
-							[normalizedItemName],
-						);
+						const existingItem =
+							mappedInventoryItemId
+								? await client.query(
+										`
+											SELECT id
+											FROM "inventoryItem"
+											WHERE id = $1
+											LIMIT 1
+										`,
+										[mappedInventoryItemId],
+									)
+								: await client.query(
+										`
+											SELECT id
+											FROM "inventoryItem"
+											WHERE "normalizedName" = $1
+											LIMIT 1
+										`,
+										[normalizedItemName],
+									);
 
 						if (existingItem.rows[0]?.id) {
 							inventoryItemId =
@@ -1154,31 +1200,49 @@ export const inventoryAccess = ({
 						let variantId;
 						let defaultPriceCents = null;
 
-						const existingVariant = await client.query(
-							`
-								SELECT
-									id,
-									"defaultPriceCents"
-								FROM "inventoryItemVariant"
-								WHERE
-									"inventoryItemId" = $1
-									AND kind = $2
-									AND "sizeOz"
-										IS NOT DISTINCT FROM $3
-									AND "packageType"
-										IS NOT DISTINCT FROM $4
-									AND name
-										IS NOT DISTINCT FROM $5
-								LIMIT 1
-							`,
-							[
-								inventoryItemId,
-								variant.kind,
-								variant.sizeOz,
-								variant.packageType,
-								variant.name,
-							],
-						);
+						const existingVariant =
+							mappedInventoryVariantId
+								? await client.query(
+										`
+											SELECT
+												id,
+												"defaultPriceCents"
+											FROM "inventoryItemVariant"
+											WHERE
+												id = $1
+												AND "inventoryItemId" = $2
+											LIMIT 1
+										`,
+										[
+											mappedInventoryVariantId,
+											inventoryItemId,
+										],
+									)
+								: await client.query(
+										`
+											SELECT
+												id,
+												"defaultPriceCents"
+											FROM "inventoryItemVariant"
+											WHERE
+												"inventoryItemId" = $1
+												AND kind = $2
+												AND "sizeOz"
+													IS NOT DISTINCT FROM $3
+												AND "packageType"
+													IS NOT DISTINCT FROM $4
+												AND name
+													IS NOT DISTINCT FROM $5
+											LIMIT 1
+										`,
+										[
+											inventoryItemId,
+											variant.kind,
+											variant.sizeOz,
+											variant.packageType,
+											variant.name,
+										],
+									);
 
 						if (existingVariant.rows[0]?.id) {
 							variantId =
@@ -1385,10 +1449,6 @@ export const inventoryAccess = ({
 						}
 
 						seenVariantIds.add(variantId);
-
-						const sourceKey =
-							item.sourceItemNumber?.trim() ||
-							item.id;
 
 						await client.query(
 							`
