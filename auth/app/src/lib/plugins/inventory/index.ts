@@ -52,6 +52,13 @@ const inventoryAssignmentBodySchema = z.object({
 });
 
 
+const inventorySourceMappingBodySchema = z.object({
+	organizationId: z.string().min(1),
+	sourceType: z.enum(["aloha-csv", "toast-template"]),
+	sourceKey: z.string().min(1),
+	variantId: z.string().min(1),
+});
+
 const inventoryOrganizationVariantBodySchema = z.object({
 	organizationId: z.string().min(1),
 	variantId: z.string().min(1),
@@ -1848,6 +1855,230 @@ export const inventoryAccess = ({
 			},
 		),
 
+		listInventorySourceMappings: createAuthEndpoint(
+			"/inventory/source-mappings",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const access = await resolveInventoryAccess(
+					pool,
+					organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (
+					!access.allowed ||
+					(access.role !== "manager" &&
+						access.role !== "admin")
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					id: string;
+					sourceType: string;
+					sourceKey: string;
+					sourceItemId: string | null;
+					sourceName: string;
+					normalizedSourceName: string;
+					inventoryItemId: string | null;
+					inventoryItemVariantId: string | null;
+					itemName: string | null;
+					variantName: string | null;
+					variantKind: string | null;
+					variantSizeOz: number | null;
+					variantPackageType: string | null;
+					updatedAt: Date;
+				}>(
+					`
+						SELECT
+							si.id,
+							si."sourceType",
+							si."sourceKey",
+							si."sourceItemId",
+							si."sourceName",
+							si."normalizedSourceName",
+							si."inventoryItemId",
+							si."inventoryItemVariantId",
+							i.name AS "itemName",
+							v.name AS "variantName",
+							v.kind AS "variantKind",
+							v."sizeOz" AS "variantSizeOz",
+							v."packageType" AS "variantPackageType",
+							si."updatedAt"
+						FROM "inventorySourceItem" si
+						LEFT JOIN "inventoryItem" i
+							ON i.id = si."inventoryItemId"
+						LEFT JOIN "inventoryItemVariant" v
+							ON v.id = si."inventoryItemVariantId"
+						WHERE si."organizationId" = $1
+						ORDER BY
+							si."sourceType",
+							LOWER(si."sourceName"),
+							si."sourceKey"
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					mappings: result.rows.map((row) => ({
+						...row,
+						updatedAt: row.updatedAt.toISOString(),
+					})),
+				});
+			},
+		),
+
+		updateInventorySourceMapping: createAuthEndpoint(
+			"/inventory/source-mapping",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventorySourceMappingBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (
+					!access.allowed ||
+					(access.role !== "manager" &&
+						access.role !== "admin")
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const variant = await pool.query<{
+					inventoryItemId: string;
+				}>(
+					`
+						SELECT "inventoryItemId"
+						FROM "inventoryItemVariant"
+						WHERE id = $1
+						LIMIT 1
+					`,
+					[body.variantId],
+				);
+
+				const target = variant.rows[0];
+
+				if (!target) {
+					return ctx.json(
+						{ error: "Inventory variant not found" },
+						{ status: 404 },
+					);
+				}
+
+				const sourceItem = await pool.query<{
+					id: string;
+					sourceName: string;
+				}>(
+					`
+						SELECT id, "sourceName"
+						FROM "inventorySourceItem"
+						WHERE
+							"organizationId" = $1
+							AND "sourceType" = $2
+							AND "sourceKey" = $3
+						LIMIT 1
+					`,
+					[
+						body.organizationId,
+						body.sourceType,
+						body.sourceKey,
+					],
+				);
+
+				const mapping = sourceItem.rows[0];
+
+				if (!mapping) {
+					return ctx.json(
+						{ error: "Inventory source mapping not found" },
+						{ status: 404 },
+					);
+				}
+
+				const now = new Date();
+				const normalizedAlias =
+					normalizeInventoryName(mapping.sourceName);
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					await client.query(
+						`
+							UPDATE "inventorySourceItem"
+							SET
+								"inventoryItemId" = $1,
+								"inventoryItemVariantId" = $2,
+								"updatedAt" = $3
+							WHERE id = $4
+						`,
+						[
+							target.inventoryItemId,
+							body.variantId,
+							now,
+							mapping.id,
+						],
+					);
+
+					if (normalizedAlias) {
+						await client.query(
+							`
+								INSERT INTO "inventoryItemAlias" (
+									id,
+									"inventoryItemId",
+									alias,
+									"normalizedAlias",
+									"createdAt",
+									"updatedAt"
+								)
+								VALUES ($1, $2, $3, $4, $5, $5)
+								ON CONFLICT (
+									"inventoryItemId",
+									"normalizedAlias"
+								)
+								DO UPDATE SET
+									alias = EXCLUDED.alias,
+									"updatedAt" = EXCLUDED."updatedAt"
+							`,
+							[
+								randomUUID(),
+								target.inventoryItemId,
+								mapping.sourceName,
+								normalizedAlias,
+								now,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+
+				return ctx.json({ updated: true });
+			},
+		),
 		listInventoryImports: createAuthEndpoint(
 			"/inventory/imports",
 			{
