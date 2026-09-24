@@ -1461,6 +1461,124 @@ export const inventoryAccess = ({
 			},
 		),
 
+		listInventoryImports: createAuthEndpoint(
+			"/inventory/imports",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const userId = ctx.context.session.user.id;
+
+				const access = await resolveInventoryAccess(
+					pool,
+					organizationId,
+					userId,
+				);
+
+				if (!access.allowed) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					id: string;
+					sourceType: string;
+					sourceName: string;
+					importedByUserId: string | null;
+					importedByName: string | null;
+					importedByEmail: string | null;
+					status: string;
+					metadataJson: string | null;
+					createdAt: Date;
+					updatedAt: Date;
+				}>(
+					`
+						SELECT
+							ii.id,
+							ii."sourceType",
+							ii."sourceName",
+							ii."importedByUserId",
+							u.name AS "importedByName",
+							u.email AS "importedByEmail",
+							ii.status,
+							ii."metadataJson",
+							ii."createdAt",
+							ii."updatedAt"
+						FROM "inventoryImport" ii
+						LEFT JOIN "user" u
+							ON u.id = ii."importedByUserId"
+						WHERE ii."organizationId" = $1
+						ORDER BY ii."createdAt" DESC
+						LIMIT 100
+					`,
+					[organizationId],
+				);
+
+				const imports = result.rows.map((row) => {
+					let metadata: {
+						itemCount?: number;
+						variantCount?: number;
+						conflictCount?: number;
+						conflicts?: unknown[];
+					} = {};
+
+					if (row.metadataJson) {
+						try {
+							const parsed = JSON.parse(row.metadataJson);
+
+							if (
+								parsed &&
+								typeof parsed === "object"
+							) {
+								metadata = parsed;
+							}
+						} catch {
+							metadata = {};
+						}
+					}
+
+					return {
+						id: row.id,
+						sourceType: row.sourceType,
+						sourceName: row.sourceName,
+						importedByUserId:
+							row.importedByUserId ?? "",
+						importedByName:
+							row.importedByName,
+						importedByEmail:
+							row.importedByEmail,
+						status: row.status,
+						createdAt:
+							row.createdAt.toISOString(),
+						updatedAt:
+							row.updatedAt.toISOString(),
+						itemCount:
+							typeof metadata.itemCount === "number"
+								? metadata.itemCount
+								: 0,
+						variantCount:
+							typeof metadata.variantCount === "number"
+								? metadata.variantCount
+								: 0,
+						conflictCount:
+							typeof metadata.conflictCount === "number"
+								? metadata.conflictCount
+								: 0,
+						conflicts: Array.isArray(metadata.conflicts)
+							? metadata.conflicts
+							: [],
+					};
+				});
+
+				return ctx.json({ imports });
+			},
+		),
+
 		listInventoryCatalog: createAuthEndpoint(
 			"/inventory/catalog",
 			{
