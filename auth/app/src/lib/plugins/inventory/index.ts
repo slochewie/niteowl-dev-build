@@ -780,6 +780,141 @@ export const inventoryAccess = ({
 	},
 
 	endpoints: {
+		listInventoryCatalog: createAuthEndpoint(
+			"/inventory/catalog",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const userId = ctx.context.session.user.id;
+
+				const access = await resolveInventoryAccess(
+					pool,
+					organizationId,
+					userId,
+				);
+
+				if (!access.allowed) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					itemId: string;
+					itemName: string;
+					itemNormalizedName: string;
+					itemActive: boolean;
+					categoryId: string | null;
+					categoryName: string | null;
+					toastCategory: string | null;
+					variantId: string;
+					variantKind: string;
+					variantSizeOz: number | null;
+					variantPackageType: string | null;
+					variantName: string | null;
+					variantDefaultPriceCents: number | null;
+					variantActive: boolean;
+					organizationEnabled: boolean | null;
+					exportToToast: boolean | null;
+					priceOverrideCents: number | null;
+					happyHourPriceCents: number | null;
+					toastNameOverride: string | null;
+					toastCategoryOverride: string | null;
+					toastDestinationOverride: string | null;
+					toastSlot: string | null;
+				}>(
+					`
+						SELECT
+							i.id AS "itemId",
+							i.name AS "itemName",
+							i."normalizedName" AS "itemNormalizedName",
+							i.active AS "itemActive",
+							c.id AS "categoryId",
+							c.name AS "categoryName",
+							c."toastCategory" AS "toastCategory",
+							v.id AS "variantId",
+							v.kind AS "variantKind",
+							v."sizeOz" AS "variantSizeOz",
+							v."packageType" AS "variantPackageType",
+							v.name AS "variantName",
+							v."defaultPriceCents" AS "variantDefaultPriceCents",
+							v.active AS "variantActive",
+							ov.enabled AS "organizationEnabled",
+							ov."exportToToast",
+							ov."priceOverrideCents",
+							ov."happyHourPriceCents",
+							ov."toastNameOverride",
+							ov."toastCategoryOverride",
+							ov."toastDestinationOverride",
+							ov."toastSlot"
+						FROM "inventoryItem" i
+						INNER JOIN "inventoryItemVariant" v
+							ON v."inventoryItemId" = i.id
+						LEFT JOIN "inventoryCategory" c
+							ON c.id = i."categoryId"
+						LEFT JOIN "inventoryOrganizationVariant" ov
+							ON ov."inventoryItemVariantId" = v.id
+							AND ov."organizationId" = $1
+						ORDER BY
+							COALESCE(c."sortOrder", 999999),
+							LOWER(COALESCE(c.name, '')),
+							LOWER(i.name),
+							v."sizeOz" NULLS FIRST,
+							LOWER(COALESCE(v.name, ''))
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					organizationId,
+					role: access.role,
+					items: result.rows.map((row) => ({
+						id: row.itemId,
+						name: row.itemName,
+						normalizedName: row.itemNormalizedName,
+						active: row.itemActive,
+						category: row.categoryId
+							? {
+								id: row.categoryId,
+								name: row.categoryName,
+								toastCategory: row.toastCategory,
+							}
+							: null,
+						variant: {
+							id: row.variantId,
+							kind: row.variantKind,
+							sizeOz: row.variantSizeOz,
+							packageType: row.variantPackageType,
+							name: row.variantName,
+							defaultPriceCents:
+								row.variantDefaultPriceCents,
+							active: row.variantActive,
+						},
+						organization: {
+							enabled: row.organizationEnabled === true,
+							exportToToast: row.exportToToast ?? true,
+							priceOverrideCents: row.priceOverrideCents,
+							happyHourPriceCents: row.happyHourPriceCents,
+							toastNameOverride: row.toastNameOverride,
+							toastCategoryOverride:
+								row.toastCategoryOverride,
+							toastDestinationOverride:
+								row.toastDestinationOverride,
+							toastSlot: row.toastSlot,
+						},
+						effectivePriceCents:
+							row.priceOverrideCents ??
+							row.variantDefaultPriceCents,
+					})),
+				});
+			},
+		),
+
 		getInventoryAccess: createAuthEndpoint(
 			"/inventory/access",
 			{
