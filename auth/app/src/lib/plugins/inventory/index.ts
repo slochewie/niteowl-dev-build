@@ -44,6 +44,14 @@ const internalAccessQuerySchema =
 	});
 
 
+const inventoryAssignmentBodySchema = z.object({
+	organizationId: z.string().min(1),
+	userId: z.string().min(1),
+	enabled: z.boolean().optional(),
+	role: z.enum(["viewer", "staff", "manager", "admin"]).optional(),
+});
+
+
 const inventoryOrganizationVariantBodySchema = z.object({
 	organizationId: z.string().min(1),
 	variantId: z.string().min(1),
@@ -2117,6 +2125,157 @@ export const inventoryAccess = ({
 							ctx.query.organizationId,
 						),
 				});
+			},
+		),
+
+		updateInventoryAssignment: createAuthEndpoint(
+			"/inventory/assignment",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventoryAssignmentBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const callerUserId =
+					ctx.context.session.user.id;
+
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					callerUserId,
+				);
+
+				if (
+					!access.allowed ||
+					access.role !== "admin"
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const target = await pool.query<{
+					membershipRole: string;
+					systemAdmin: boolean;
+					currentRole: string | null;
+				}>(
+					`
+						SELECT
+							m.role AS "membershipRole",
+							(u.role = 'admin') AS "systemAdmin",
+							a.role AS "currentRole"
+						FROM member m
+						INNER JOIN "user" u
+							ON u.id = m."userId"
+						LEFT JOIN "organizationMemberStatus" oms
+							ON oms."memberId" = m.id
+						LEFT JOIN "inventoryAssignment" a
+							ON a."organizationId" = m."organizationId"
+							AND a."userId" = m."userId"
+						WHERE
+							m."organizationId" = $1
+							AND m."userId" = $2
+							AND COALESCE(u.banned, false) = false
+							AND COALESCE(oms.active, true) = true
+						LIMIT 1
+					`,
+					[
+						body.organizationId,
+						body.userId,
+					],
+				);
+
+				const targetRow = target.rows[0];
+
+				if (!targetRow) {
+					return ctx.json(
+						{ error: "Organization member not found" },
+						{ status: 404 },
+					);
+				}
+
+				const protectedTarget =
+					targetRow.systemAdmin ||
+					targetRow.membershipRole === "owner" ||
+					targetRow.membershipRole === "admin";
+
+				if (protectedTarget) {
+					return ctx.json(
+						{
+							error:
+								"Protected organization administrators cannot be changed",
+						},
+						{ status: 403 },
+					);
+				}
+
+				const canManageAdmins =
+					access.systemAdmin ||
+					access.organizationManager;
+
+				if (
+					!canManageAdmins &&
+					(
+						body.role === "admin" ||
+						targetRow.currentRole === "admin"
+					)
+				) {
+					return ctx.json(
+						{
+							error:
+								"Only organization or system administrators can manage Inventory admins",
+						},
+						{ status: 403 },
+					);
+				}
+
+				const now = new Date();
+
+				await pool.query(
+					`
+						INSERT INTO "inventoryAssignment" (
+							id,
+							"organizationId",
+							"userId",
+							enabled,
+							role,
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							$1, $2, $3,
+							COALESCE($4, false),
+							COALESCE($5, 'viewer'),
+							$6, $6
+						)
+						ON CONFLICT (
+							"organizationId",
+							"userId"
+						)
+						DO UPDATE SET
+							enabled = COALESCE(
+								$4,
+								"inventoryAssignment".enabled
+							),
+							role = COALESCE(
+								$5,
+								"inventoryAssignment".role
+							),
+							"updatedAt" = $6
+					`,
+					[
+						randomUUID(),
+						body.organizationId,
+						body.userId,
+						body.enabled ?? null,
+						body.role ?? null,
+						now,
+					],
+				);
+
+				return ctx.json({ updated: true });
 			},
 		),
 
