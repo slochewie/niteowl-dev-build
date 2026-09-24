@@ -44,6 +44,18 @@ const internalAccessQuerySchema =
 	});
 
 
+const inventoryOrganizationVariantBodySchema = z.object({
+	organizationId: z.string().min(1),
+	variantId: z.string().min(1),
+	enabled: z.boolean().optional(),
+	exportToToast: z.boolean().optional(),
+	priceOverrideCents: z.number().int().nullable().optional(),
+	happyHourPriceCents: z.number().int().nullable().optional(),
+	toastNameOverride: z.string().nullable().optional(),
+	toastCategoryOverride: z.string().nullable().optional(),
+	toastDestinationOverride: z.string().nullable().optional(),
+});
+
 const inventoryImportBodySchema = z.object({
 	organizationId: z.string().min(1),
 	sourceType: z.enum(["aloha-csv", "toast-template"]),
@@ -1458,6 +1470,135 @@ export const inventoryAccess = ({
 				} finally {
 					client.release();
 				}
+			},
+		),
+
+		updateInventoryOrganizationVariant: createAuthEndpoint(
+			"/inventory/organization-variant",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventoryOrganizationVariantBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const userId = ctx.context.session.user.id;
+
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					userId,
+				);
+
+				if (
+					!access.allowed ||
+					(access.role !== "manager" &&
+						access.role !== "admin")
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const variant = await pool.query(
+					`
+						SELECT id
+						FROM "inventoryItemVariant"
+						WHERE id = $1
+						LIMIT 1
+					`,
+					[body.variantId],
+				);
+
+				if (variant.rowCount !== 1) {
+					return ctx.json(
+						{ error: "Inventory variant not found" },
+						{ status: 404 },
+					);
+				}
+
+				await pool.query(
+					`
+						INSERT INTO "inventoryOrganizationVariant" (
+							id,
+							"organizationId",
+							"inventoryItemVariantId",
+							enabled,
+							"exportToToast",
+							"priceOverrideCents",
+							"happyHourPriceCents",
+							"toastNameOverride",
+							"toastCategoryOverride",
+							"toastDestinationOverride",
+							"toastSlot",
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							$1, $2, $3,
+							COALESCE($4, true),
+							COALESCE($5, true),
+							$6, $7, $8, $9, $10,
+							NULL, $11, $11
+						)
+						ON CONFLICT (
+							"organizationId",
+							"inventoryItemVariantId"
+						)
+						DO UPDATE SET
+							enabled = COALESCE($4,
+								"inventoryOrganizationVariant".enabled),
+							"exportToToast" = COALESCE($5,
+								"inventoryOrganizationVariant"."exportToToast"),
+							"priceOverrideCents" =
+								CASE WHEN $12
+									THEN $6
+									ELSE "inventoryOrganizationVariant"."priceOverrideCents"
+								END,
+							"happyHourPriceCents" =
+								CASE WHEN $13
+									THEN $7
+									ELSE "inventoryOrganizationVariant"."happyHourPriceCents"
+								END,
+							"toastNameOverride" =
+								CASE WHEN $14
+									THEN $8
+									ELSE "inventoryOrganizationVariant"."toastNameOverride"
+								END,
+							"toastCategoryOverride" =
+								CASE WHEN $15
+									THEN $9
+									ELSE "inventoryOrganizationVariant"."toastCategoryOverride"
+								END,
+							"toastDestinationOverride" =
+								CASE WHEN $16
+									THEN $10
+									ELSE "inventoryOrganizationVariant"."toastDestinationOverride"
+								END,
+							"updatedAt" = $11
+					`,
+					[
+						randomUUID(),
+						body.organizationId,
+						body.variantId,
+						body.enabled ?? null,
+						body.exportToToast ?? null,
+						body.priceOverrideCents ?? null,
+						body.happyHourPriceCents ?? null,
+						body.toastNameOverride ?? null,
+						body.toastCategoryOverride ?? null,
+						body.toastDestinationOverride ?? null,
+						new Date(),
+						Object.hasOwn(body, "priceOverrideCents"),
+						Object.hasOwn(body, "happyHourPriceCents"),
+						Object.hasOwn(body, "toastNameOverride"),
+						Object.hasOwn(body, "toastCategoryOverride"),
+						Object.hasOwn(body, "toastDestinationOverride"),
+					],
+				);
+
+				return ctx.json({ updated: true });
 			},
 		),
 
