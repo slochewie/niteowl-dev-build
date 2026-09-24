@@ -2,6 +2,10 @@ import type { BetterAuthPlugin } from "better-auth";
 import { APIError, createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import type { Pool, PoolClient } from "pg";
 import * as z from "zod";
+import {
+	appendRevisionInTransaction,
+	type RevisionOperation,
+} from "../revision-history";
 
 type TipClaimOptions = {
 	pool: Pool;
@@ -756,6 +760,215 @@ async function validateShiftStaffEligibility(
 	}
 
 	return null;
+}
+
+const TIP_CLAIM_REPORT_RESOURCE = "tip-claim-report";
+const TIP_POOL_REPORT_RESOURCE = "tip-pool-report";
+
+async function getTipClaimRevisionSnapshot(
+	client: PoolClient,
+	organizationId: string,
+	shiftId: string,
+) {
+	const shiftResult = await client.query(
+		`
+			SELECT
+				id,
+				"organizationId",
+				"savedByUserId",
+				"claimPercent",
+				"totalSalesCents",
+				"requiredClaimCents",
+				"totalWeightUnits",
+				"bartenderWeight",
+				"managerWeight",
+				"barbackWeight",
+				"doorWeight",
+				"completedAt",
+				"createdAt"
+			FROM "tipClaimShift"
+			WHERE
+				id = $1
+				AND "organizationId" = $2
+			LIMIT 1
+		`,
+		[shiftId, organizationId],
+	);
+
+	const shift = shiftResult.rows[0];
+
+	if (!shift) {
+		return null;
+	}
+
+	const registerResult = await client.query(
+		`
+			SELECT
+				id,
+				"shiftId",
+				"registerKey",
+				name,
+				"salesCents",
+				"createdAt"
+			FROM "tipClaimRegister"
+			WHERE "shiftId" = $1
+			ORDER BY "createdAt", id
+		`,
+		[shiftId],
+	);
+
+	const staffResult = await client.query(
+		`
+			SELECT
+				id,
+				"shiftId",
+				"userId",
+				name,
+				email,
+				role,
+				"registerKey",
+				weight,
+				"claimCents",
+				"createdAt"
+			FROM "tipClaimStaff"
+			WHERE "shiftId" = $1
+			ORDER BY "createdAt", id
+		`,
+		[shiftId],
+	);
+
+	return {
+		...shift,
+		totalWeightUnits: Number(shift.totalWeightUnits),
+		bartenderWeight: Number(shift.bartenderWeight),
+		managerWeight: Number(shift.managerWeight),
+		barbackWeight: Number(shift.barbackWeight),
+		doorWeight: Number(shift.doorWeight),
+		registers: registerResult.rows,
+		staff: staffResult.rows.map((staffMember) => ({
+			...staffMember,
+			weight: Number(staffMember.weight),
+		})),
+	};
+}
+
+async function getTipPoolRevisionSnapshot(
+	client: PoolClient,
+	organizationId: string,
+	shiftId: string,
+) {
+	const shiftResult = await client.query(
+		`
+			SELECT
+				id,
+				"organizationId",
+				"savedByUserId",
+				"totalTipsCents",
+				"totalWeightTenths",
+				"managerWeightTenths",
+				"bartenderWeightTenths",
+				"barbackWeightTenths",
+				"doorWeightTenths",
+				"completedAt",
+				"createdAt"
+			FROM "tipPoolShift"
+			WHERE
+				id = $1
+				AND "organizationId" = $2
+			LIMIT 1
+		`,
+		[shiftId, organizationId],
+	);
+
+	const shift = shiftResult.rows[0];
+
+	if (!shift) {
+		return null;
+	}
+
+	const staffResult = await client.query(
+		`
+			SELECT
+				id,
+				"shiftId",
+				"userId",
+				name,
+				email,
+				role,
+				"weightTenths",
+				"shareCents",
+				"createdAt"
+			FROM "tipPoolStaff"
+			WHERE "shiftId" = $1
+			ORDER BY "createdAt", id
+		`,
+		[shiftId],
+	);
+
+	return {
+		...shift,
+		staff: staffResult.rows,
+	};
+}
+
+async function recordTipClaimRevision(
+	client: PoolClient,
+	organizationId: string,
+	shiftId: string,
+	actorUserId: string,
+	operation: RevisionOperation,
+	snapshot?: unknown,
+) {
+	const resolvedSnapshot =
+		snapshot ??
+		(await getTipClaimRevisionSnapshot(
+			client,
+			organizationId,
+			shiftId,
+		));
+
+	if (!resolvedSnapshot) {
+		throw new Error("Tip Claim report snapshot not found");
+	}
+
+	return appendRevisionInTransaction(client, {
+		resourceType: TIP_CLAIM_REPORT_RESOURCE,
+		resourceId: shiftId,
+		organizationId,
+		actorUserId,
+		operation,
+		snapshot: resolvedSnapshot,
+	});
+}
+
+async function recordTipPoolRevision(
+	client: PoolClient,
+	organizationId: string,
+	shiftId: string,
+	actorUserId: string,
+	operation: RevisionOperation,
+	snapshot?: unknown,
+) {
+	const resolvedSnapshot =
+		snapshot ??
+		(await getTipPoolRevisionSnapshot(
+			client,
+			organizationId,
+			shiftId,
+		));
+
+	if (!resolvedSnapshot) {
+		throw new Error("Tip Pool report snapshot not found");
+	}
+
+	return appendRevisionInTransaction(client, {
+		resourceType: TIP_POOL_REPORT_RESOURCE,
+		resourceId: shiftId,
+		organizationId,
+		actorUserId,
+		operation,
+		snapshot: resolvedSnapshot,
+	});
 }
 
 export const tipClaim = ({
@@ -2492,6 +2705,14 @@ export const tipClaim = ({
 						);
 					}
 
+					await recordTipClaimRevision(
+						client,
+						body.organizationId,
+						shiftId,
+						userId,
+						"create",
+					);
+
 					await client.query("COMMIT");
 
 					return ctx.json({
@@ -2709,6 +2930,14 @@ export const tipClaim = ({
 						);
 					}
 
+					await recordTipClaimRevision(
+						client,
+						body.organizationId,
+						body.shiftId,
+						userId,
+						"update",
+					);
+
 					await client.query("COMMIT");
 
 					return ctx.json({
@@ -2750,31 +2979,77 @@ export const tipClaim = ({
 					});
 				}
 
-				const result = await pool.query<{ id: string }>(
-					`
-						DELETE FROM "tipClaimShift"
-						WHERE
-							id = $1
-							AND "organizationId" = $2
-						RETURNING id
-					`,
-					[shiftId, organizationId],
-				);
+				const client = await pool.connect();
 
-				if (result.rowCount !== 1) {
-					return ctx.json(
-						{
-							error: "Shift not found",
-						},
-						{
-							status: 404,
-						},
+				try {
+					await client.query("BEGIN");
+
+					await client.query(
+						`
+							SELECT id
+							FROM "tipClaimShift"
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							FOR UPDATE
+						`,
+						[shiftId, organizationId],
 					);
-				}
 
-				return ctx.json({
-					shiftId,
-				});
+					const snapshot = await getTipClaimRevisionSnapshot(
+						client,
+						organizationId,
+						shiftId,
+					);
+
+					if (!snapshot) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{
+								error: "Shift not found",
+							},
+							{
+								status: 404,
+							},
+						);
+					}
+
+					const result = await client.query<{ id: string }>(
+						`
+							DELETE FROM "tipClaimShift"
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							RETURNING id
+						`,
+						[shiftId, organizationId],
+					);
+
+					if (result.rowCount !== 1) {
+						throw new Error("Failed to delete Tip Claim report");
+					}
+
+					await recordTipClaimRevision(
+						client,
+						organizationId,
+						shiftId,
+						userId,
+						"delete",
+						snapshot,
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						shiftId,
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
 			},
 		),
 
@@ -2921,6 +3196,14 @@ export const tipClaim = ({
 							],
 						);
 					}
+
+					await recordTipPoolRevision(
+						client,
+						body.organizationId,
+						shiftId,
+						userId,
+						"create",
+					);
 
 					await client.query("COMMIT");
 
@@ -3077,6 +3360,14 @@ export const tipClaim = ({
 						);
 					}
 
+					await recordTipPoolRevision(
+						client,
+						body.organizationId,
+						body.shiftId,
+						userId,
+						"update",
+					);
+
 					await client.query("COMMIT");
 
 					return ctx.json({ shiftId: body.shiftId });
@@ -3123,24 +3414,70 @@ export const tipClaim = ({
 					});
 				}
 
-				const result = await pool.query(
-					`
-						DELETE FROM "tipPoolShift"
-						WHERE
-							id = $1
-							AND "organizationId" = $2
-					`,
-					[body.shiftId, body.organizationId],
-				);
+				const client = await pool.connect();
 
-				if (result.rowCount !== 1) {
-					return ctx.json(
-						{ error: "Tip Pool report not found" },
-						{ status: 404 },
+				try {
+					await client.query("BEGIN");
+
+					await client.query(
+						`
+							SELECT id
+							FROM "tipPoolShift"
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							FOR UPDATE
+						`,
+						[body.shiftId, body.organizationId],
 					);
-				}
 
-				return ctx.json({ success: true });
+					const snapshot = await getTipPoolRevisionSnapshot(
+						client,
+						body.organizationId,
+						body.shiftId,
+					);
+
+					if (!snapshot) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{ error: "Tip Pool report not found" },
+							{ status: 404 },
+						);
+					}
+
+					const result = await client.query(
+						`
+							DELETE FROM "tipPoolShift"
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+						`,
+						[body.shiftId, body.organizationId],
+					);
+
+					if (result.rowCount !== 1) {
+						throw new Error("Failed to delete Tip Pool report");
+					}
+
+					await recordTipPoolRevision(
+						client,
+						body.organizationId,
+						body.shiftId,
+						userId,
+						"delete",
+						snapshot,
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({ success: true });
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
 			},
 		),
 
@@ -4457,24 +4794,70 @@ export const tipClaim = ({
 					);
 				}
 
-				const result = await pool.query(
-					`
-						DELETE FROM "tipPoolShift"
-						WHERE
-							id = $1
-							AND "organizationId" = $2
-					`,
-					[body.shiftId, body.organizationId],
-				);
+				const client = await pool.connect();
 
-				if (result.rowCount !== 1) {
-					return ctx.json(
-						{ error: "Tip Pool report not found" },
-						{ status: 404 },
+				try {
+					await client.query("BEGIN");
+
+					await client.query(
+						`
+							SELECT id
+							FROM "tipPoolShift"
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							FOR UPDATE
+						`,
+						[body.shiftId, body.organizationId],
 					);
-				}
 
-				return ctx.json({ success: true });
+					const snapshot = await getTipPoolRevisionSnapshot(
+						client,
+						body.organizationId,
+						body.shiftId,
+					);
+
+					if (!snapshot) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{ error: "Tip Pool report not found" },
+							{ status: 404 },
+						);
+					}
+
+					const result = await client.query(
+						`
+							DELETE FROM "tipPoolShift"
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+						`,
+						[body.shiftId, body.organizationId],
+					);
+
+					if (result.rowCount !== 1) {
+						throw new Error("Failed to delete Tip Pool report");
+					}
+
+					await recordTipPoolRevision(
+						client,
+						body.organizationId,
+						body.shiftId,
+						userId,
+						"delete",
+						snapshot,
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({ success: true });
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
 			},
 		),
 
@@ -4611,6 +4994,14 @@ export const tipClaim = ({
 							],
 						);
 					}
+
+					await recordTipPoolRevision(
+						client,
+						body.organizationId,
+						body.shiftId,
+						userId,
+						"update",
+					);
 
 					await client.query("COMMIT");
 
@@ -4758,6 +5149,14 @@ export const tipClaim = ({
 							],
 						);
 					}
+
+					await recordTipPoolRevision(
+						client,
+						body.organizationId,
+						shiftId,
+						userId,
+						"create",
+					);
 
 					await client.query("COMMIT");
 
@@ -4956,6 +5355,14 @@ export const tipClaim = ({
 							],
 						);
 					}
+
+					await recordTipClaimRevision(
+						client,
+						body.organizationId,
+						shiftId,
+						userId,
+						"create",
+					);
 
 					await client.query("COMMIT");
 
@@ -5169,6 +5576,14 @@ export const tipClaim = ({
 						);
 					}
 
+					await recordTipClaimRevision(
+						client,
+						body.organizationId,
+						body.shiftId,
+						userId,
+						"update",
+					);
+
 					await client.query("COMMIT");
 
 					return ctx.json({
@@ -5205,31 +5620,77 @@ export const tipClaim = ({
 					);
 				}
 
-				const result = await pool.query<{ id: string }>(
-					`
-						DELETE FROM "tipClaimShift"
-						WHERE
-							id = $1
-							AND "organizationId" = $2
-						RETURNING id
-					`,
-					[shiftId, organizationId],
-				);
+				const client = await pool.connect();
 
-				if (result.rowCount !== 1) {
-					return ctx.json(
-						{
-							error: "Shift not found",
-						},
-						{
-							status: 404,
-						},
+				try {
+					await client.query("BEGIN");
+
+					await client.query(
+						`
+							SELECT id
+							FROM "tipClaimShift"
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							FOR UPDATE
+						`,
+						[shiftId, organizationId],
 					);
-				}
 
-				return ctx.json({
-					shiftId,
-				});
+					const snapshot = await getTipClaimRevisionSnapshot(
+						client,
+						organizationId,
+						shiftId,
+					);
+
+					if (!snapshot) {
+						await client.query("ROLLBACK");
+
+						return ctx.json(
+							{
+								error: "Shift not found",
+							},
+							{
+								status: 404,
+							},
+						);
+					}
+
+					const result = await client.query<{ id: string }>(
+						`
+							DELETE FROM "tipClaimShift"
+							WHERE
+								id = $1
+								AND "organizationId" = $2
+							RETURNING id
+						`,
+						[shiftId, organizationId],
+					);
+
+					if (result.rowCount !== 1) {
+						throw new Error("Failed to delete Tip Claim report");
+					}
+
+					await recordTipClaimRevision(
+						client,
+						organizationId,
+						shiftId,
+						userId,
+						"delete",
+						snapshot,
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						shiftId,
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
 			},
 		),
 
