@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { BetterAuthPlugin } from "better-auth";
 import {
 	createAuthEndpoint,
@@ -41,6 +42,27 @@ const internalAccessQuerySchema =
 	organizationQuerySchema.extend({
 		userId: z.string().min(1),
 	});
+
+
+const inventoryImportBodySchema = z.object({
+	organizationId: z.string().min(1),
+	sourceType: z.enum(["aloha-csv", "toast-template"]),
+	sourceName: z.string().min(1),
+	items: z.array(
+		z.object({
+			id: z.string().min(1),
+			sourceItemNumber: z.string().optional(),
+			name: z.string().min(1),
+			category: z.string().optional(),
+			toastCategory: z.string().min(1),
+			toastDestination: z.string(),
+			basePriceCents: z.number().int().nullable(),
+			happyHourPriceCents: z.number().int().nullable(),
+			status: z.enum(["ready", "review", "ignored"]),
+			exportIncluded: z.boolean(),
+		}),
+	),
+});
 
 function normalizeInventoryRole(
 	role: string | null | undefined,
@@ -253,6 +275,98 @@ async function resolveInventoryAccess(
 		role: normalizeInventoryRole(row.role),
 		systemAdmin: false,
 		organizationManager: false,
+	};
+}
+
+function normalizeInventoryName(value: string) {
+	return value
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, " ")
+		.trim();
+}
+
+function getCanonicalItemName(
+	name: string,
+	toastCategory: string,
+	toastDestination: string,
+) {
+	if (toastCategory.toLowerCase() !== "beer") {
+		return name.trim();
+	}
+
+	const destination = toastDestination.toLowerCase();
+	let normalized = name
+		.replace(/\b(10\s*oz|10oz|16\s*oz|16oz|20\s*oz|20oz|24\s*oz|24oz)\b/gi, "")
+		.replace(/\b(draft|pint|imperial|imp|reg|regular|can|bottle|btl|tall)\b/gi, "")
+		.replace(/[\s_-]+/g, " ")
+		.trim();
+
+	if (!normalized && destination.includes("draft beer 10oz")) {
+		normalized = name.replace(/10\s*oz/gi, "").trim();
+	}
+
+	return normalized || name.trim();
+}
+
+function getVariantIdentity(
+	toastCategory: string,
+	toastDestination: string,
+) {
+	const category = toastCategory.toLowerCase();
+	const destination = toastDestination.toLowerCase();
+
+	if (category === "beer") {
+		if (destination.includes("draft beer 10oz")) {
+			return {
+				kind: "draft",
+				sizeOz: 10,
+				packageType: null,
+				name: "10oz draft",
+			};
+		}
+
+		if (destination.includes("draft beer 16oz")) {
+			return {
+				kind: "draft",
+				sizeOz: 16,
+				packageType: null,
+				name: "16oz draft",
+			};
+		}
+
+		if (destination.includes("24oz can")) {
+			return {
+				kind: "can",
+				sizeOz: 24,
+				packageType: "can",
+				name: "24oz can",
+			};
+		}
+
+		if (destination.includes("bottle")) {
+			return {
+				kind: "bottle",
+				sizeOz: null,
+				packageType: "bottle",
+				name: "bottle",
+			};
+		}
+
+		if (destination.includes("can")) {
+			return {
+				kind: "can",
+				sizeOz: null,
+				packageType: "can",
+				name: "can",
+			};
+		}
+	}
+
+	return {
+		kind: "standard",
+		sizeOz: null,
+		packageType: null,
+		name: null,
 	};
 }
 
@@ -780,6 +894,492 @@ export const inventoryAccess = ({
 	},
 
 	endpoints: {
+		persistInventoryImport: createAuthEndpoint(
+			"/inventory/import",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: inventoryImportBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const userId = ctx.context.session.user.id;
+
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					userId,
+				);
+
+				if (
+					!access.allowed ||
+					access.role === "viewer"
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const now = new Date();
+					const importId = randomUUID();
+
+					await client.query(
+						`
+							INSERT INTO "inventoryImport" (
+								id,
+								"organizationId",
+								"sourceType",
+								"sourceName",
+								"importedByUserId",
+								status,
+								"metadataJson",
+								"createdAt",
+								"updatedAt"
+							)
+							VALUES (
+								$1, $2, $3, $4, $5,
+								'pending', NULL, $6, $6
+							)
+						`,
+						[
+							importId,
+							body.organizationId,
+							body.sourceType,
+							body.sourceName,
+							userId,
+							now,
+						],
+					);
+
+					await client.query(
+						`
+							INSERT INTO "inventoryOrganizationConfig" (
+								id,
+								"organizationId",
+								enabled,
+								"happyHourEnabled",
+								"createdAt",
+								"updatedAt"
+							)
+							VALUES ($1, $2, true, false, $3, $3)
+							ON CONFLICT ("organizationId")
+							DO NOTHING
+						`,
+						[randomUUID(), body.organizationId, now],
+					);
+
+					const itemIds = new Set();
+					const variantIds = new Set();
+
+					for (const item of body.items) {
+						if (item.status === "ignored") continue;
+
+						const categoryName =
+							item.category?.trim() ||
+							item.toastCategory.trim() ||
+							"Uncategorized";
+
+						const normalizedCategory =
+							normalizeInventoryName(categoryName);
+
+						let categoryId;
+
+						const categoryResult = await client.query(
+							`
+								SELECT id
+								FROM "inventoryCategory"
+								WHERE "normalizedName" = $1
+								LIMIT 1
+							`,
+							[normalizedCategory],
+						);
+
+						if (categoryResult.rows[0]?.id) {
+							categoryId = categoryResult.rows[0].id;
+						} else {
+							categoryId = randomUUID();
+
+							await client.query(
+								`
+									INSERT INTO "inventoryCategory" (
+										id,
+										name,
+										"normalizedName",
+										"toastCategory",
+										"sortOrder",
+										active,
+										"createdAt",
+										"updatedAt"
+									)
+									VALUES (
+										$1, $2, $3, $4,
+										0, true, $5, $5
+									)
+								`,
+								[
+									categoryId,
+									categoryName,
+									normalizedCategory,
+									item.toastCategory,
+									now,
+								],
+							);
+						}
+
+						const canonicalName = getCanonicalItemName(
+							item.name,
+							item.toastCategory,
+							item.toastDestination,
+						);
+
+						const normalizedItemName =
+							normalizeInventoryName(canonicalName);
+
+						let inventoryItemId;
+
+						const existingItem = await client.query(
+							`
+								SELECT id
+								FROM "inventoryItem"
+								WHERE "normalizedName" = $1
+								LIMIT 1
+							`,
+							[normalizedItemName],
+						);
+
+						if (existingItem.rows[0]?.id) {
+							inventoryItemId =
+								existingItem.rows[0].id;
+						} else {
+							inventoryItemId = randomUUID();
+
+							await client.query(
+								`
+									INSERT INTO "inventoryItem" (
+										id,
+										"categoryId",
+										name,
+										"normalizedName",
+										active,
+										"createdAt",
+										"updatedAt"
+									)
+									VALUES (
+										$1, $2, $3, $4,
+										true, $5, $5
+									)
+								`,
+								[
+									inventoryItemId,
+									categoryId,
+									canonicalName,
+									normalizedItemName,
+									now,
+								],
+							);
+						}
+
+						itemIds.add(inventoryItemId);
+
+						const normalizedAlias =
+							normalizeInventoryName(item.name);
+
+						if (
+							normalizedAlias &&
+							normalizedAlias !== normalizedItemName
+						) {
+							await client.query(
+								`
+									INSERT INTO "inventoryItemAlias" (
+										id,
+										"inventoryItemId",
+										alias,
+										"normalizedAlias",
+										"createdAt",
+										"updatedAt"
+									)
+									VALUES ($1, $2, $3, $4, $5, $5)
+									ON CONFLICT (
+										"inventoryItemId",
+										"normalizedAlias"
+									)
+									DO NOTHING
+								`,
+								[
+									randomUUID(),
+									inventoryItemId,
+									item.name,
+									normalizedAlias,
+									now,
+								],
+							);
+						}
+
+						const variant = getVariantIdentity(
+							item.toastCategory,
+							item.toastDestination,
+						);
+
+						let variantId;
+						let defaultPriceCents = null;
+
+						const existingVariant = await client.query(
+							`
+								SELECT
+									id,
+									"defaultPriceCents"
+								FROM "inventoryItemVariant"
+								WHERE
+									"inventoryItemId" = $1
+									AND kind = $2
+									AND "sizeOz"
+										IS NOT DISTINCT FROM $3
+									AND "packageType"
+										IS NOT DISTINCT FROM $4
+									AND name
+										IS NOT DISTINCT FROM $5
+								LIMIT 1
+							`,
+							[
+								inventoryItemId,
+								variant.kind,
+								variant.sizeOz,
+								variant.packageType,
+								variant.name,
+							],
+						);
+
+						if (existingVariant.rows[0]?.id) {
+							variantId =
+								existingVariant.rows[0].id;
+
+							defaultPriceCents =
+								existingVariant.rows[0]
+									.defaultPriceCents ?? null;
+
+							if (
+								defaultPriceCents === null &&
+								item.basePriceCents !== null
+							) {
+								defaultPriceCents =
+									item.basePriceCents;
+
+								await client.query(
+									`
+										UPDATE "inventoryItemVariant"
+										SET
+											"defaultPriceCents" = $1,
+											"updatedAt" = $2
+										WHERE id = $3
+									`,
+									[
+										defaultPriceCents,
+										now,
+										variantId,
+									],
+								);
+							}
+						} else {
+							variantId = randomUUID();
+							defaultPriceCents =
+								item.basePriceCents;
+
+							await client.query(
+								`
+									INSERT INTO "inventoryItemVariant" (
+										id,
+										"inventoryItemId",
+										kind,
+										"sizeOz",
+										"packageType",
+										name,
+										"defaultPriceCents",
+										active,
+										"createdAt",
+										"updatedAt"
+									)
+									VALUES (
+										$1, $2, $3, $4, $5,
+										$6, $7, true, $8, $8
+									)
+								`,
+								[
+									variantId,
+									inventoryItemId,
+									variant.kind,
+									variant.sizeOz,
+									variant.packageType,
+									variant.name,
+									defaultPriceCents,
+									now,
+								],
+							);
+						}
+
+						variantIds.add(variantId);
+
+						const priceOverrideCents =
+							item.basePriceCents !==
+							defaultPriceCents
+								? item.basePriceCents
+								: null;
+
+						await client.query(
+							`
+								INSERT INTO "inventoryOrganizationVariant" (
+									id,
+									"organizationId",
+									"inventoryItemVariantId",
+									enabled,
+									"exportToToast",
+									"priceOverrideCents",
+									"happyHourPriceCents",
+									"toastNameOverride",
+									"toastCategoryOverride",
+									"toastDestinationOverride",
+									"toastSlot",
+									"createdAt",
+									"updatedAt"
+								)
+								VALUES (
+									$1, $2, $3, true, $4,
+									$5, $6, NULL, $7, $8,
+									NULL, $9, $9
+								)
+								ON CONFLICT (
+									"organizationId",
+									"inventoryItemVariantId"
+								)
+								DO UPDATE SET
+									enabled = true,
+									"exportToToast" =
+										EXCLUDED."exportToToast",
+									"priceOverrideCents" =
+										EXCLUDED."priceOverrideCents",
+									"happyHourPriceCents" =
+										EXCLUDED."happyHourPriceCents",
+									"toastCategoryOverride" =
+										EXCLUDED."toastCategoryOverride",
+									"toastDestinationOverride" =
+										EXCLUDED."toastDestinationOverride",
+									"updatedAt" =
+										EXCLUDED."updatedAt"
+							`,
+							[
+								randomUUID(),
+								body.organizationId,
+								variantId,
+								item.exportIncluded,
+								priceOverrideCents,
+								item.happyHourPriceCents,
+								item.toastCategory,
+								item.toastDestination,
+								now,
+							],
+						);
+
+						const sourceKey =
+							item.sourceItemNumber?.trim() ||
+							item.id;
+
+						await client.query(
+							`
+								INSERT INTO "inventorySourceItem" (
+									id,
+									"organizationId",
+									"sourceType",
+									"sourceKey",
+									"sourceItemId",
+									"sourceName",
+									"normalizedSourceName",
+									"inventoryItemId",
+									"inventoryItemVariantId",
+									"lastImportId",
+									"createdAt",
+									"updatedAt"
+								)
+								VALUES (
+									$1, $2, $3, $4, $5, $6,
+									$7, $8, $9, $10, $11, $11
+								)
+								ON CONFLICT (
+									"organizationId",
+									"sourceType",
+									"sourceKey"
+								)
+								DO UPDATE SET
+									"sourceItemId" =
+										EXCLUDED."sourceItemId",
+									"sourceName" =
+										EXCLUDED."sourceName",
+									"normalizedSourceName" =
+										EXCLUDED."normalizedSourceName",
+									"inventoryItemId" =
+										EXCLUDED."inventoryItemId",
+									"inventoryItemVariantId" =
+										EXCLUDED."inventoryItemVariantId",
+									"lastImportId" =
+										EXCLUDED."lastImportId",
+									"updatedAt" =
+										EXCLUDED."updatedAt"
+							`,
+							[
+								randomUUID(),
+								body.organizationId,
+								body.sourceType,
+								sourceKey,
+								item.sourceItemNumber ?? null,
+								item.name,
+								normalizedAlias,
+								inventoryItemId,
+								variantId,
+								importId,
+								now,
+							],
+						);
+					}
+
+					await client.query(
+						`
+							UPDATE "inventoryImport"
+							SET
+								status = 'completed',
+								"metadataJson" = $1,
+								"updatedAt" = $2
+							WHERE id = $3
+						`,
+						[
+							JSON.stringify({
+								itemCount: itemIds.size,
+								variantCount: variantIds.size,
+							}),
+							now,
+							importId,
+						],
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						importId,
+						importedItems: itemIds.size,
+						importedVariants: variantIds.size,
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
 		listInventoryCatalog: createAuthEndpoint(
 			"/inventory/catalog",
 			{
