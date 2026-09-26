@@ -105,6 +105,8 @@ const inventoryOrganizationConfigBodySchema = z.object({
 	draft24ActualSizeOz: z.number().positive().nullable(),
 	pitcherEnabled: z.boolean(),
 	pitcherActualSizeOz: z.number().positive().nullable(),
+	tallBoyCanEnabled: z.boolean().default(false),
+	tallBoyCanLabel: z.string().trim().min(1).max(80).default("Tall Boy Can"),
 });
 
 const inventoryOrganizationVariantBodySchema = z.object({
@@ -382,7 +384,7 @@ function getCanonicalItemName(
 
 	const destination = toastDestination.toLowerCase();
 	let normalized = name
-		.replace(/\b(10\s*oz|10oz|16\s*oz|16oz|20\s*oz|20oz|24\s*oz|24oz)\b/gi, "")
+		.replace(/\b\d+(?:\.\d+)?\s*oz\b/gi, "")
 		.replace(/\b(draft|pint|imperial|imp|reg|regular|can|bottle|btl|tall)\b/gi, "")
 		.replace(/[\s_-]+/g, " ")
 		.trim();
@@ -420,12 +422,17 @@ function getVariantIdentity(
 			};
 		}
 
-		if (destination.includes("24oz can")) {
+		const tallBoyCanMatch = destination.match(/\b(\d+(?:\.\d+)?)\s*oz\s*can\b/);
+		const tallBoyCanSizeOz = tallBoyCanMatch
+			? Number(tallBoyCanMatch[1])
+			: null;
+
+		if (tallBoyCanSizeOz !== null && tallBoyCanSizeOz >= 24) {
 			return {
 				kind: "can",
-				sizeOz: 24,
+				sizeOz: tallBoyCanSizeOz,
 				packageType: "can",
-				name: "24oz can",
+				name: String(tallBoyCanSizeOz) + "oz can",
 			};
 		}
 
@@ -618,6 +625,16 @@ export const inventoryAccess = ({
 				pitcherActualSizeOz: {
 					type: "number",
 					required: false,
+				},
+				tallBoyCanEnabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				tallBoyCanLabel: {
+					type: "string",
+					required: true,
+					defaultValue: "Tall Boy Can",
 				},
 				createdAt: {
 					type: "date",
@@ -2868,6 +2885,8 @@ export const inventoryAccess = ({
 					draft24ActualSizeOz: number | null;
 					pitcherEnabled: boolean;
 					pitcherActualSizeOz: number | null;
+					tallBoyCanEnabled: boolean;
+					tallBoyCanLabel: string;
 				}>(
 					`
 						SELECT
@@ -2887,7 +2906,9 @@ export const inventoryAccess = ({
 							"draft24Enabled",
 							"draft24ActualSizeOz",
 							"pitcherEnabled",
-							"pitcherActualSizeOz"
+							"pitcherActualSizeOz",
+							"tallBoyCanEnabled",
+							"tallBoyCanLabel"
 						FROM "inventoryOrganizationConfig"
 						WHERE "organizationId" = $1
 						LIMIT 1
@@ -2927,6 +2948,8 @@ export const inventoryAccess = ({
 						draft24ActualSizeOz: config?.draft24ActualSizeOz ?? null,
 						pitcherEnabled: config?.pitcherEnabled ?? false,
 						pitcherActualSizeOz: config?.pitcherActualSizeOz ?? null,
+						tallBoyCanEnabled: config?.tallBoyCanEnabled ?? false,
+						tallBoyCanLabel: config?.tallBoyCanLabel ?? "Tall Boy Can",
 					},
 				});
 			},
@@ -3021,11 +3044,13 @@ export const inventoryAccess = ({
 							"draft24ActualSizeOz",
 							"pitcherEnabled",
 							"pitcherActualSizeOz",
+							"tallBoyCanEnabled",
+							"tallBoyCanLabel",
 							"createdAt",
 							"updatedAt"
 						)
 						VALUES (
-							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $19
+							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $21
 						)
 						ON CONFLICT ("organizationId")
 						DO UPDATE SET
@@ -3045,6 +3070,8 @@ export const inventoryAccess = ({
 							"draft24ActualSizeOz" = EXCLUDED."draft24ActualSizeOz",
 							"pitcherEnabled" = EXCLUDED."pitcherEnabled",
 							"pitcherActualSizeOz" = EXCLUDED."pitcherActualSizeOz",
+							"tallBoyCanEnabled" = EXCLUDED."tallBoyCanEnabled",
+							"tallBoyCanLabel" = EXCLUDED."tallBoyCanLabel",
 							"updatedAt" = EXCLUDED."updatedAt"
 					`,
 					[
@@ -3066,6 +3093,8 @@ export const inventoryAccess = ({
 						body.draft24ActualSizeOz,
 						body.pitcherEnabled,
 						body.pitcherActualSizeOz,
+						body.tallBoyCanEnabled,
+						body.tallBoyCanLabel,
 						now,
 					],
 				);
@@ -3091,6 +3120,8 @@ export const inventoryAccess = ({
 						draft24ActualSizeOz: body.draft24ActualSizeOz,
 						pitcherEnabled: body.pitcherEnabled,
 						pitcherActualSizeOz: body.pitcherActualSizeOz,
+						tallBoyCanEnabled: body.tallBoyCanEnabled,
+						tallBoyCanLabel: body.tallBoyCanLabel,
 					},
 				});
 			},
