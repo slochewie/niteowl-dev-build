@@ -1062,7 +1062,6 @@ export const inventoryAccess = ({
 								?.inventoryItemVariantId ?? null;
 
 						const categoryName =
-							item.category?.trim() ||
 							item.toastCategory.trim() ||
 							"Uncategorized";
 
