@@ -1122,6 +1122,9 @@ export const inventoryAccess = ({
 						const normalizedItemName =
 							normalizeInventoryName(canonicalName);
 
+						const normalizedSourceAlias =
+							normalizeInventoryName(item.name);
+
 						let inventoryItemId;
 
 						const existingItem =
@@ -1137,12 +1140,31 @@ export const inventoryAccess = ({
 									)
 								: await client.query(
 										`
-											SELECT id
-											FROM "inventoryItem"
-											WHERE "normalizedName" = $1
+											SELECT candidate.id
+											FROM (
+												SELECT
+													i.id,
+													0 AS priority
+												FROM "inventoryItem" i
+												WHERE
+													i."normalizedName" = $1
+
+												UNION ALL
+
+												SELECT
+													a."inventoryItemId" AS id,
+													1 AS priority
+												FROM "inventoryItemAlias" a
+												WHERE
+													a."normalizedAlias" = $2
+											) candidate
+											ORDER BY candidate.priority
 											LIMIT 1
 										`,
-										[normalizedItemName],
+										[
+											normalizedItemName,
+											normalizedSourceAlias,
+										],
 									);
 
 						if (existingItem.rows[0]?.id) {
