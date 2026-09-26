@@ -82,6 +82,9 @@ const inventoryOrganizationConfigBodySchema = z.object({
 		.string()
 		.regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
 		.nullable(),
+	happyHourDays: z.array(
+		z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
+	).min(1).max(7),
 });
 
 const inventoryOrganizationVariantBodySchema = z.object({
@@ -536,6 +539,10 @@ export const inventoryAccess = ({
 					required: false,
 				},
 				happyHourEnd: {
+					type: "string",
+					required: false,
+				},
+				happyHourDays: {
 					type: "string",
 					required: false,
 				},
@@ -2775,13 +2782,15 @@ export const inventoryAccess = ({
 					happyHourEnabled: boolean;
 					happyHourStart: string | null;
 					happyHourEnd: string | null;
+					happyHourDays: string | null;
 				}>(
 					`
 						SELECT
 							enabled,
 							"happyHourEnabled",
 							"happyHourStart",
-							"happyHourEnd"
+							"happyHourEnd",
+							"happyHourDays"
 						FROM "inventoryOrganizationConfig"
 						WHERE "organizationId" = $1
 						LIMIT 1
@@ -2801,6 +2810,9 @@ export const inventoryAccess = ({
 							config?.happyHourStart ?? null,
 						happyHourEnd:
 							config?.happyHourEnd ?? null,
+						happyHourDays: config?.happyHourDays
+							? config.happyHourDays.split(",").filter(Boolean)
+							: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
 					},
 				});
 			},
@@ -2855,17 +2867,19 @@ export const inventoryAccess = ({
 							"happyHourEnabled",
 							"happyHourStart",
 							"happyHourEnd",
+							"happyHourDays",
 							"createdAt",
 							"updatedAt"
 						)
 						VALUES (
-							$1, $2, true, $3, $4, $5, $6, $6
+							$1, $2, true, $3, $4, $5, $6, $7, $7
 						)
 						ON CONFLICT ("organizationId")
 						DO UPDATE SET
 							"happyHourEnabled" = EXCLUDED."happyHourEnabled",
 							"happyHourStart" = EXCLUDED."happyHourStart",
 							"happyHourEnd" = EXCLUDED."happyHourEnd",
+							"happyHourDays" = EXCLUDED."happyHourDays",
 							"updatedAt" = EXCLUDED."updatedAt"
 					`,
 					[
@@ -2874,6 +2888,7 @@ export const inventoryAccess = ({
 						body.happyHourEnabled,
 						body.happyHourStart,
 						body.happyHourEnd,
+						body.happyHourDays.join(","),
 						now,
 					],
 				);
@@ -2886,6 +2901,7 @@ export const inventoryAccess = ({
 						happyHourEnabled: body.happyHourEnabled,
 						happyHourStart: body.happyHourStart,
 						happyHourEnd: body.happyHourEnd,
+						happyHourDays: body.happyHourDays,
 					},
 				});
 			},
