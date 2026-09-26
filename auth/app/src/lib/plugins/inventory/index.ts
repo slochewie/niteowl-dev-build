@@ -85,6 +85,26 @@ const inventoryOrganizationConfigBodySchema = z.object({
 	happyHourDays: z.array(
 		z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
 	).min(1).max(7),
+	happyHourRange2Enabled: z.boolean(),
+	happyHourRange2Start: z
+		.string()
+		.regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
+		.nullable(),
+	happyHourRange2End: z
+		.string()
+		.regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
+		.nullable(),
+	happyHourRange2Days: z.array(
+		z.enum(["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
+	).min(1).max(7),
+	draft8Enabled: z.boolean(),
+	draft8ActualSizeOz: z.number().positive().nullable(),
+	draft16Enabled: z.boolean(),
+	draft16ActualSizeOz: z.number().positive().nullable(),
+	draft24Enabled: z.boolean(),
+	draft24ActualSizeOz: z.number().positive().nullable(),
+	pitcherEnabled: z.boolean(),
+	pitcherActualSizeOz: z.number().positive().nullable(),
 });
 
 const inventoryOrganizationVariantBodySchema = z.object({
@@ -544,6 +564,59 @@ export const inventoryAccess = ({
 				},
 				happyHourDays: {
 					type: "string",
+					required: false,
+				},
+				happyHourRange2Enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				happyHourRange2Start: {
+					type: "string",
+					required: false,
+				},
+				happyHourRange2End: {
+					type: "string",
+					required: false,
+				},
+				happyHourRange2Days: {
+					type: "string",
+					required: false,
+				},
+				draft8Enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				draft8ActualSizeOz: {
+					type: "number",
+					required: false,
+				},
+				draft16Enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				draft16ActualSizeOz: {
+					type: "number",
+					required: false,
+				},
+				draft24Enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				draft24ActualSizeOz: {
+					type: "number",
+					required: false,
+				},
+				pitcherEnabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				pitcherActualSizeOz: {
+					type: "number",
 					required: false,
 				},
 				createdAt: {
@@ -2783,6 +2856,18 @@ export const inventoryAccess = ({
 					happyHourStart: string | null;
 					happyHourEnd: string | null;
 					happyHourDays: string | null;
+					happyHourRange2Enabled: boolean;
+					happyHourRange2Start: string | null;
+					happyHourRange2End: string | null;
+					happyHourRange2Days: string | null;
+					draft8Enabled: boolean;
+					draft8ActualSizeOz: number | null;
+					draft16Enabled: boolean;
+					draft16ActualSizeOz: number | null;
+					draft24Enabled: boolean;
+					draft24ActualSizeOz: number | null;
+					pitcherEnabled: boolean;
+					pitcherActualSizeOz: number | null;
 				}>(
 					`
 						SELECT
@@ -2790,7 +2875,19 @@ export const inventoryAccess = ({
 							"happyHourEnabled",
 							"happyHourStart",
 							"happyHourEnd",
-							"happyHourDays"
+							"happyHourDays",
+							"happyHourRange2Enabled",
+							"happyHourRange2Start",
+							"happyHourRange2End",
+							"happyHourRange2Days",
+							"draft8Enabled",
+							"draft8ActualSizeOz",
+							"draft16Enabled",
+							"draft16ActualSizeOz",
+							"draft24Enabled",
+							"draft24ActualSizeOz",
+							"pitcherEnabled",
+							"pitcherActualSizeOz"
 						FROM "inventoryOrganizationConfig"
 						WHERE "organizationId" = $1
 						LIMIT 1
@@ -2813,6 +2910,23 @@ export const inventoryAccess = ({
 						happyHourDays: config?.happyHourDays
 							? config.happyHourDays.split(",").filter(Boolean)
 							: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+						happyHourRange2Enabled:
+							config?.happyHourRange2Enabled ?? false,
+						happyHourRange2Start:
+							config?.happyHourRange2Start ?? null,
+						happyHourRange2End:
+							config?.happyHourRange2End ?? null,
+						happyHourRange2Days: config?.happyHourRange2Days
+							? config.happyHourRange2Days.split(",").filter(Boolean)
+							: ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+						draft8Enabled: config?.draft8Enabled ?? false,
+						draft8ActualSizeOz: config?.draft8ActualSizeOz ?? null,
+						draft16Enabled: config?.draft16Enabled ?? false,
+						draft16ActualSizeOz: config?.draft16ActualSizeOz ?? null,
+						draft24Enabled: config?.draft24Enabled ?? false,
+						draft24ActualSizeOz: config?.draft24ActualSizeOz ?? null,
+						pitcherEnabled: config?.pitcherEnabled ?? false,
+						pitcherActualSizeOz: config?.pitcherActualSizeOz ?? null,
 					},
 				});
 			},
@@ -2856,6 +2970,33 @@ export const inventoryAccess = ({
 					);
 				}
 
+				if (
+					body.happyHourRange2Enabled &&
+					(!body.happyHourRange2Start ||
+						!body.happyHourRange2End)
+				) {
+					return ctx.json(
+						{
+							error: "Happy Hour Time Range 2 start and end times are required when enabled",
+						},
+						{ status: 400 },
+					);
+				}
+				const missingDraftSize =
+					(body.draft8Enabled && body.draft8ActualSizeOz === null) ||
+					(body.draft16Enabled && body.draft16ActualSizeOz === null) ||
+					(body.draft24Enabled && body.draft24ActualSizeOz === null) ||
+					(body.pitcherEnabled && body.pitcherActualSizeOz === null);
+
+				if (missingDraftSize) {
+					return ctx.json(
+						{
+							error: "An actual draft size is required for every enabled Toast draft slot",
+						},
+						{ status: 400 },
+					);
+				}
+
 				const now = new Date();
 
 				await pool.query(
@@ -2868,11 +3009,23 @@ export const inventoryAccess = ({
 							"happyHourStart",
 							"happyHourEnd",
 							"happyHourDays",
+							"happyHourRange2Enabled",
+							"happyHourRange2Start",
+							"happyHourRange2End",
+							"happyHourRange2Days",
+							"draft8Enabled",
+							"draft8ActualSizeOz",
+							"draft16Enabled",
+							"draft16ActualSizeOz",
+							"draft24Enabled",
+							"draft24ActualSizeOz",
+							"pitcherEnabled",
+							"pitcherActualSizeOz",
 							"createdAt",
 							"updatedAt"
 						)
 						VALUES (
-							$1, $2, true, $3, $4, $5, $6, $7, $7
+							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $19
 						)
 						ON CONFLICT ("organizationId")
 						DO UPDATE SET
@@ -2880,6 +3033,18 @@ export const inventoryAccess = ({
 							"happyHourStart" = EXCLUDED."happyHourStart",
 							"happyHourEnd" = EXCLUDED."happyHourEnd",
 							"happyHourDays" = EXCLUDED."happyHourDays",
+							"happyHourRange2Enabled" = EXCLUDED."happyHourRange2Enabled",
+							"happyHourRange2Start" = EXCLUDED."happyHourRange2Start",
+							"happyHourRange2End" = EXCLUDED."happyHourRange2End",
+							"happyHourRange2Days" = EXCLUDED."happyHourRange2Days",
+							"draft8Enabled" = EXCLUDED."draft8Enabled",
+							"draft8ActualSizeOz" = EXCLUDED."draft8ActualSizeOz",
+							"draft16Enabled" = EXCLUDED."draft16Enabled",
+							"draft16ActualSizeOz" = EXCLUDED."draft16ActualSizeOz",
+							"draft24Enabled" = EXCLUDED."draft24Enabled",
+							"draft24ActualSizeOz" = EXCLUDED."draft24ActualSizeOz",
+							"pitcherEnabled" = EXCLUDED."pitcherEnabled",
+							"pitcherActualSizeOz" = EXCLUDED."pitcherActualSizeOz",
 							"updatedAt" = EXCLUDED."updatedAt"
 					`,
 					[
@@ -2889,6 +3054,18 @@ export const inventoryAccess = ({
 						body.happyHourStart,
 						body.happyHourEnd,
 						body.happyHourDays.join(","),
+						body.happyHourRange2Enabled,
+						body.happyHourRange2Start,
+						body.happyHourRange2End,
+						body.happyHourRange2Days.join(","),
+						body.draft8Enabled,
+						body.draft8ActualSizeOz,
+						body.draft16Enabled,
+						body.draft16ActualSizeOz,
+						body.draft24Enabled,
+						body.draft24ActualSizeOz,
+						body.pitcherEnabled,
+						body.pitcherActualSizeOz,
 						now,
 					],
 				);
@@ -2902,6 +3079,18 @@ export const inventoryAccess = ({
 						happyHourStart: body.happyHourStart,
 						happyHourEnd: body.happyHourEnd,
 						happyHourDays: body.happyHourDays,
+						happyHourRange2Enabled: body.happyHourRange2Enabled,
+						happyHourRange2Start: body.happyHourRange2Start,
+						happyHourRange2End: body.happyHourRange2End,
+						happyHourRange2Days: body.happyHourRange2Days,
+						draft8Enabled: body.draft8Enabled,
+						draft8ActualSizeOz: body.draft8ActualSizeOz,
+						draft16Enabled: body.draft16Enabled,
+						draft16ActualSizeOz: body.draft16ActualSizeOz,
+						draft24Enabled: body.draft24Enabled,
+						draft24ActualSizeOz: body.draft24ActualSizeOz,
+						pitcherEnabled: body.pitcherEnabled,
+						pitcherActualSizeOz: body.pitcherActualSizeOz,
 					},
 				});
 			},
