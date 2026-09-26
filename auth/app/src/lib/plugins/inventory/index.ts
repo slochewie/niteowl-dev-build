@@ -59,6 +59,12 @@ const inventorySourceMappingBodySchema = z.object({
 	variantId: z.string().min(1),
 });
 
+const inventoryItemMergeBodySchema = z.object({
+	organizationId: z.string().min(1),
+	sourceItemId: z.string().min(1),
+	targetItemId: z.string().min(1),
+});
+
 const inventoryOrganizationVariantBodySchema = z.object({
 	organizationId: z.string().min(1),
 	variantId: z.string().min(1),
@@ -1852,6 +1858,422 @@ export const inventoryAccess = ({
 				);
 
 				return ctx.json({ updated: true });
+			},
+		),
+
+		mergeInventoryItems: createAuthEndpoint(
+			"/inventory/item-merge",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: inventoryItemMergeBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed || access.role !== "admin") {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				if (body.sourceItemId === body.targetItemId) {
+					return ctx.json(
+						{ error: "Source and target items must be different" },
+						{ status: 400 },
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const items = await client.query(
+						`
+							SELECT id, name, "normalizedName"
+							FROM "inventoryItem"
+							WHERE id = ANY($1::text[])
+							FOR UPDATE
+						`,
+						[[body.sourceItemId, body.targetItemId]],
+					);
+
+					const sourceItem = items.rows.find(
+						(row) => row.id === body.sourceItemId,
+					);
+					const targetItem = items.rows.find(
+						(row) => row.id === body.targetItemId,
+					);
+
+					if (!sourceItem || !targetItem) {
+						await client.query("ROLLBACK");
+						return ctx.json(
+							{ error: "Inventory item not found" },
+							{ status: 404 },
+						);
+					}
+
+					const sourceVariants = await client.query(
+						`
+							SELECT
+								id,
+								kind,
+								"sizeOz",
+								"packageType",
+								name
+							FROM "inventoryItemVariant"
+							WHERE "inventoryItemId" = $1
+							ORDER BY "createdAt", id
+							FOR UPDATE
+						`,
+						[body.sourceItemId],
+					);
+
+					let movedVariants = 0;
+					let mergedVariants = 0;
+					const now = new Date();
+
+					for (const sourceVariant of sourceVariants.rows) {
+						const matchingVariant = await client.query(
+							`
+								SELECT id
+								FROM "inventoryItemVariant"
+								WHERE
+									"inventoryItemId" = $1
+									AND kind = $2
+									AND "sizeOz" IS NOT DISTINCT FROM $3
+									AND "packageType" IS NOT DISTINCT FROM $4
+									AND name IS NOT DISTINCT FROM $5
+								LIMIT 1
+								FOR UPDATE
+							`,
+							[
+								body.targetItemId,
+								sourceVariant.kind,
+								sourceVariant.sizeOz,
+								sourceVariant.packageType,
+								sourceVariant.name,
+							],
+						);
+
+						const targetVariantId =
+							matchingVariant.rows[0]?.id ?? null;
+
+						if (!targetVariantId) {
+							await client.query(
+								`
+									UPDATE "inventoryItemVariant"
+									SET
+										"inventoryItemId" = $1,
+										"updatedAt" = $2
+									WHERE id = $3
+								`,
+								[
+									body.targetItemId,
+									now,
+									sourceVariant.id,
+								],
+							);
+
+							await client.query(
+								`
+									UPDATE "inventorySourceItem"
+									SET
+										"inventoryItemId" = $1,
+										"updatedAt" = $2
+									WHERE "inventoryItemVariantId" = $3
+								`,
+								[
+									body.targetItemId,
+									now,
+									sourceVariant.id,
+								],
+							);
+
+							movedVariants += 1;
+							continue;
+						}
+
+						const organizationVariants = await client.query(
+							`
+								SELECT *
+								FROM "inventoryOrganizationVariant"
+								WHERE "inventoryItemVariantId" = $1
+								FOR UPDATE
+							`,
+							[sourceVariant.id],
+						);
+
+						for (const organizationVariant of organizationVariants.rows) {
+							const existingTarget = await client.query(
+								`
+									SELECT id
+									FROM "inventoryOrganizationVariant"
+									WHERE
+										"organizationId" = $1
+										AND "inventoryItemVariantId" = $2
+									LIMIT 1
+									FOR UPDATE
+								`,
+								[
+									organizationVariant.organizationId,
+									targetVariantId,
+								],
+							);
+
+							const existingTargetId =
+								existingTarget.rows[0]?.id ?? null;
+
+							if (existingTargetId) {
+								await client.query(
+									`
+										UPDATE "inventoryOrganizationVariant"
+										SET
+											enabled = (
+												enabled OR $1
+											),
+											"exportToToast" = (
+												"exportToToast" OR $2
+											),
+											"priceOverrideCents" =
+												COALESCE(
+													"priceOverrideCents",
+													$3
+												),
+											"happyHourPriceCents" =
+												COALESCE(
+													"happyHourPriceCents",
+													$4
+												),
+											"toastNameOverride" =
+												COALESCE(
+													"toastNameOverride",
+													$5
+												),
+											"toastCategoryOverride" =
+												COALESCE(
+													"toastCategoryOverride",
+													$6
+												),
+											"toastDestinationOverride" =
+												COALESCE(
+													"toastDestinationOverride",
+													$7
+												),
+											"toastSlot" =
+												COALESCE(
+													"toastSlot",
+													$8
+												),
+											"updatedAt" = $9
+										WHERE id = $10
+									`,
+									[
+										organizationVariant.enabled,
+										organizationVariant.exportToToast,
+										organizationVariant.priceOverrideCents,
+										organizationVariant.happyHourPriceCents,
+										organizationVariant.toastNameOverride,
+										organizationVariant.toastCategoryOverride,
+										organizationVariant.toastDestinationOverride,
+										organizationVariant.toastSlot,
+										now,
+										existingTargetId,
+									],
+								);
+
+								await client.query(
+									`
+										DELETE FROM "inventoryOrganizationVariant"
+										WHERE id = $1
+									`,
+									[organizationVariant.id],
+								);
+							} else {
+								await client.query(
+									`
+										UPDATE "inventoryOrganizationVariant"
+										SET
+											"inventoryItemVariantId" = $1,
+											"updatedAt" = $2
+										WHERE id = $3
+									`,
+									[
+										targetVariantId,
+										now,
+										organizationVariant.id,
+									],
+								);
+							}
+						}
+
+						await client.query(
+							`
+								UPDATE "inventorySourceItem"
+								SET
+									"inventoryItemId" = $1,
+									"inventoryItemVariantId" = $2,
+									"updatedAt" = $3
+								WHERE "inventoryItemVariantId" = $4
+							`,
+							[
+								body.targetItemId,
+								targetVariantId,
+								now,
+								sourceVariant.id,
+							],
+						);
+
+						await client.query(
+							`
+								DELETE FROM "inventoryItemVariant"
+								WHERE id = $1
+							`,
+							[sourceVariant.id],
+						);
+
+						mergedVariants += 1;
+					}
+
+					await client.query(
+						`
+							UPDATE "inventorySourceItem"
+							SET
+								"inventoryItemId" = $1,
+								"updatedAt" = $2
+							WHERE "inventoryItemId" = $3
+						`,
+						[
+							body.targetItemId,
+							now,
+							body.sourceItemId,
+						],
+					);
+
+					const aliases = await client.query(
+						`
+							SELECT alias, "normalizedAlias"
+							FROM "inventoryItemAlias"
+							WHERE "inventoryItemId" = $1
+						`,
+						[body.sourceItemId],
+					);
+
+					for (const alias of aliases.rows) {
+						await client.query(
+							`
+								INSERT INTO "inventoryItemAlias" (
+									id,
+									"inventoryItemId",
+									alias,
+									"normalizedAlias",
+									"createdAt",
+									"updatedAt"
+								)
+								VALUES ($1, $2, $3, $4, $5, $5)
+								ON CONFLICT (
+									"inventoryItemId",
+									"normalizedAlias"
+								)
+								DO UPDATE SET
+									alias = EXCLUDED.alias,
+									"updatedAt" = EXCLUDED."updatedAt"
+							`,
+							[
+								randomUUID(),
+								body.targetItemId,
+								alias.alias,
+								alias.normalizedAlias,
+								now,
+							],
+						);
+					}
+
+					const sourceAlias =
+						normalizeInventoryName(sourceItem.name);
+
+					if (sourceAlias) {
+						await client.query(
+							`
+								INSERT INTO "inventoryItemAlias" (
+									id,
+									"inventoryItemId",
+									alias,
+									"normalizedAlias",
+									"createdAt",
+									"updatedAt"
+								)
+								VALUES ($1, $2, $3, $4, $5, $5)
+								ON CONFLICT (
+									"inventoryItemId",
+									"normalizedAlias"
+								)
+								DO UPDATE SET
+									alias = EXCLUDED.alias,
+									"updatedAt" = EXCLUDED."updatedAt"
+							`,
+							[
+								randomUUID(),
+								body.targetItemId,
+								sourceItem.name,
+								sourceAlias,
+								now,
+							],
+						);
+					}
+
+					await client.query(
+						`
+							UPDATE "inventoryOrganizationVariant"
+							SET
+								"toastNameOverride" = NULL,
+								"updatedAt" = $2
+							WHERE
+								"inventoryItemVariantId" IN (
+									SELECT id
+									FROM "inventoryItemVariant"
+									WHERE "inventoryItemId" = $1
+								)
+								AND LOWER(TRIM(
+									COALESCE("toastNameOverride", '')
+								)) = LOWER(TRIM($3))
+						`,
+						[
+							body.targetItemId,
+							now,
+							targetItem.name,
+						],
+					);
+
+					await client.query(
+						`
+							DELETE FROM "inventoryItem"
+							WHERE id = $1
+						`,
+						[body.sourceItemId],
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						merged: true,
+						targetItemId: body.targetItemId,
+						movedVariants,
+						mergedVariants,
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
 			},
 		),
 
