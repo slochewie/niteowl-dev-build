@@ -65,6 +65,12 @@ const inventoryItemMergeBodySchema = z.object({
 	targetItemId: z.string().min(1),
 });
 
+const inventoryItemCategoryBodySchema = z.object({
+	organizationId: z.string().min(1),
+	itemId: z.string().min(1),
+	categoryId: z.string().min(1),
+});
+
 const inventoryOrganizationVariantBodySchema = z.object({
 	organizationId: z.string().min(1),
 	variantId: z.string().min(1),
@@ -1879,6 +1885,95 @@ export const inventoryAccess = ({
 				);
 
 				return ctx.json({ updated: true });
+			},
+		),
+
+		updateInventoryItemCategory: createAuthEndpoint(
+			"/inventory/item-category",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventoryItemCategoryBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed || access.role !== "admin") {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const category = await pool.query<{
+					id: string;
+					name: string;
+					toastCategory: string;
+				}>(
+					`
+						SELECT
+							id,
+							name,
+							"toastCategory"
+						FROM "inventoryCategory"
+						WHERE
+							id = $1
+							AND active = true
+						LIMIT 1
+					`,
+					[body.categoryId],
+				);
+
+				const targetCategory = category.rows[0];
+
+				if (!targetCategory) {
+					return ctx.json(
+						{ error: "Inventory category not found" },
+						{ status: 404 },
+					);
+				}
+
+				const item = await pool.query<{ id: string }>(
+					`
+						SELECT id
+						FROM "inventoryItem"
+						WHERE id = $1
+						LIMIT 1
+					`,
+					[body.itemId],
+				);
+
+				if (!item.rows[0]) {
+					return ctx.json(
+						{ error: "Inventory item not found" },
+						{ status: 404 },
+					);
+				}
+
+				await pool.query(
+					`
+						UPDATE "inventoryItem"
+						SET
+							"categoryId" = $1,
+							"updatedAt" = $2
+						WHERE id = $3
+					`,
+					[
+						body.categoryId,
+						new Date(),
+						body.itemId,
+					],
+				);
+
+				return ctx.json({
+					updated: true,
+					category: targetCategory,
+				});
 			},
 		),
 
