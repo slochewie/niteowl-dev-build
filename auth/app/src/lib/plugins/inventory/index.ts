@@ -71,6 +71,19 @@ const inventoryItemCategoryBodySchema = z.object({
 	categoryId: z.string().min(1),
 });
 
+const inventoryOrganizationConfigBodySchema = z.object({
+	organizationId: z.string().min(1),
+	happyHourEnabled: z.boolean(),
+	happyHourStart: z
+		.string()
+		.regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
+		.nullable(),
+	happyHourEnd: z
+		.string()
+		.regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
+		.nullable(),
+});
+
 const inventoryOrganizationVariantBodySchema = z.object({
 	organizationId: z.string().min(1),
 	variantId: z.string().min(1),
@@ -2735,6 +2748,148 @@ export const inventoryAccess = ({
 			},
 		),
 
+		getInventoryOrganizationConfig: createAuthEndpoint(
+			"/inventory/organization-config",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const access = await resolveInventoryAccess(
+					pool,
+					organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const result = await pool.query<{
+					enabled: boolean;
+					happyHourEnabled: boolean;
+					happyHourStart: string | null;
+					happyHourEnd: string | null;
+				}>(
+					`
+						SELECT
+							enabled,
+							"happyHourEnabled",
+							"happyHourStart",
+							"happyHourEnd"
+						FROM "inventoryOrganizationConfig"
+						WHERE "organizationId" = $1
+						LIMIT 1
+					`,
+					[organizationId],
+				);
+
+				const config = result.rows[0];
+
+				return ctx.json({
+					organizationId,
+					config: {
+						enabled: config?.enabled ?? true,
+						happyHourEnabled:
+							config?.happyHourEnabled ?? false,
+						happyHourStart:
+							config?.happyHourStart ?? null,
+						happyHourEnd:
+							config?.happyHourEnd ?? null,
+					},
+				});
+			},
+		),
+
+		updateInventoryOrganizationConfig: createAuthEndpoint(
+			"/inventory/organization-config",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventoryOrganizationConfigBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (
+					!access.allowed ||
+					(access.role !== "manager" &&
+						access.role !== "admin")
+				) {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				if (
+					body.happyHourEnabled &&
+					(!body.happyHourStart || !body.happyHourEnd)
+				) {
+					return ctx.json(
+						{
+							error: "Happy Hour start and end times are required when enabled",
+						},
+						{ status: 400 },
+					);
+				}
+
+				const now = new Date();
+
+				await pool.query(
+					`
+						INSERT INTO "inventoryOrganizationConfig" (
+							id,
+							"organizationId",
+							enabled,
+							"happyHourEnabled",
+							"happyHourStart",
+							"happyHourEnd",
+							"createdAt",
+							"updatedAt"
+						)
+						VALUES (
+							$1, $2, true, $3, $4, $5, $6, $6
+						)
+						ON CONFLICT ("organizationId")
+						DO UPDATE SET
+							"happyHourEnabled" = EXCLUDED."happyHourEnabled",
+							"happyHourStart" = EXCLUDED."happyHourStart",
+							"happyHourEnd" = EXCLUDED."happyHourEnd",
+							"updatedAt" = EXCLUDED."updatedAt"
+					`,
+					[
+						randomUUID(),
+						body.organizationId,
+						body.happyHourEnabled,
+						body.happyHourStart,
+						body.happyHourEnd,
+						now,
+					],
+				);
+
+				return ctx.json({
+					updated: true,
+					organizationId: body.organizationId,
+					config: {
+						enabled: true,
+						happyHourEnabled: body.happyHourEnabled,
+						happyHourStart: body.happyHourStart,
+						happyHourEnd: body.happyHourEnd,
+					},
+				});
+			},
+		),
 		listInventoryCatalog: createAuthEndpoint(
 			"/inventory/catalog",
 			{
