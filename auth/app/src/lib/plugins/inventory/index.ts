@@ -105,8 +105,16 @@ const inventoryOrganizationConfigBodySchema = z.object({
 	draft24ActualSizeOz: z.number().positive().nullable(),
 	pitcherEnabled: z.boolean(),
 	pitcherActualSizeOz: z.number().positive().nullable(),
-	tallBoyCanEnabled: z.boolean().default(false),
-	tallBoyCanLabel: z.string().trim().min(1).max(80).default("Tall Boy Can"),
+	optionalBeerCategory1Enabled: z.boolean().default(false),
+	optionalBeerCategory1Label: z.string().trim().min(1).max(80).default("Optional Beer Category 1"),
+	optionalBeerCategory2Enabled: z.boolean().default(false),
+	optionalBeerCategory2Label: z.string().trim().min(1).max(80).default("Optional Beer Category 2"),
+	optionalBeerCategory3Enabled: z.boolean().default(false),
+	optionalBeerCategory3Label: z.string().trim().min(1).max(80).default("Optional Beer Category 3"),
+	optionalBeerCategory4Enabled: z.boolean().default(false),
+	optionalBeerCategory4Label: z.string().trim().min(1).max(80).default("Optional Beer Category 4"),
+	optionalBeerCategory5Enabled: z.boolean().default(false),
+	optionalBeerCategory5Label: z.string().trim().min(1).max(80).default("Optional Beer Category 5"),
 });
 
 const inventoryOrganizationVariantBodySchema = z.object({
@@ -119,6 +127,7 @@ const inventoryOrganizationVariantBodySchema = z.object({
 	toastNameOverride: z.string().nullable().optional(),
 	toastCategoryOverride: z.string().nullable().optional(),
 	toastDestinationOverride: z.string().nullable().optional(),
+	toastSlot: z.string().trim().min(1).max(80).nullable().optional(),
 });
 
 const inventoryOrganizationVariantsBodySchema = z.object({
@@ -635,6 +644,46 @@ export const inventoryAccess = ({
 					type: "string",
 					required: true,
 					defaultValue: "Tall Boy Can",
+				},
+				optionalBeerCategory2Enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				optionalBeerCategory2Label: {
+					type: "string",
+					required: true,
+					defaultValue: "Optional Beer Category 2",
+				},
+				optionalBeerCategory3Enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				optionalBeerCategory3Label: {
+					type: "string",
+					required: true,
+					defaultValue: "Optional Beer Category 3",
+				},
+				optionalBeerCategory4Enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				optionalBeerCategory4Label: {
+					type: "string",
+					required: true,
+					defaultValue: "Optional Beer Category 4",
+				},
+				optionalBeerCategory5Enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
+				optionalBeerCategory5Label: {
+					type: "string",
+					required: true,
+					defaultValue: "Optional Beer Category 5",
 				},
 				createdAt: {
 					type: "date",
@@ -1936,7 +1985,7 @@ export const inventoryAccess = ({
 							COALESCE($4, true),
 							COALESCE($5, true),
 							$6, $7, $8, $9, $10,
-							NULL, $11, $11
+							$11, $12, $12
 						)
 						ON CONFLICT (
 							"organizationId",
@@ -1948,31 +1997,36 @@ export const inventoryAccess = ({
 							"exportToToast" = COALESCE($5,
 								"inventoryOrganizationVariant"."exportToToast"),
 							"priceOverrideCents" =
-								CASE WHEN $12
+								CASE WHEN $13
 									THEN $6
 									ELSE "inventoryOrganizationVariant"."priceOverrideCents"
 								END,
 							"happyHourPriceCents" =
-								CASE WHEN $13
+								CASE WHEN $14
 									THEN $7
 									ELSE "inventoryOrganizationVariant"."happyHourPriceCents"
 								END,
 							"toastNameOverride" =
-								CASE WHEN $14
+								CASE WHEN $15
 									THEN $8
 									ELSE "inventoryOrganizationVariant"."toastNameOverride"
 								END,
 							"toastCategoryOverride" =
-								CASE WHEN $15
+								CASE WHEN $16
 									THEN $9
 									ELSE "inventoryOrganizationVariant"."toastCategoryOverride"
 								END,
 							"toastDestinationOverride" =
-								CASE WHEN $16
+								CASE WHEN $17
 									THEN $10
 									ELSE "inventoryOrganizationVariant"."toastDestinationOverride"
 								END,
-							"updatedAt" = $11
+							"toastSlot" =
+								CASE WHEN $18
+									THEN $11
+									ELSE "inventoryOrganizationVariant"."toastSlot"
+								END,
+							"updatedAt" = $12
 					`,
 					[
 						randomUUID(),
@@ -1985,12 +2039,14 @@ export const inventoryAccess = ({
 						body.toastNameOverride ?? null,
 						body.toastCategoryOverride ?? null,
 						body.toastDestinationOverride ?? null,
+						body.toastSlot ?? null,
 						new Date(),
 						Object.hasOwn(body, "priceOverrideCents"),
 						Object.hasOwn(body, "happyHourPriceCents"),
 						Object.hasOwn(body, "toastNameOverride"),
 						Object.hasOwn(body, "toastCategoryOverride"),
 						Object.hasOwn(body, "toastDestinationOverride"),
+						Object.hasOwn(body, "toastSlot"),
 					],
 				);
 
@@ -2887,6 +2943,14 @@ export const inventoryAccess = ({
 					pitcherActualSizeOz: number | null;
 					tallBoyCanEnabled: boolean;
 					tallBoyCanLabel: string;
+					optionalBeerCategory2Enabled: boolean;
+					optionalBeerCategory2Label: string;
+					optionalBeerCategory3Enabled: boolean;
+					optionalBeerCategory3Label: string;
+					optionalBeerCategory4Enabled: boolean;
+					optionalBeerCategory4Label: string;
+					optionalBeerCategory5Enabled: boolean;
+					optionalBeerCategory5Label: string;
 				}>(
 					`
 						SELECT
@@ -2908,7 +2972,15 @@ export const inventoryAccess = ({
 							"pitcherEnabled",
 							"pitcherActualSizeOz",
 							"tallBoyCanEnabled",
-							"tallBoyCanLabel"
+							"tallBoyCanLabel",
+							"optionalBeerCategory2Enabled",
+							"optionalBeerCategory2Label",
+							"optionalBeerCategory3Enabled",
+							"optionalBeerCategory3Label",
+							"optionalBeerCategory4Enabled",
+							"optionalBeerCategory4Label",
+							"optionalBeerCategory5Enabled",
+							"optionalBeerCategory5Label"
 						FROM "inventoryOrganizationConfig"
 						WHERE "organizationId" = $1
 						LIMIT 1
@@ -2948,8 +3020,26 @@ export const inventoryAccess = ({
 						draft24ActualSizeOz: config?.draft24ActualSizeOz ?? null,
 						pitcherEnabled: config?.pitcherEnabled ?? false,
 						pitcherActualSizeOz: config?.pitcherActualSizeOz ?? null,
-						tallBoyCanEnabled: config?.tallBoyCanEnabled ?? false,
-						tallBoyCanLabel: config?.tallBoyCanLabel ?? "Tall Boy Can",
+						optionalBeerCategory1Enabled:
+							config?.tallBoyCanEnabled ?? false,
+						optionalBeerCategory1Label:
+							config?.tallBoyCanLabel ?? "Optional Beer Category 1",
+						optionalBeerCategory2Enabled:
+							config?.optionalBeerCategory2Enabled ?? false,
+						optionalBeerCategory2Label:
+							config?.optionalBeerCategory2Label ?? "Optional Beer Category 2",
+						optionalBeerCategory3Enabled:
+							config?.optionalBeerCategory3Enabled ?? false,
+						optionalBeerCategory3Label:
+							config?.optionalBeerCategory3Label ?? "Optional Beer Category 3",
+						optionalBeerCategory4Enabled:
+							config?.optionalBeerCategory4Enabled ?? false,
+						optionalBeerCategory4Label:
+							config?.optionalBeerCategory4Label ?? "Optional Beer Category 4",
+						optionalBeerCategory5Enabled:
+							config?.optionalBeerCategory5Enabled ?? false,
+						optionalBeerCategory5Label:
+							config?.optionalBeerCategory5Label ?? "Optional Beer Category 5",
 					},
 				});
 			},
@@ -3046,11 +3136,19 @@ export const inventoryAccess = ({
 							"pitcherActualSizeOz",
 							"tallBoyCanEnabled",
 							"tallBoyCanLabel",
+							"optionalBeerCategory2Enabled",
+							"optionalBeerCategory2Label",
+							"optionalBeerCategory3Enabled",
+							"optionalBeerCategory3Label",
+							"optionalBeerCategory4Enabled",
+							"optionalBeerCategory4Label",
+							"optionalBeerCategory5Enabled",
+							"optionalBeerCategory5Label",
 							"createdAt",
 							"updatedAt"
 						)
 						VALUES (
-							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $21
+							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $29
 						)
 						ON CONFLICT ("organizationId")
 						DO UPDATE SET
@@ -3072,6 +3170,14 @@ export const inventoryAccess = ({
 							"pitcherActualSizeOz" = EXCLUDED."pitcherActualSizeOz",
 							"tallBoyCanEnabled" = EXCLUDED."tallBoyCanEnabled",
 							"tallBoyCanLabel" = EXCLUDED."tallBoyCanLabel",
+							"optionalBeerCategory2Enabled" = EXCLUDED."optionalBeerCategory2Enabled",
+							"optionalBeerCategory2Label" = EXCLUDED."optionalBeerCategory2Label",
+							"optionalBeerCategory3Enabled" = EXCLUDED."optionalBeerCategory3Enabled",
+							"optionalBeerCategory3Label" = EXCLUDED."optionalBeerCategory3Label",
+							"optionalBeerCategory4Enabled" = EXCLUDED."optionalBeerCategory4Enabled",
+							"optionalBeerCategory4Label" = EXCLUDED."optionalBeerCategory4Label",
+							"optionalBeerCategory5Enabled" = EXCLUDED."optionalBeerCategory5Enabled",
+							"optionalBeerCategory5Label" = EXCLUDED."optionalBeerCategory5Label",
 							"updatedAt" = EXCLUDED."updatedAt"
 					`,
 					[
@@ -3093,8 +3199,16 @@ export const inventoryAccess = ({
 						body.draft24ActualSizeOz,
 						body.pitcherEnabled,
 						body.pitcherActualSizeOz,
-						body.tallBoyCanEnabled,
-						body.tallBoyCanLabel,
+						body.optionalBeerCategory1Enabled,
+						body.optionalBeerCategory1Label,
+						body.optionalBeerCategory2Enabled,
+						body.optionalBeerCategory2Label,
+						body.optionalBeerCategory3Enabled,
+						body.optionalBeerCategory3Label,
+						body.optionalBeerCategory4Enabled,
+						body.optionalBeerCategory4Label,
+						body.optionalBeerCategory5Enabled,
+						body.optionalBeerCategory5Label,
 						now,
 					],
 				);
@@ -3120,8 +3234,26 @@ export const inventoryAccess = ({
 						draft24ActualSizeOz: body.draft24ActualSizeOz,
 						pitcherEnabled: body.pitcherEnabled,
 						pitcherActualSizeOz: body.pitcherActualSizeOz,
-						tallBoyCanEnabled: body.tallBoyCanEnabled,
-						tallBoyCanLabel: body.tallBoyCanLabel,
+						optionalBeerCategory1Enabled:
+							body.optionalBeerCategory1Enabled,
+						optionalBeerCategory1Label:
+							body.optionalBeerCategory1Label,
+						optionalBeerCategory2Enabled:
+							body.optionalBeerCategory2Enabled,
+						optionalBeerCategory2Label:
+							body.optionalBeerCategory2Label,
+						optionalBeerCategory3Enabled:
+							body.optionalBeerCategory3Enabled,
+						optionalBeerCategory3Label:
+							body.optionalBeerCategory3Label,
+						optionalBeerCategory4Enabled:
+							body.optionalBeerCategory4Enabled,
+						optionalBeerCategory4Label:
+							body.optionalBeerCategory4Label,
+						optionalBeerCategory5Enabled:
+							body.optionalBeerCategory5Enabled,
+						optionalBeerCategory5Label:
+							body.optionalBeerCategory5Label,
 					},
 				});
 			},
