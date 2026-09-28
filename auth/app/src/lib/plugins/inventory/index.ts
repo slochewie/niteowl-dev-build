@@ -145,6 +145,7 @@ const inventoryImportBodySchema = z.object({
 	organizationId: z.string().min(1),
 	sourceType: z.enum(["aloha-csv", "toast-template"]),
 	sourceName: z.string().min(1),
+	reconciliationMode: z.enum(["automatic", "explicit"]).default("automatic"),
 	items: z.array(
 		z.object({
 			id: z.string().min(1),
@@ -157,6 +158,8 @@ const inventoryImportBodySchema = z.object({
 			happyHourPriceCents: z.number().int().nullable(),
 			status: z.enum(["ready", "review", "ignored"]),
 			exportIncluded: z.boolean(),
+			targetVariantId: z.string().min(1).optional(),
+			createNewMaster: z.boolean().optional(),
 		}),
 	),
 });
@@ -1219,12 +1222,50 @@ export const inventoryAccess = ({
 							);
 
 						const mappedInventoryItemId =
-							existingSourceMapping.rows[0]
-								?.inventoryItemId ?? null;
+							item.createNewMaster === true
+								? null
+								: existingSourceMapping.rows[0]
+										?.inventoryItemId ?? null;
 
 						const mappedInventoryVariantId =
-							existingSourceMapping.rows[0]
-								?.inventoryItemVariantId ?? null;
+							item.createNewMaster === true
+								? null
+								: existingSourceMapping.rows[0]
+										?.inventoryItemVariantId ?? null;
+
+						if (
+							body.reconciliationMode === "explicit" &&
+							item.targetVariantId &&
+							item.createNewMaster === true
+						) {
+							await client.query("ROLLBACK");
+
+							return ctx.json(
+								{
+									error:
+										"Choose either an existing master variant or Create new master, not both.",
+									sourceKey,
+								},
+								{ status: 409 },
+							);
+						}
+
+						if (
+							body.reconciliationMode === "explicit" &&
+							!item.targetVariantId &&
+							item.createNewMaster !== true
+						) {
+							await client.query("ROLLBACK");
+
+							return ctx.json(
+								{
+									error:
+										"Explicit reconciliation requires targetVariantId or createNewMaster for every imported item.",
+									sourceKey,
+								},
+								{ status: 409 },
+							);
+						}
 
 						const categoryName =
 							item.toastCategory.trim() ||
@@ -1291,8 +1332,54 @@ export const inventoryAccess = ({
 
 						let inventoryItemId;
 
+						const explicitTargetVariant =
+							item.targetVariantId
+								? await client.query<{
+									inventoryItemId: string;
+									variantId: string;
+								}>(
+									`
+										SELECT
+											v."inventoryItemId",
+											v.id AS "variantId"
+										FROM "inventoryItemVariant" v
+										INNER JOIN "inventoryItem" i
+											ON i.id = v."inventoryItemId"
+										WHERE
+											v.id = $1
+											AND v.active = true
+											AND i.active = true
+										LIMIT 1
+									`,
+									[item.targetVariantId],
+								)
+								: null;
+
+						if (
+							item.targetVariantId &&
+							!explicitTargetVariant?.rows[0]
+						) {
+							await client.query("ROLLBACK");
+
+							return ctx.json(
+								{
+									error: "Selected master variant no longer exists.",
+									sourceKey,
+								},
+								{ status: 409 },
+							);
+						}
+
+						const explicitInventoryItemId =
+							explicitTargetVariant?.rows[0]
+								?.inventoryItemId ?? null;
+
+						const explicitVariantId =
+							explicitTargetVariant?.rows[0]
+								?.variantId ?? null;
+
 						const existingItem =
-							mappedInventoryItemId
+							explicitInventoryItemId
 								? await client.query(
 										`
 											SELECT id
@@ -1300,9 +1387,21 @@ export const inventoryAccess = ({
 											WHERE id = $1
 											LIMIT 1
 										`,
-										[mappedInventoryItemId],
+										[explicitInventoryItemId],
 									)
-								: await client.query(
+								: item.createNewMaster === true
+									? { rows: [] }
+									: mappedInventoryItemId
+										? await client.query(
+												`
+													SELECT id
+													FROM "inventoryItem"
+													WHERE id = $1
+													LIMIT 1
+												`,
+												[mappedInventoryItemId],
+											)
+										: await client.query(
 										`
 											SELECT candidate.id
 											FROM (
@@ -1408,7 +1507,21 @@ export const inventoryAccess = ({
 						let defaultPriceCents = null;
 
 						const existingVariant =
-							mappedInventoryVariantId
+							explicitVariantId
+								? await client.query(
+										`
+											SELECT
+												id,
+												"defaultPriceCents"
+											FROM "inventoryItemVariant"
+											WHERE
+												id = $1
+												AND "inventoryItemId" = $2
+											LIMIT 1
+										`,
+										[explicitVariantId, inventoryItemId],
+									)
+								: mappedInventoryVariantId
 								? await client.query(
 										`
 											SELECT
