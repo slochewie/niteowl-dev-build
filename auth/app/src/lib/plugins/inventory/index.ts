@@ -119,6 +119,14 @@ const inventoryOrganizationConfigBodySchema = z.object({
 	optionalBeerCategory5Label: z.string().trim().min(1).max(80).default("Optional Beer Category 5"),
 });
 
+const inventoryAddOrganizationVariantBodySchema = z.object({
+	organizationId: z.string().min(1),
+	itemId: z.string().min(1),
+	toastCategory: z.string().min(1),
+	toastDestination: z.string().min(1),
+	toastSlot: z.string().nullable().optional(),
+});
+
 const inventoryOrganizationVariantBodySchema = z.object({
 	organizationId: z.string().min(1),
 	variantId: z.string().min(1),
@@ -1888,6 +1896,179 @@ export const inventoryAccess = ({
 						importedItems: itemIds.size,
 						importedVariants: variantIds.size,
 					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
+		addInventoryOrganizationVariant: createAuthEndpoint(
+			"/inventory/organization-variant",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: inventoryAddOrganizationVariantBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const userId = ctx.context.session.user.id;
+
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					userId,
+				);
+
+				if (!access.allowed || access.role === "viewer") {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const item = await pool.query<{ id: string }>(
+					`
+						SELECT id
+						FROM "inventoryItem"
+						WHERE id = $1
+							AND active = true
+						LIMIT 1
+					`,
+					[body.itemId],
+				);
+
+				if (!item.rows[0]) {
+					return ctx.json(
+						{ error: "Inventory item not found" },
+						{ status: 404 },
+					);
+				}
+
+				const identity = getVariantIdentity(
+					body.toastCategory,
+					body.toastDestination,
+				);
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const existingVariant = await client.query<{
+						id: string;
+					}>(
+						`
+							SELECT id
+							FROM "inventoryItemVariant"
+							WHERE
+								"inventoryItemId" = $1
+								AND kind = $2
+								AND "sizeOz" IS NOT DISTINCT FROM $3
+								AND "packageType" IS NOT DISTINCT FROM $4
+								AND name IS NOT DISTINCT FROM $5
+							LIMIT 1
+						`,
+						[
+							body.itemId,
+							identity.kind,
+							identity.sizeOz,
+							identity.packageType,
+							identity.name,
+						],
+					);
+
+					const now = new Date();
+					const variantId =
+						existingVariant.rows[0]?.id ?? randomUUID();
+
+					if (!existingVariant.rows[0]) {
+						await client.query(
+							`
+								INSERT INTO "inventoryItemVariant" (
+									id,
+									"inventoryItemId",
+									kind,
+									"sizeOz",
+									"packageType",
+									name,
+									"defaultPriceCents",
+									active,
+									"createdAt",
+									"updatedAt"
+								)
+								VALUES (
+									$1, $2, $3, $4, $5,
+									$6, NULL, true, $7, $7
+								)
+							`,
+							[
+								variantId,
+								body.itemId,
+								identity.kind,
+								identity.sizeOz,
+								identity.packageType,
+								identity.name,
+								now,
+							],
+						);
+					}
+
+					await client.query(
+						`
+							INSERT INTO "inventoryOrganizationVariant" (
+								id,
+								"organizationId",
+								"inventoryItemVariantId",
+								enabled,
+								"exportToToast",
+								"priceOverrideCents",
+								"happyHourPriceCents",
+								"toastNameOverride",
+								"toastCategoryOverride",
+								"toastDestinationOverride",
+								"toastSlot",
+								"createdAt",
+								"updatedAt"
+							)
+							VALUES (
+								$1, $2, $3,
+								true, true,
+								NULL, NULL, NULL,
+								$4, $5, $6,
+								$7, $7
+							)
+							ON CONFLICT (
+								"organizationId",
+								"inventoryItemVariantId"
+							)
+							DO UPDATE SET
+								enabled = true,
+								"toastCategoryOverride" =
+									EXCLUDED."toastCategoryOverride",
+								"toastDestinationOverride" =
+									EXCLUDED."toastDestinationOverride",
+								"toastSlot" =
+									EXCLUDED."toastSlot",
+								"updatedAt" =
+									EXCLUDED."updatedAt"
+						`,
+						[
+							randomUUID(),
+							body.organizationId,
+							variantId,
+							body.toastCategory,
+							body.toastDestination,
+							body.toastSlot ?? null,
+							now,
+						],
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({ variantId });
 				} catch (error) {
 					await client.query("ROLLBACK");
 					throw error;
