@@ -105,6 +105,8 @@ const inventoryOrganizationConfigBodySchema = z.object({
 	draft24ActualSizeOz: z.number().positive().nullable(),
 	pitcherEnabled: z.boolean(),
 	pitcherActualSizeOz: z.number().positive().nullable(),
+	canEnabled: z.boolean().default(true),
+	bottleEnabled: z.boolean().default(true),
 	optionalBeerCategory1Enabled: z.boolean().default(false),
 	optionalBeerCategory1Label: z.string().trim().min(1).max(80).default("Optional Beer Category 1"),
 	optionalBeerCategory2Enabled: z.boolean().default(false),
@@ -416,21 +418,29 @@ function getVariantIdentity(
 	const destination = toastDestination.toLowerCase();
 
 	if (category === "beer") {
-		if (destination.includes("draft beer 10oz")) {
-			return {
-				kind: "draft",
-				sizeOz: 10,
-				packageType: null,
-				name: "10oz draft",
-			};
+		const draftSizeMatch =
+			destination.match(/\bdraft beer\s*(\d+(?:\.\d+)?)\s*oz\b/) ??
+			destination.match(/\b(\d+(?:\.\d+)?)\s*oz\s*draft\b/);
+
+		if (draftSizeMatch) {
+			const sizeOz = Number(draftSizeMatch[1]);
+
+			if (Number.isFinite(sizeOz) && sizeOz > 0) {
+				return {
+					kind: "draft",
+					sizeOz,
+					packageType: null,
+					name: String(sizeOz) + "oz draft",
+				};
+			}
 		}
 
-		if (destination.includes("draft beer 16oz")) {
+		if (destination.includes("pitcher")) {
 			return {
 				kind: "draft",
-				sizeOz: 16,
+				sizeOz: null,
 				packageType: null,
-				name: "16oz draft",
+				name: "pitcher",
 			};
 		}
 
@@ -637,6 +647,16 @@ export const inventoryAccess = ({
 				pitcherActualSizeOz: {
 					type: "number",
 					required: false,
+				},
+				canEnabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: true,
+				},
+				bottleEnabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: true,
 				},
 				tallBoyCanEnabled: {
 					type: "boolean",
@@ -1077,6 +1097,11 @@ export const inventoryAccess = ({
 						field: "id",
 						onDelete: "set null",
 					},
+				},
+				mappingConfirmed: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
 				},
 				createdAt: {
 					type: "date",
@@ -1783,12 +1808,13 @@ export const inventoryAccess = ({
 									"inventoryItemId",
 									"inventoryItemVariantId",
 									"lastImportId",
+									"mappingConfirmed",
 									"createdAt",
 									"updatedAt"
 								)
 								VALUES (
 									$1, $2, $3, $4, $5, $6,
-									$7, $8, $9, $10, $11, $11
+									$7, $8, $9, $10, $11, $12, $12
 								)
 								ON CONFLICT (
 									"organizationId",
@@ -1808,6 +1834,12 @@ export const inventoryAccess = ({
 										EXCLUDED."inventoryItemVariantId",
 									"lastImportId" =
 										EXCLUDED."lastImportId",
+									"mappingConfirmed" =
+										CASE
+											WHEN EXCLUDED."mappingConfirmed"
+												THEN true
+											ELSE "inventorySourceItem"."mappingConfirmed"
+										END,
 									"updatedAt" =
 										EXCLUDED."updatedAt"
 							`,
@@ -1822,6 +1854,7 @@ export const inventoryAccess = ({
 								inventoryItemId,
 								variantId,
 								importId,
+								body.reconciliationMode === "explicit",
 								now,
 							],
 						);
@@ -2707,6 +2740,7 @@ export const inventoryAccess = ({
 					normalizedSourceName: string;
 					inventoryItemId: string | null;
 					inventoryItemVariantId: string | null;
+					mappingConfirmed: boolean;
 					itemName: string | null;
 					variantName: string | null;
 					variantKind: string | null;
@@ -2724,6 +2758,7 @@ export const inventoryAccess = ({
 							si."normalizedSourceName",
 							si."inventoryItemId",
 							si."inventoryItemVariantId",
+							si."mappingConfirmed",
 							i.name AS "itemName",
 							v.name AS "variantName",
 							v.kind AS "variantKind",
@@ -2844,6 +2879,7 @@ export const inventoryAccess = ({
 							SET
 								"inventoryItemId" = $1,
 								"inventoryItemVariantId" = $2,
+								"mappingConfirmed" = true,
 								"updatedAt" = $3
 							WHERE id = $4
 						`,
@@ -3054,6 +3090,8 @@ export const inventoryAccess = ({
 					draft24ActualSizeOz: number | null;
 					pitcherEnabled: boolean;
 					pitcherActualSizeOz: number | null;
+					canEnabled: boolean;
+					bottleEnabled: boolean;
 					tallBoyCanEnabled: boolean;
 					tallBoyCanLabel: string;
 					optionalBeerCategory2Enabled: boolean;
@@ -3084,6 +3122,8 @@ export const inventoryAccess = ({
 							"draft24ActualSizeOz",
 							"pitcherEnabled",
 							"pitcherActualSizeOz",
+							"canEnabled",
+							"bottleEnabled",
 							"tallBoyCanEnabled",
 							"tallBoyCanLabel",
 							"optionalBeerCategory2Enabled",
@@ -3133,6 +3173,8 @@ export const inventoryAccess = ({
 						draft24ActualSizeOz: config?.draft24ActualSizeOz ?? null,
 						pitcherEnabled: config?.pitcherEnabled ?? false,
 						pitcherActualSizeOz: config?.pitcherActualSizeOz ?? null,
+						canEnabled: config?.canEnabled ?? true,
+						bottleEnabled: config?.bottleEnabled ?? true,
 						optionalBeerCategory1Enabled:
 							config?.tallBoyCanEnabled ?? false,
 						optionalBeerCategory1Label:
@@ -3211,8 +3253,7 @@ export const inventoryAccess = ({
 				const missingDraftSize =
 					(body.draft8Enabled && body.draft8ActualSizeOz === null) ||
 					(body.draft16Enabled && body.draft16ActualSizeOz === null) ||
-					(body.draft24Enabled && body.draft24ActualSizeOz === null) ||
-					(body.pitcherEnabled && body.pitcherActualSizeOz === null);
+					(body.draft24Enabled && body.draft24ActualSizeOz === null);
 
 				if (missingDraftSize) {
 					return ctx.json(
@@ -3247,6 +3288,8 @@ export const inventoryAccess = ({
 							"draft24ActualSizeOz",
 							"pitcherEnabled",
 							"pitcherActualSizeOz",
+							"canEnabled",
+							"bottleEnabled",
 							"tallBoyCanEnabled",
 							"tallBoyCanLabel",
 							"optionalBeerCategory2Enabled",
@@ -3261,7 +3304,7 @@ export const inventoryAccess = ({
 							"updatedAt"
 						)
 						VALUES (
-							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $29
+							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $31
 						)
 						ON CONFLICT ("organizationId")
 						DO UPDATE SET
@@ -3281,6 +3324,8 @@ export const inventoryAccess = ({
 							"draft24ActualSizeOz" = EXCLUDED."draft24ActualSizeOz",
 							"pitcherEnabled" = EXCLUDED."pitcherEnabled",
 							"pitcherActualSizeOz" = EXCLUDED."pitcherActualSizeOz",
+							"canEnabled" = EXCLUDED."canEnabled",
+							"bottleEnabled" = EXCLUDED."bottleEnabled",
 							"tallBoyCanEnabled" = EXCLUDED."tallBoyCanEnabled",
 							"tallBoyCanLabel" = EXCLUDED."tallBoyCanLabel",
 							"optionalBeerCategory2Enabled" = EXCLUDED."optionalBeerCategory2Enabled",
@@ -3312,6 +3357,8 @@ export const inventoryAccess = ({
 						body.draft24ActualSizeOz,
 						body.pitcherEnabled,
 						body.pitcherActualSizeOz,
+						body.canEnabled,
+						body.bottleEnabled,
 						body.optionalBeerCategory1Enabled,
 						body.optionalBeerCategory1Label,
 						body.optionalBeerCategory2Enabled,
@@ -3347,6 +3394,8 @@ export const inventoryAccess = ({
 						draft24ActualSizeOz: body.draft24ActualSizeOz,
 						pitcherEnabled: body.pitcherEnabled,
 						pitcherActualSizeOz: body.pitcherActualSizeOz,
+						canEnabled: body.canEnabled,
+						bottleEnabled: body.bottleEnabled,
 						optionalBeerCategory1Enabled:
 							body.optionalBeerCategory1Enabled,
 						optionalBeerCategory1Label:
