@@ -1223,6 +1223,7 @@ export const inventoryAccess = ({
 					const variantIds = new Set();
 					const seenVariantIds = new Set();
 					const importConflicts = [];
+					const createdExplicitMasterIds = new Map<string, string>();
 
 					for (const item of body.items) {
 						if (item.status === "ignored") continue;
@@ -1411,6 +1412,18 @@ export const inventoryAccess = ({
 							explicitTargetVariant?.rows[0]
 								?.variantId ?? null;
 
+						const explicitNewMasterKey =
+							item.createNewMaster === true
+								? `${categoryId}:${normalizedItemName}`
+								: null;
+
+						const createdExplicitMasterId =
+							explicitNewMasterKey
+								? createdExplicitMasterIds.get(
+										explicitNewMasterKey,
+									) ?? null
+								: null;
+
 						const existingItem =
 							explicitInventoryItemId
 								? await client.query(
@@ -1422,9 +1435,11 @@ export const inventoryAccess = ({
 										`,
 										[explicitInventoryItemId],
 									)
-								: item.createNewMaster === true
-									? { rows: [] }
-									: mappedInventoryItemId
+								: createdExplicitMasterId
+									? { rows: [{ id: createdExplicitMasterId }] }
+									: item.createNewMaster === true
+										? { rows: [] }
+										: mappedInventoryItemId
 										? await client.query(
 												`
 													SELECT id
@@ -1493,6 +1508,13 @@ export const inventoryAccess = ({
 									now,
 								],
 							);
+
+							if (explicitNewMasterKey) {
+								createdExplicitMasterIds.set(
+									explicitNewMasterKey,
+									inventoryItemId,
+								);
+							}
 						}
 
 						itemIds.add(inventoryItemId);
