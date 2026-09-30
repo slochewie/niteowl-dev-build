@@ -77,6 +77,64 @@ const inventoryMasterItemNameBodySchema = z.object({
 	name: z.string().trim().min(1).max(160),
 });
 
+const inventoryCocktailSectionSchema = z.enum([
+	"house",
+	"vodka",
+	"gin",
+	"rum",
+	"tequila",
+	"whiskey-bourbon",
+]);
+
+const inventoryCocktailCreateBodySchema = z
+	.object({
+		organizationId: z.string().min(1),
+		inventoryCocktailId: z.string().min(1).optional(),
+		name: z.string().trim().min(1).max(160),
+		createNewMaster: z.boolean().default(false),
+		section: inventoryCocktailSectionSchema,
+		description: z.string().trim().max(1000).nullable().optional(),
+		priceCents: z.number().int().nonnegative().nullable(),
+		happyHourPriceCents: z.number().int().nonnegative().nullable().optional(),
+		enabled: z.boolean().default(true),
+		exportToToast: z.boolean().default(true),
+		toastNameOverride: z.string().trim().max(160).nullable().optional(),
+		sortOrder: z.number().int().nonnegative().default(0),
+	})
+	.superRefine((body, ctx) => {
+		if (body.inventoryCocktailId && body.createNewMaster) {
+			ctx.addIssue({
+				code: "custom",
+				message: "Choose an existing cocktail or create a new master, not both.",
+			});
+		}
+
+		if (!body.inventoryCocktailId && !body.createNewMaster) {
+			ctx.addIssue({
+				code: "custom",
+				message: "Select an existing cocktail or create a new master.",
+			});
+		}
+	});
+
+const inventoryCocktailUpdateBodySchema = z.object({
+	organizationId: z.string().min(1),
+	organizationCocktailId: z.string().min(1),
+	section: inventoryCocktailSectionSchema.optional(),
+	description: z.string().trim().max(1000).nullable().optional(),
+	priceCents: z.number().int().nonnegative().nullable().optional(),
+	happyHourPriceCents: z.number().int().nonnegative().nullable().optional(),
+	enabled: z.boolean().optional(),
+	exportToToast: z.boolean().optional(),
+	toastNameOverride: z.string().trim().max(160).nullable().optional(),
+	sortOrder: z.number().int().nonnegative().optional(),
+});
+
+const inventoryCocktailRemoveBodySchema = z.object({
+	organizationId: z.string().min(1),
+	organizationCocktailId: z.string().min(1),
+});
+
 const inventoryOrganizationConfigBodySchema = z.object({
 	organizationId: z.string().min(1),
 	happyHourEnabled: z.boolean(),
@@ -735,6 +793,124 @@ export const inventoryAccess = ({
 			},
 		},
 
+		inventoryCocktail: {
+			fields: {
+				name: {
+					type: "string",
+					required: true,
+				},
+				normalizedName: {
+					type: "string",
+					required: true,
+				},
+				active: {
+					type: "boolean",
+					required: true,
+					defaultValue: true,
+				},
+				createdAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+				updatedAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+			},
+			indexes: [
+				{
+					fields: ["normalizedName"],
+					unique: true,
+				},
+			],
+		},
+
+		inventoryOrganizationCocktail: {
+			fields: {
+				organizationId: {
+					type: "string",
+					required: true,
+					references: {
+						model: "organization",
+						field: "id",
+						onDelete: "cascade",
+					},
+				},
+				inventoryCocktailId: {
+					type: "string",
+					required: true,
+					references: {
+						model: "inventoryCocktail",
+						field: "id",
+						onDelete: "cascade",
+					},
+				},
+				enabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: true,
+				},
+				exportToToast: {
+					type: "boolean",
+					required: true,
+					defaultValue: true,
+				},
+				section: {
+					type: "string",
+					required: true,
+					defaultValue: "house",
+				},
+				description: {
+					type: "string",
+					required: false,
+				},
+				priceCents: {
+					type: "number",
+					required: false,
+				},
+				happyHourPriceCents: {
+					type: "number",
+					required: false,
+				},
+				toastNameOverride: {
+					type: "string",
+					required: false,
+				},
+				sortOrder: {
+					type: "number",
+					required: true,
+					defaultValue: 0,
+				},
+				createdAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+				updatedAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+			},
+			indexes: [
+				{
+					fields: ["organizationId"],
+				},
+				{
+					fields: ["inventoryCocktailId"],
+				},
+				{
+					fields: [
+						"organizationId",
+						"inventoryCocktailId",
+					],
+					unique: true,
+				},
+			],
+		},
+
 		inventoryCategory: {
 			fields: {
 				name: {
@@ -1145,6 +1321,421 @@ export const inventoryAccess = ({
 	},
 
 	endpoints: {
+		listInventoryCocktailMasters: createAuthEndpoint(
+			"/inventory/cocktail-masters",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const access = await resolveInventoryAccess(
+					pool,
+					organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed) {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const result = await pool.query(
+					`
+						SELECT
+							c.id,
+							c.name,
+							c."normalizedName",
+							c.active,
+							oc.id AS "organizationCocktailId",
+							(oc.id IS NOT NULL) AS assigned
+						FROM "inventoryCocktail" c
+						LEFT JOIN "inventoryOrganizationCocktail" oc
+							ON oc."inventoryCocktailId" = c.id
+							AND oc."organizationId" = $1
+						WHERE c.active = true
+						ORDER BY LOWER(c.name), c.id
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({ cocktails: result.rows });
+			},
+		),
+
+		listInventoryCocktails: createAuthEndpoint(
+			"/inventory/cocktails",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const access = await resolveInventoryAccess(
+					pool,
+					organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed) {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const result = await pool.query(
+					`
+						SELECT
+							oc.id,
+							oc."organizationId",
+							oc."inventoryCocktailId",
+							c.name AS "masterName",
+							c."normalizedName",
+							oc.enabled,
+							oc."exportToToast",
+							oc.section,
+							oc.description,
+							oc."priceCents",
+							oc."happyHourPriceCents",
+							oc."toastNameOverride",
+							oc."sortOrder",
+							oc."createdAt",
+							oc."updatedAt"
+						FROM "inventoryOrganizationCocktail" oc
+						INNER JOIN "inventoryCocktail" c
+							ON c.id = oc."inventoryCocktailId"
+						WHERE
+							oc."organizationId" = $1
+							AND c.active = true
+						ORDER BY
+							CASE oc.section
+								WHEN 'house' THEN 0
+								WHEN 'vodka' THEN 1
+								WHEN 'gin' THEN 2
+								WHEN 'rum' THEN 3
+								WHEN 'tequila' THEN 4
+								WHEN 'whiskey-bourbon' THEN 5
+								ELSE 99
+							END,
+							oc."sortOrder",
+							LOWER(COALESCE(NULLIF(TRIM(oc."toastNameOverride"), ''), c.name)),
+							oc.id
+					`,
+					[organizationId],
+				);
+
+				return ctx.json({
+					organizationId,
+					role: access.role,
+					cocktails: result.rows,
+				});
+			},
+		),
+
+		createInventoryCocktail: createAuthEndpoint(
+			"/inventory/cocktail",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: inventoryCocktailCreateBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (
+					!access.allowed ||
+					(access.role !== "manager" && access.role !== "admin")
+				) {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					let inventoryCocktailId = body.inventoryCocktailId ?? null;
+					let masterName = body.name.trim();
+
+					if (inventoryCocktailId) {
+						const master = await client.query(
+							`
+								SELECT id, name
+								FROM "inventoryCocktail"
+								WHERE id = $1 AND active = true
+								LIMIT 1
+								FOR UPDATE
+							`,
+							[inventoryCocktailId],
+						);
+
+						if (!master.rows[0]) {
+							await client.query("ROLLBACK");
+							return ctx.json(
+								{ error: "Cocktail master not found" },
+								{ status: 404 },
+							);
+						}
+
+						masterName = master.rows[0].name;
+					} else {
+						const normalizedName = normalizeInventoryName(masterName);
+
+						const existing = await client.query(
+							`
+								SELECT id, name
+								FROM "inventoryCocktail"
+								WHERE "normalizedName" = $1
+								LIMIT 1
+							`,
+							[normalizedName],
+						);
+
+						if (existing.rows[0]) {
+							await client.query("ROLLBACK");
+							return ctx.json(
+								{
+									error: "That cocktail already exists. Select the existing master cocktail instead.",
+									inventoryCocktailId: existing.rows[0].id,
+									name: existing.rows[0].name,
+								},
+								{ status: 409 },
+							);
+						}
+
+						inventoryCocktailId = randomUUID();
+						const now = new Date();
+
+						await client.query(
+							`
+								INSERT INTO "inventoryCocktail" (
+									id, name, "normalizedName",
+									active, "createdAt", "updatedAt"
+								)
+								VALUES ($1, $2, $3, true, $4, $4)
+							`,
+							[
+								inventoryCocktailId,
+								masterName,
+								normalizedName,
+								now,
+							],
+						);
+					}
+
+					const assigned = await client.query(
+						`
+							SELECT id
+							FROM "inventoryOrganizationCocktail"
+							WHERE
+								"organizationId" = $1
+								AND "inventoryCocktailId" = $2
+							LIMIT 1
+						`,
+						[body.organizationId, inventoryCocktailId],
+					);
+
+					if (assigned.rows[0]) {
+						await client.query("ROLLBACK");
+						return ctx.json(
+							{ error: masterName + " is already assigned to this organization." },
+							{ status: 409 },
+						);
+					}
+
+					const organizationCocktailId = randomUUID();
+					const now = new Date();
+
+					await client.query(
+						`
+							INSERT INTO "inventoryOrganizationCocktail" (
+								id,
+								"organizationId",
+								"inventoryCocktailId",
+								enabled,
+								"exportToToast",
+								section,
+								description,
+								"priceCents",
+								"happyHourPriceCents",
+								"toastNameOverride",
+								"sortOrder",
+								"createdAt",
+								"updatedAt"
+							)
+							VALUES (
+								$1, $2, $3, $4, $5, $6,
+								$7, $8, $9, $10, $11, $12, $12
+							)
+						`,
+						[
+							organizationCocktailId,
+							body.organizationId,
+							inventoryCocktailId,
+							body.enabled,
+							body.exportToToast,
+							body.section,
+							body.description?.trim() || null,
+							body.priceCents,
+							body.section === "house"
+								? body.happyHourPriceCents ?? null
+								: null,
+							body.toastNameOverride?.trim() || null,
+							body.sortOrder,
+							now,
+						],
+					);
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						created: true,
+						inventoryCocktailId,
+						organizationCocktailId,
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
+		updateInventoryCocktail: createAuthEndpoint(
+			"/inventory/cocktail",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventoryCocktailUpdateBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (
+					!access.allowed ||
+					(access.role !== "manager" && access.role !== "admin")
+				) {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const existing = await pool.query(
+					`
+						SELECT id, section, "happyHourPriceCents"
+						FROM "inventoryOrganizationCocktail"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+						LIMIT 1
+					`,
+					[body.organizationCocktailId, body.organizationId],
+				);
+
+				if (!existing.rows[0]) {
+					return ctx.json({ error: "Cocktail not found" }, { status: 404 });
+				}
+
+				const current = existing.rows[0];
+				const nextSection = body.section ?? current.section;
+				const nextHappyHourPriceCents =
+					nextSection === "house"
+						? Object.hasOwn(body, "happyHourPriceCents")
+							? body.happyHourPriceCents ?? null
+							: current.happyHourPriceCents
+						: null;
+
+				await pool.query(
+					`
+						UPDATE "inventoryOrganizationCocktail"
+						SET
+							section = CASE WHEN $3 THEN $4 ELSE section END,
+							description = CASE WHEN $5 THEN $6 ELSE description END,
+							"priceCents" = CASE WHEN $7 THEN $8 ELSE "priceCents" END,
+							"happyHourPriceCents" = $9,
+							enabled = CASE WHEN $10 THEN $11 ELSE enabled END,
+							"exportToToast" = CASE WHEN $12 THEN $13 ELSE "exportToToast" END,
+							"toastNameOverride" = CASE WHEN $14 THEN $15 ELSE "toastNameOverride" END,
+							"sortOrder" = CASE WHEN $16 THEN $17 ELSE "sortOrder" END,
+							"updatedAt" = $18
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+					`,
+					[
+						body.organizationCocktailId,
+						body.organizationId,
+						Object.hasOwn(body, "section"),
+						nextSection,
+						Object.hasOwn(body, "description"),
+						body.description?.trim() || null,
+						Object.hasOwn(body, "priceCents"),
+						body.priceCents ?? null,
+						nextHappyHourPriceCents,
+						Object.hasOwn(body, "enabled"),
+						body.enabled ?? true,
+						Object.hasOwn(body, "exportToToast"),
+						body.exportToToast ?? true,
+						Object.hasOwn(body, "toastNameOverride"),
+						body.toastNameOverride?.trim() || null,
+						Object.hasOwn(body, "sortOrder"),
+						body.sortOrder ?? 0,
+						new Date(),
+					],
+				);
+
+				return ctx.json({ updated: true });
+			},
+		),
+
+		removeInventoryCocktail: createAuthEndpoint(
+			"/inventory/cocktail/remove",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: inventoryCocktailRemoveBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (
+					!access.allowed ||
+					(access.role !== "manager" && access.role !== "admin")
+				) {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const result = await pool.query(
+					`
+						DELETE FROM "inventoryOrganizationCocktail"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
+					`,
+					[body.organizationCocktailId, body.organizationId],
+				);
+
+				if (result.rowCount !== 1) {
+					return ctx.json({ error: "Cocktail not found" }, { status: 404 });
+				}
+
+				return ctx.json({ removed: true });
+			},
+		),
+
 		persistInventoryImport: createAuthEndpoint(
 			"/inventory/import",
 			{
