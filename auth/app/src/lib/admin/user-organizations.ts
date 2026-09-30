@@ -44,12 +44,15 @@ export const addUserToOrganization = createServerFn({
 	.handler(async ({ data }) => {
 		await requireAdminWrite();
 
+		const request = getRequest();
+
 		await auth.api.addMember({
 			body: {
 				userId: data.userId,
 				organizationId: data.organizationId,
 				role: data.role,
 			},
+			headers: request.headers,
 		});
 
 		return {

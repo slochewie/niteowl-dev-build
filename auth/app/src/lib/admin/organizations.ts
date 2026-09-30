@@ -347,7 +347,7 @@ export const addAdminOrganizationMember = createServerFn({
 		}) => data,
 	)
 	.handler(async ({ data }) => {
-		await requireAdminWrite();
+		const { request } = await requireAdminWrite();
 
 		await auth.api.addMember({
 			body: {
@@ -355,6 +355,7 @@ export const addAdminOrganizationMember = createServerFn({
 				userId: data.userId,
 				role: data.role,
 			},
+			headers: request.headers,
 		});
 
 		return {
