@@ -71,6 +71,12 @@ const inventoryItemCategoryBodySchema = z.object({
 	categoryId: z.string().min(1),
 });
 
+const inventoryMasterItemNameBodySchema = z.object({
+	organizationId: z.string().min(1),
+	itemId: z.string().min(1),
+	name: z.string().trim().min(1).max(160),
+});
+
 const inventoryOrganizationConfigBodySchema = z.object({
 	organizationId: z.string().min(1),
 	happyHourEnabled: z.boolean(),
@@ -2400,6 +2406,320 @@ export const inventoryAccess = ({
 				);
 
 				return ctx.json({ updated: true });
+			},
+		),
+
+		listInventoryMasterItems: createAuthEndpoint(
+			"/inventory/master-items",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: organizationQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const access = await resolveInventoryAccess(
+					pool,
+					organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed || access.role !== "admin") {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const itemResult = await pool.query<{
+					id: string;
+					name: string;
+					normalizedName: string;
+					categoryName: string | null;
+					toastCategory: string | null;
+					variantCount: number;
+				}>(
+					`
+						SELECT
+							i.id,
+							i.name,
+							i."normalizedName",
+							c.name AS "categoryName",
+							c."toastCategory",
+							COUNT(DISTINCT v.id)::int AS "variantCount"
+						FROM "inventoryItem" i
+						LEFT JOIN "inventoryCategory" c
+							ON c.id = i."categoryId"
+						LEFT JOIN "inventoryItemVariant" v
+							ON v."inventoryItemId" = i.id
+						WHERE i.active = true
+						GROUP BY
+							i.id,
+							i.name,
+							i."normalizedName",
+							c.name,
+							c."toastCategory"
+						ORDER BY LOWER(i.name), i.id
+					`,
+				);
+
+				const impactResult = await pool.query<{
+					itemId: string;
+					organizationId: string;
+					organizationName: string;
+					variantCount: number;
+					enabledVariantCount: number;
+					exportVariantCount: number;
+					followsMasterNameCount: number;
+					overrideNames: string[];
+				}>(
+					`
+						SELECT
+							v."inventoryItemId" AS "itemId",
+							o.id AS "organizationId",
+							o.name AS "organizationName",
+							COUNT(*)::int AS "variantCount",
+							COUNT(*) FILTER (
+								WHERE ov.enabled = true
+							)::int AS "enabledVariantCount",
+							COUNT(*) FILTER (
+								WHERE
+									ov.enabled = true
+									AND ov."exportToToast" = true
+							)::int AS "exportVariantCount",
+							COUNT(*) FILTER (
+								WHERE
+									ov.enabled = true
+									AND ov."exportToToast" = true
+									AND NULLIF(
+										TRIM(ov."toastNameOverride"),
+										''
+									) IS NULL
+							)::int AS "followsMasterNameCount",
+							COALESCE(
+								ARRAY_AGG(
+									DISTINCT NULLIF(
+										TRIM(ov."toastNameOverride"),
+										''
+									)
+								) FILTER (
+									WHERE
+										ov.enabled = true
+										AND ov."exportToToast" = true
+										AND NULLIF(
+											TRIM(ov."toastNameOverride"),
+											''
+										) IS NOT NULL
+								),
+								ARRAY[]::text[]
+							) AS "overrideNames"
+						FROM "inventoryOrganizationVariant" ov
+						INNER JOIN "inventoryItemVariant" v
+							ON v.id = ov."inventoryItemVariantId"
+						INNER JOIN organization o
+							ON o.id = ov."organizationId"
+						GROUP BY
+							v."inventoryItemId",
+							o.id,
+							o.name
+						ORDER BY
+							LOWER(o.name),
+							o.id
+					`,
+				);
+
+				const impactsByItemId = new Map<
+					string,
+					typeof impactResult.rows
+				>();
+
+				for (const row of impactResult.rows) {
+					const current =
+						impactsByItemId.get(row.itemId) ?? [];
+					current.push(row);
+					impactsByItemId.set(row.itemId, current);
+				}
+
+				return ctx.json({
+					items: itemResult.rows.map((item) => ({
+						...item,
+						organizations:
+							impactsByItemId.get(item.id) ?? [],
+					})),
+				});
+			},
+		),
+
+		renameInventoryMasterItem: createAuthEndpoint(
+			"/inventory/master-item-name",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventoryMasterItemNameBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed || access.role !== "admin") {
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
+				}
+
+				const nextName = body.name.trim();
+				const nextNormalizedName =
+					normalizeInventoryName(nextName);
+
+				if (!nextNormalizedName) {
+					return ctx.json(
+						{ error: "Master name is required" },
+						{ status: 400 },
+					);
+				}
+
+				const client = await pool.connect();
+
+				try {
+					await client.query("BEGIN");
+
+					const itemResult = await client.query<{
+						id: string;
+						name: string;
+						normalizedName: string;
+					}>(
+						`
+							SELECT
+								id,
+								name,
+								"normalizedName"
+							FROM "inventoryItem"
+							WHERE id = $1
+							LIMIT 1
+							FOR UPDATE
+						`,
+						[body.itemId],
+					);
+
+					const item = itemResult.rows[0];
+
+					if (!item) {
+						await client.query("ROLLBACK");
+						return ctx.json(
+							{ error: "Inventory master item not found" },
+							{ status: 404 },
+						);
+					}
+
+					const nameConflict = await client.query<{
+						id: string;
+						name: string;
+					}>(
+						`
+							SELECT id, name
+							FROM "inventoryItem"
+							WHERE
+								"normalizedName" = $1
+								AND id <> $2
+							LIMIT 1
+						`,
+						[nextNormalizedName, body.itemId],
+					);
+
+					if (nameConflict.rows[0]) {
+						await client.query("ROLLBACK");
+						return ctx.json(
+							{
+								error:
+									"Another master item already uses that name",
+							},
+							{ status: 409 },
+						);
+					}
+
+					const now = new Date();
+
+					await client.query(
+						`
+							UPDATE "inventoryItem"
+							SET
+								name = $1,
+								"normalizedName" = $2,
+								"updatedAt" = $3
+							WHERE id = $4
+						`,
+						[
+							nextName,
+							nextNormalizedName,
+							now,
+							body.itemId,
+						],
+					);
+
+					await client.query(
+						`
+							DELETE FROM "inventoryItemAlias"
+							WHERE
+								"inventoryItemId" = $1
+								AND "normalizedAlias" = $2
+						`,
+						[body.itemId, nextNormalizedName],
+					);
+
+					if (
+						item.normalizedName &&
+						item.normalizedName !== nextNormalizedName
+					) {
+						await client.query(
+							`
+								INSERT INTO "inventoryItemAlias" (
+									id,
+									"inventoryItemId",
+									alias,
+									"normalizedAlias",
+									"createdAt",
+									"updatedAt"
+								)
+								VALUES ($1, $2, $3, $4, $5, $5)
+								ON CONFLICT (
+									"inventoryItemId",
+									"normalizedAlias"
+								)
+								DO UPDATE SET
+									alias = EXCLUDED.alias,
+									"updatedAt" = EXCLUDED."updatedAt"
+							`,
+							[
+								randomUUID(),
+								body.itemId,
+								item.name,
+								item.normalizedName,
+								now,
+							],
+						);
+					}
+
+					await client.query("COMMIT");
+
+					return ctx.json({
+						updated: true,
+						item: {
+							id: body.itemId,
+							name: nextName,
+							normalizedName: nextNormalizedName,
+						},
+					});
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
 			},
 		),
 
