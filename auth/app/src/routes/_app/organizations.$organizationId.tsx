@@ -72,13 +72,33 @@ import {
 	removeAdminOrganizationMember,
 	removeAdminOrganizationTeamMember,
 	updateAdminOrganization,
+	updateAdminOrganizationMemberProfile,
 	updateAdminOrganizationMemberRole,
 	updateAdminOrganizationTeam,
 	type AdminOrganizationDetail,
 	type AdminOrganizationMember,
 	type AdminOrganizationTeam,
+	type OrganizationPersonType,
 	type OrganizationRole,
 } from "@/lib/admin/organizations";
+
+const PERSON_TYPE_OPTIONS: Array<{
+	value: OrganizationPersonType;
+	label: string;
+}> = [
+	{ value: "employee", label: "Employee" },
+	{ value: "vendor", label: "Vendor" },
+	{ value: "contractor", label: "Contractor" },
+	{ value: "it_support", label: "IT Support" },
+	{ value: "accountant", label: "Accountant" },
+	{ value: "owner", label: "Owner" },
+	{ value: "service_account", label: "Service Account" },
+	{ value: "other", label: "Other" },
+];
+
+const PERSON_TYPE_LABELS = Object.fromEntries(
+	PERSON_TYPE_OPTIONS.map((option) => [option.value, option.label]),
+) as Record<OrganizationPersonType, string>;
 
 export const Route = createFileRoute("/_app/organizations/$organizationId")({
 	loader: async ({ params }) => {
@@ -745,6 +765,7 @@ function MembersCard({
 								<MemberRow
 									organizationId={organization.id}
 									member={member}
+									members={organization.members}
 									compact={compact}
 									onRefresh={onRefresh}
 								/>
@@ -760,11 +781,13 @@ function MembersCard({
 function MemberRow({
 	organizationId,
 	member,
+	members,
 	compact,
 	onRefresh,
 }: {
 	organizationId: string;
 	member: AdminOrganizationMember;
+	members: AdminOrganizationMember[];
 	compact: boolean;
 	onRefresh?: () => Promise<void>;
 }) {
@@ -772,7 +795,71 @@ function MemberRow({
 
 	const [removeOpen, setRemoveOpen] = useState(false);
 
+	const [editProfileOpen, setEditProfileOpen] = useState(false);
+
 	const [pending, setPending] = useState(false);
+
+	const [personType, setPersonType] = useState<OrganizationPersonType>(
+		member.personType,
+	);
+
+	const [vendorCompany, setVendorCompany] = useState(
+		member.vendorCompany ?? "",
+	);
+
+	const [sponsorUserId, setSponsorUserId] = useState(
+		member.sponsorUserId ?? "none",
+	);
+
+	const [accessExpiresAt, setAccessExpiresAt] = useState(
+		formatDateInput(member.accessExpiresAt),
+	);
+
+	const [notes, setNotes] = useState(member.notes ?? "");
+
+	function openProfileEditor() {
+		setPersonType(member.personType);
+		setVendorCompany(member.vendorCompany ?? "");
+		setSponsorUserId(member.sponsorUserId ?? "none");
+		setAccessExpiresAt(formatDateInput(member.accessExpiresAt));
+		setNotes(member.notes ?? "");
+		setEditProfileOpen(true);
+	}
+
+	async function saveProfile() {
+		if (!onRefresh) {
+			return;
+		}
+
+		setPending(true);
+
+		try {
+			await updateAdminOrganizationMemberProfile({
+				data: {
+					organizationId,
+					userId: member.userId,
+					active: member.active,
+					personType,
+					vendorCompany,
+					sponsorUserId: sponsorUserId === "none" ? null : sponsorUserId,
+					accessExpiresAt: accessExpiresAt
+						? new Date(`${accessExpiresAt}T00:00:00.000Z`).toISOString()
+						: null,
+					notes,
+				},
+			});
+
+			toast.success("Member relationship updated");
+
+			setEditProfileOpen(false);
+
+			await onRefresh();
+		} catch (error) {
+			toast.error(getErrorMessage(error, "Unable to update member relationship"));
+		} finally {
+			setPending(false);
+		}
+	}
 
 	async function setRole(role: OrganizationRole) {
 		if (!onRefresh) {
@@ -850,10 +937,24 @@ function MemberRow({
 
 						<Badge variant="outline">{member.role}</Badge>
 
+						{member.personType !== "employee" && (
+							<Badge variant="outline">
+								{PERSON_TYPE_LABELS[member.personType]}
+							</Badge>
+						)}
+
+						{!member.active && <Badge variant="destructive">Inactive</Badge>}
+
 						{member.banned && <Badge variant="destructive">Banned</Badge>}
 					</ItemTitle>
 
-					<ItemDescription>{member.email}</ItemDescription>
+					<ItemDescription>
+						<div>{member.email}</div>
+
+						{getRelationshipSummary(member) && (
+							<div>{getRelationshipSummary(member)}</div>
+						)}
+					</ItemDescription>
 				</ItemContent>
 
 				{!compact && (
@@ -888,6 +989,11 @@ function MemberRow({
 								Copy Email
 							</DropdownMenuItem>
 
+							<DropdownMenuItem onClick={openProfileEditor}>
+								<Pencil />
+								Edit Relationship
+							</DropdownMenuItem>
+
 							<DropdownMenuSeparator />
 
 							<DropdownMenuLabel>Change Role</DropdownMenuLabel>
@@ -917,6 +1023,109 @@ function MemberRow({
 					</DropdownMenu>
 				)}
 			</Item>
+
+			<Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
+				<DialogContent className="sm:max-w-xl">
+					<DialogHeader>
+						<DialogTitle>Edit Relationship</DialogTitle>
+
+						<DialogDescription>
+							Update how {member.name} is related to this organization.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="grid gap-4 py-2">
+						<div className="grid gap-2">
+							<label className="text-sm font-medium">Relationship</label>
+
+							<Select
+								value={personType}
+								onValueChange={(value) =>
+									setPersonType(value as OrganizationPersonType)
+								}
+							>
+								<SelectTrigger>
+									<SelectValue />
+								</SelectTrigger>
+
+								<SelectContent>
+									{PERSON_TYPE_OPTIONS.map((option) => (
+										<SelectItem key={option.value} value={option.value}>
+											{option.label}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="grid gap-2">
+							<label className="text-sm font-medium">Vendor / Company</label>
+
+							<Input
+								value={vendorCompany}
+								onChange={(event) => setVendorCompany(event.target.value)}
+								placeholder="Optional"
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<label className="text-sm font-medium">Sponsor</label>
+
+							<Select value={sponsorUserId} onValueChange={setSponsorUserId}>
+								<SelectTrigger>
+									<SelectValue />
+								</SelectTrigger>
+
+								<SelectContent>
+									<SelectItem value="none">No sponsor</SelectItem>
+
+									{members
+										.filter((sponsor) => sponsor.userId !== member.userId)
+										.map((sponsor) => (
+											<SelectItem key={sponsor.userId} value={sponsor.userId}>
+												{sponsor.name} · {sponsor.email}
+											</SelectItem>
+										))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div className="grid gap-2">
+							<label className="text-sm font-medium">Access Expires</label>
+
+							<Input
+								type="date"
+								value={accessExpiresAt}
+								onChange={(event) => setAccessExpiresAt(event.target.value)}
+							/>
+						</div>
+
+						<div className="grid gap-2">
+							<label className="text-sm font-medium">Notes</label>
+
+							<Input
+								value={notes}
+								onChange={(event) => setNotes(event.target.value)}
+								placeholder="Optional"
+							/>
+						</div>
+					</div>
+
+					<DialogFooter>
+						<Button
+							variant="outline"
+							disabled={pending}
+							onClick={() => setEditProfileOpen(false)}
+						>
+							Cancel
+						</Button>
+
+						<Button disabled={pending} onClick={() => void saveProfile()}>
+							Save Relationship
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			<Dialog open={removeOpen} onOpenChange={setRemoveOpen}>
 				<DialogContent>
@@ -1577,10 +1786,31 @@ function InfoField({ label, value }: { label: string; value: string }) {
 	);
 }
 
-function formatDateOnly(value: Date) {
+function formatDateOnly(value: Date | string) {
 	return new Intl.DateTimeFormat(undefined, {
 		dateStyle: "medium",
 	}).format(new Date(value));
+}
+
+function formatDateInput(value: Date | string | null) {
+	if (!value) {
+		return "";
+	}
+
+	return new Date(value).toISOString().slice(0, 10);
+}
+
+function getRelationshipSummary(member: AdminOrganizationMember) {
+	const parts = [
+		PERSON_TYPE_LABELS[member.personType],
+		member.vendorCompany,
+		member.sponsorName ? `Sponsor: ${member.sponsorName}` : null,
+		member.accessExpiresAt
+			? `Expires: ${formatDateOnly(member.accessExpiresAt)}`
+			: null,
+	].filter(Boolean);
+
+	return parts.join(" · ");
 }
 
 function getErrorMessage(error: unknown, fallback: string) {

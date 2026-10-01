@@ -4,6 +4,16 @@ import { auth, pool } from "@/lib/auth";
 
 export type OrganizationRole = "member" | "admin" | "owner";
 
+export type OrganizationPersonType =
+	| "employee"
+	| "vendor"
+	| "contractor"
+	| "it_support"
+	| "accountant"
+	| "owner"
+	| "service_account"
+	| "other";
+
 export type AdminOrganizationMemberPreview = {
 	id: string;
 	name: string;
@@ -32,6 +42,14 @@ export type AdminOrganizationMember = {
 	role: string;
 	joinedAt: Date;
 	banned: boolean;
+	active: boolean;
+	personType: OrganizationPersonType;
+	vendorCompany: string | null;
+	sponsorUserId: string | null;
+	sponsorName: string | null;
+	sponsorEmail: string | null;
+	accessExpiresAt: Date | null;
+	notes: string | null;
 };
 
 export type AdminOrganizationInvitation = {
@@ -213,10 +231,28 @@ export const getAdminOrganization = createServerFn({
                 COALESCE(
                   u.banned,
                   false
-                ) AS banned
+                ) AS banned,
+                COALESCE(
+                  oms.active,
+                  true
+                ) AS active,
+                COALESCE(
+                  oms."personType",
+                  'employee'
+                ) AS "personType",
+                oms."vendorCompany",
+                oms."sponsorUserId",
+                sponsor.name AS "sponsorName",
+                sponsor.email AS "sponsorEmail",
+                oms."accessExpiresAt",
+                oms.notes
               FROM member m
               INNER JOIN "user" u
                 ON u.id = m."userId"
+              LEFT JOIN "organizationMemberStatus" oms
+                ON oms."memberId" = m.id
+              LEFT JOIN "user" sponsor
+                ON sponsor.id = oms."sponsorUserId"
               WHERE
                 m."organizationId" = $1
               ORDER BY
@@ -320,6 +356,12 @@ export const getAdminOrganizationUserOptions = createServerFn({
 	return result.rows;
 });
 
+function cleanOptionalText(value?: string | null) {
+	const text = value?.trim() ?? "";
+
+	return text.length > 0 ? text : null;
+}
+
 export const setAdminOrganizationEnabled = createServerFn({
 	method: "POST",
 })
@@ -381,6 +423,45 @@ export const updateAdminOrganizationMemberRole = createServerFn({
 				organizationId: data.organizationId,
 				memberId: data.memberId,
 				role: data.role,
+			},
+			headers: request.headers,
+		});
+
+		return {
+			ok: true,
+		};
+	});
+
+export const updateAdminOrganizationMemberProfile = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			organizationId: string;
+			userId: string;
+			active: boolean;
+			personType: OrganizationPersonType;
+			vendorCompany?: string | null;
+			sponsorUserId?: string | null;
+			accessExpiresAt?: string | null;
+			notes?: string | null;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		await auth.api.setOrganizationMemberStatus({
+			body: {
+				organizationId: data.organizationId,
+				userId: data.userId,
+				active: data.active,
+				source: "admin-ui",
+				reason: data.active ? null : "Disabled in admin console",
+				personType: data.personType,
+				vendorCompany: cleanOptionalText(data.vendorCompany),
+				sponsorUserId: cleanOptionalText(data.sponsorUserId),
+				accessExpiresAt: cleanOptionalText(data.accessExpiresAt),
+				notes: cleanOptionalText(data.notes),
 			},
 			headers: request.headers,
 		});
