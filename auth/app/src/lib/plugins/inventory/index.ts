@@ -171,6 +171,8 @@ const inventoryOrganizationConfigBodySchema = z.object({
 	pitcherActualSizeOz: z.number().positive().nullable(),
 	canEnabled: z.boolean().default(true),
 	bottleEnabled: z.boolean().default(true),
+	retailEnabled: z.boolean().optional(),
+	openItemsEnabled: z.boolean().optional(),
 	optionalBeerCategory1Enabled: z.boolean().default(false),
 	optionalBeerCategory1Label: z.string().trim().min(1).max(80).default("Optional Beer Category 1"),
 	optionalBeerCategory2Enabled: z.boolean().default(false),
@@ -729,6 +731,16 @@ export const inventoryAccess = ({
 					type: "boolean",
 					required: true,
 					defaultValue: true,
+				},
+				retailEnabled: {
+					type: "boolean",
+					required: false,
+					defaultValue: false,
+				},
+				openItemsEnabled: {
+					type: "boolean",
+					required: false,
+					defaultValue: false,
 				},
 				tallBoyCanEnabled: {
 					type: "boolean",
@@ -4206,6 +4218,8 @@ export const inventoryAccess = ({
 					pitcherActualSizeOz: number | null;
 					canEnabled: boolean;
 					bottleEnabled: boolean;
+					retailEnabled: boolean | null;
+					openItemsEnabled: boolean | null;
 					tallBoyCanEnabled: boolean;
 					tallBoyCanLabel: string;
 					optionalBeerCategory2Enabled: boolean;
@@ -4238,6 +4252,8 @@ export const inventoryAccess = ({
 							"pitcherActualSizeOz",
 							"canEnabled",
 							"bottleEnabled",
+							"retailEnabled",
+							"openItemsEnabled",
 							"tallBoyCanEnabled",
 							"tallBoyCanLabel",
 							"optionalBeerCategory2Enabled",
@@ -4289,6 +4305,8 @@ export const inventoryAccess = ({
 						pitcherActualSizeOz: config?.pitcherActualSizeOz ?? null,
 						canEnabled: config?.canEnabled ?? true,
 						bottleEnabled: config?.bottleEnabled ?? true,
+						retailEnabled: config?.retailEnabled ?? false,
+						openItemsEnabled: config?.openItemsEnabled ?? false,
 						optionalBeerCategory1Enabled:
 							config?.tallBoyCanEnabled ?? false,
 						optionalBeerCategory1Label:
@@ -4414,11 +4432,13 @@ export const inventoryAccess = ({
 							"optionalBeerCategory4Label",
 							"optionalBeerCategory5Enabled",
 							"optionalBeerCategory5Label",
+							"retailEnabled",
+							"openItemsEnabled",
 							"createdAt",
 							"updatedAt"
 						)
 						VALUES (
-							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $31
+							$1, $2, true, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, COALESCE($31, false), COALESCE($32, false), $33, $33
 						)
 						ON CONFLICT ("organizationId")
 						DO UPDATE SET
@@ -4450,6 +4470,8 @@ export const inventoryAccess = ({
 							"optionalBeerCategory4Label" = EXCLUDED."optionalBeerCategory4Label",
 							"optionalBeerCategory5Enabled" = EXCLUDED."optionalBeerCategory5Enabled",
 							"optionalBeerCategory5Label" = EXCLUDED."optionalBeerCategory5Label",
+							"retailEnabled" = CASE WHEN $34 THEN EXCLUDED."retailEnabled" ELSE "inventoryOrganizationConfig"."retailEnabled" END,
+							"openItemsEnabled" = CASE WHEN $35 THEN EXCLUDED."openItemsEnabled" ELSE "inventoryOrganizationConfig"."openItemsEnabled" END,
 							"updatedAt" = EXCLUDED."updatedAt"
 					`,
 					[
@@ -4483,7 +4505,11 @@ export const inventoryAccess = ({
 						body.optionalBeerCategory4Label,
 						body.optionalBeerCategory5Enabled,
 						body.optionalBeerCategory5Label,
+						body.retailEnabled ?? null,
+						body.openItemsEnabled ?? null,
 						now,
+						Object.hasOwn(body, "retailEnabled"),
+						Object.hasOwn(body, "openItemsEnabled"),
 					],
 				);
 
@@ -4510,6 +4536,8 @@ export const inventoryAccess = ({
 						pitcherActualSizeOz: body.pitcherActualSizeOz,
 						canEnabled: body.canEnabled,
 						bottleEnabled: body.bottleEnabled,
+						retailEnabled: body.retailEnabled ?? false,
+						openItemsEnabled: body.openItemsEnabled ?? false,
 						optionalBeerCategory1Enabled:
 							body.optionalBeerCategory1Enabled,
 						optionalBeerCategory1Label:
