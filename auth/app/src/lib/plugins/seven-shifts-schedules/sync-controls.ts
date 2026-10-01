@@ -9,7 +9,7 @@ import {
 	getOrganizationMembership,
 	isGlobalAdmin,
 } from "../organization-member-status/access.js";
-import { userHasLocationPermission } from "../seven-shifts/access.js";
+import { userHasScheduleAccess } from "../seven-shifts/access.js";
 
 type SyncControlsEndpointOptions = {
 	pool: Pool;
@@ -45,10 +45,9 @@ async function canReadSchedule(
 		return true;
 	}
 
-	return userHasLocationPermission(
+	return userHasScheduleAccess(
 		pool,
 		userId,
-		"schedules",
 		organizationId,
 	);
 }

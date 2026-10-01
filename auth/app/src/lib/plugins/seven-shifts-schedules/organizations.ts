@@ -113,6 +113,7 @@ export const createListSevenShiftsScheduleOrganizationsEndpoint = ({
 			const [
 				memberships,
 				locationPermissions,
+				explicitScheduleAssignments,
 			] = await Promise.all([
 				pool.query<MembershipRow>(
 					`
@@ -144,6 +145,22 @@ export const createListSevenShiftsScheduleOrganizationsEndpoint = ({
 					pool,
 					userId,
 				),
+				pool.query<{ organizationId: string }>(
+					`
+						SELECT assignment."organizationId"
+						FROM "tipClaimEmployeeAssignment" assignment
+						INNER JOIN "sevenShiftsApiOrganizationSource" mapping
+							ON mapping."organizationId" =
+								assignment."organizationId"
+						WHERE
+							assignment."userId" = $1
+							AND assignment."accessEnabled" = true
+							AND assignment."sevenShiftsEnabled" = true
+							AND assignment."organizationId" =
+								ANY($2::text[])
+					`,
+					[userId, organizationIds],
+				),
 			]);
 
 			const membershipByOrganization =
@@ -170,6 +187,13 @@ export const createListSevenShiftsScheduleOrganizationsEndpoint = ({
 						),
 				);
 
+			const explicitlyPermittedScheduleOrganizations =
+				new Set(
+					explicitScheduleAssignments.rows.map(
+						(row) => row.organizationId,
+					),
+				);
+
 			const allowedOrganizations =
 				organizations.rows.filter(
 					(organization) => {
@@ -190,6 +214,9 @@ export const createListSevenShiftsScheduleOrganizationsEndpoint = ({
 							membership.role === "owner" ||
 							membership.role === "admin" ||
 							permittedScheduleOrganizations.has(
+								organization.id,
+							) ||
+							explicitlyPermittedScheduleOrganizations.has(
 								organization.id,
 							)
 						);

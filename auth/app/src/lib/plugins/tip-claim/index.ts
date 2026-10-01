@@ -26,6 +26,13 @@ type OrganizationStatusRow = {
 };
 
 const roleSchema = z.enum(["bartender", "manager", "barback", "door"]);
+const assignmentRoleSchema = z.enum([
+	"bartender",
+	"manager",
+	"barback",
+	"door",
+	"seven-shifts",
+]);
 
 const registerSchema = z.object({
 	registerKey: z.string().min(1),
@@ -195,7 +202,7 @@ const deleteWeightPresetBodySchema = z.object({
 const updateAssignmentBodySchema = z.object({
 	organizationId: z.string().min(1),
 	userId: z.string().min(1),
-	role: roleSchema,
+	role: assignmentRoleSchema,
 	enabled: z.boolean(),
 });
 
@@ -1103,6 +1110,11 @@ export const tipClaim = ({
 					required: true,
 					defaultValue: true,
 				},
+				sevenShiftsEnabled: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
 				createdAt: {
 					type: "date",
 					required: true,
@@ -1472,6 +1484,16 @@ export const tipClaim = ({
 					});
 				}
 
+				const sevenShiftsConfiguredResult = await pool.query(
+					`SELECT 1
+					 FROM "sevenShiftsApiOrganizationSource"
+					 WHERE "organizationId" = $1
+					 LIMIT 1`,
+					[organizationId],
+				);
+				const sevenShiftsConfigured =
+					sevenShiftsConfiguredResult.rowCount === 1;
+
 				const result = await pool.query<{
 					memberId: string;
 					userId: string;
@@ -1484,6 +1506,7 @@ export const tipClaim = ({
 					managerEnabled: boolean | null;
 					barbackEnabled: boolean | null;
 					doorEnabled: boolean | null;
+					sevenShiftsEnabled: boolean | null;
 				}>(
 					`
 						SELECT
@@ -1497,7 +1520,8 @@ export const tipClaim = ({
 							a."bartenderEnabled",
 							a."managerEnabled",
 							a."barbackEnabled",
-							a."doorEnabled"
+							a."doorEnabled",
+							a."sevenShiftsEnabled"
 						FROM member m
 						INNER JOIN "user" u
 							ON u.id = m."userId"
@@ -1516,6 +1540,7 @@ export const tipClaim = ({
 				);
 
 				return ctx.json({
+					sevenShiftsConfigured,
 					assignments: result.rows.map((row) => {
 						const accessEnabled = row.accessEnabled ?? false;
 						const systemAdmin = row.systemRole === "admin";
@@ -1553,6 +1578,8 @@ export const tipClaim = ({
 							managerEnabled: row.managerEnabled ?? true,
 							barbackEnabled: row.barbackEnabled ?? true,
 							doorEnabled: row.doorEnabled ?? true,
+							sevenShiftsEnabled:
+								row.sevenShiftsEnabled ?? false,
 							canUpdateAccess,
 							canUpdateManager,
 							canUpdateRoles,
@@ -3506,6 +3533,16 @@ export const tipClaim = ({
 					);
 				}
 
+				const sevenShiftsConfiguredResult = await pool.query(
+					`SELECT 1
+					 FROM "sevenShiftsApiOrganizationSource"
+					 WHERE "organizationId" = $1
+					 LIMIT 1`,
+					[organizationId],
+				);
+				const sevenShiftsConfigured =
+					sevenShiftsConfiguredResult.rowCount === 1;
+
 				const result = await pool.query<{
 					memberId: string;
 					userId: string;
@@ -3518,6 +3555,7 @@ export const tipClaim = ({
 					managerEnabled: boolean | null;
 					barbackEnabled: boolean | null;
 					doorEnabled: boolean | null;
+					sevenShiftsEnabled: boolean | null;
 				}>(
 					`
 						SELECT
@@ -3531,7 +3569,8 @@ export const tipClaim = ({
 							a."bartenderEnabled",
 							a."managerEnabled",
 							a."barbackEnabled",
-							a."doorEnabled"
+							a."doorEnabled",
+							a."sevenShiftsEnabled"
 						FROM member m
 						INNER JOIN "user" u
 							ON u.id = m."userId"
@@ -3550,6 +3589,7 @@ export const tipClaim = ({
 				);
 
 				return ctx.json({
+					sevenShiftsConfigured,
 					assignments: result.rows.map((row) => {
 						const accessEnabled = row.accessEnabled ?? false;
 						const systemAdmin = row.systemRole === "admin";
@@ -3587,6 +3627,8 @@ export const tipClaim = ({
 							managerEnabled: row.managerEnabled ?? true,
 							barbackEnabled: row.barbackEnabled ?? true,
 							doorEnabled: row.doorEnabled ?? true,
+							sevenShiftsEnabled:
+								row.sevenShiftsEnabled ?? false,
 							canUpdateAccess,
 							canUpdateManager,
 							canUpdateRoles,
@@ -3729,6 +3771,7 @@ export const tipClaim = ({
 					manager: "managerEnabled",
 					barback: "barbackEnabled",
 					door: "doorEnabled",
+					"seven-shifts": "sevenShiftsEnabled",
 				} as const;
 
 				const column = columnByRole[role];
@@ -3744,6 +3787,7 @@ export const tipClaim = ({
 							"managerEnabled",
 							"barbackEnabled",
 							"doorEnabled",
+							"sevenShiftsEnabled",
 							"createdAt",
 							"updatedAt"
 						)
@@ -3756,6 +3800,7 @@ export const tipClaim = ({
 							true,
 							true,
 							true,
+							false,
 							CURRENT_TIMESTAMP,
 							CURRENT_TIMESTAMP
 						)
@@ -3783,6 +3828,7 @@ export const tipClaim = ({
 					managerEnabled: boolean;
 					barbackEnabled: boolean;
 					doorEnabled: boolean;
+					sevenShiftsEnabled: boolean;
 				}>(
 					`
 						SELECT
@@ -3791,7 +3837,8 @@ export const tipClaim = ({
 							"bartenderEnabled",
 							"managerEnabled",
 							"barbackEnabled",
-							"doorEnabled"
+							"doorEnabled",
+							"sevenShiftsEnabled"
 						FROM "tipClaimEmployeeAssignment"
 						WHERE "organizationId" = $1
 							AND "userId" = $2

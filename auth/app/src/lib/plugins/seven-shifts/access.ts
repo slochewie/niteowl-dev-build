@@ -84,3 +84,51 @@ export async function userHasLocationPermission(
       permission.organizationId === organizationId,
   );
 }
+
+
+export async function userHasTipCalculatorScheduleAccess(
+  pool: Pool,
+  userId: string,
+  organizationId: string,
+): Promise<boolean> {
+  const result = await pool.query(
+    `
+      SELECT 1
+      FROM "tipClaimEmployeeAssignment" assignment
+      INNER JOIN "sevenShiftsApiOrganizationSource" mapping
+        ON mapping."organizationId" = assignment."organizationId"
+      WHERE
+        assignment."organizationId" = $1
+        AND assignment."userId" = $2
+        AND assignment."accessEnabled" = true
+        AND assignment."sevenShiftsEnabled" = true
+      LIMIT 1
+    `,
+    [organizationId, userId],
+  );
+
+  return result.rowCount === 1;
+}
+
+export async function userHasScheduleAccess(
+  pool: Pool,
+  userId: string,
+  organizationId: string,
+): Promise<boolean> {
+  if (
+    await userHasLocationPermission(
+      pool,
+      userId,
+      "schedules",
+      organizationId,
+    )
+  ) {
+    return true;
+  }
+
+  return userHasTipCalculatorScheduleAccess(
+    pool,
+    userId,
+    organizationId,
+  );
+}
