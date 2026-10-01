@@ -32,16 +32,6 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
-	Item,
-	ItemActions,
-	ItemContent,
-	ItemDescription,
-	ItemGroup,
-	ItemMedia,
-	ItemSeparator,
-	ItemTitle,
-} from "@/components/ui/item";
-import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -62,6 +52,8 @@ import {
 import type { AdminUserOrganization } from "@/lib/admin/users";
 
 type OrganizationRole = "member" | "admin" | "owner";
+
+type RowsPerPage = 10 | 25 | 50;
 
 type MembershipFormValues = {
 	personType: OrganizationPersonType;
@@ -125,6 +117,25 @@ export function UserOrganizations({
 	const [membershipValues, setMembershipValues] = useState<MembershipFormValues>(
 		EMPTY_MEMBERSHIP_VALUES,
 	);
+
+	const [rowsPerPage, setRowsPerPage] = useState<RowsPerPage>(10);
+
+	const [currentPage, setCurrentPage] = useState(1);
+
+	const pageCount = Math.max(1, Math.ceil(organizations.length / rowsPerPage));
+
+	const safePage = Math.min(currentPage, pageCount);
+
+	const startIndex = (safePage - 1) * rowsPerPage;
+
+	const visibleOrganizations = organizations.slice(
+		startIndex,
+		startIndex + rowsPerPage,
+	);
+
+	const showingFrom = organizations.length === 0 ? 0 : startIndex + 1;
+
+	const showingTo = Math.min(startIndex + rowsPerPage, organizations.length);
 
 	const availableOrganizations = useMemo(() => {
 		const currentIds = new Set(
@@ -378,113 +389,197 @@ export function UserOrganizations({
 							Not a member of any organizations
 						</div>
 					) : (
-						<ItemGroup className="gap-0">
-							{organizations.map((organization, index) => (
-								<div key={organization.id}>
-									{index > 0 && <ItemSeparator />}
+						<div className="space-y-3">
+							<div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+								<div>
+									Showing {showingFrom}
+									{"-"}
+									{showingTo} of {organizations.length}{" "}
+									{organizations.length === 1
+										? "organization membership"
+										: "organization memberships"}
+								</div>
 
-									<Item>
-										<ItemMedia variant="icon">
-											<Building2 />
-										</ItemMedia>
+								<div className="flex items-center gap-2">
+									<span>Rows per page</span>
 
-										<ItemContent>
-											<ItemTitle className="flex flex-wrap items-center gap-2">
-												{organization.name}
+									<Select
+										value={String(rowsPerPage)}
+										onValueChange={(value) => {
+											setRowsPerPage(Number(value) as RowsPerPage);
+											setCurrentPage(1);
+										}}
+									>
+										<SelectTrigger className="h-8 w-20">
+											<SelectValue />
+										</SelectTrigger>
 
-												<Badge variant="outline">{organization.role}</Badge>
+										<SelectContent>
+											<SelectItem value="10">10</SelectItem>
+											<SelectItem value="25">25</SelectItem>
+											<SelectItem value="50">50</SelectItem>
+										</SelectContent>
+									</Select>
+								</div>
+							</div>
 
-												{organization.personType !== "employee" && (
-													<Badge variant="outline">
-														{PERSON_TYPE_LABELS[organization.personType]}
-													</Badge>
-												)}
+							<div className="overflow-x-auto rounded-md border">
+								<div className="min-w-[820px]">
+									<div className="grid grid-cols-[minmax(240px,1.3fr)_minmax(180px,0.9fr)_130px_260px] gap-4 border-b bg-muted/30 px-4 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+										<div>Organization</div>
+										<div>Membership Type</div>
+										<div>Role</div>
+										<div className="text-right">Actions</div>
+									</div>
 
-												{!organization.active && (
-													<Badge variant="destructive">Inactive</Badge>
-												)}
-											</ItemTitle>
+									<div className="divide-y">
+										{visibleOrganizations.map((organization) => (
+											<div
+												key={organization.id}
+												className="grid grid-cols-[minmax(240px,1.3fr)_minmax(180px,0.9fr)_130px_260px] items-center gap-4 px-4 py-4"
+											>
+												<div className="flex min-w-0 items-center gap-3">
+													<div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
+														<Building2 className="size-5 text-muted-foreground" />
+													</div>
 
-											<ItemDescription>
-												<div>
-													{organization.slug}
-													{" · Joined "}
-													{formatDate(organization.joinedAt)}
+													<div className="min-w-0">
+														<div className="truncate font-medium">
+															{organization.name}
+														</div>
+
+														<div className="truncate text-sm text-muted-foreground">
+															{organization.slug}
+														</div>
+
+														<div className="truncate text-xs text-muted-foreground">
+															Joined {formatDate(organization.joinedAt)}
+														</div>
+													</div>
 												</div>
 
-												<div>{membershipSummary(organization)}</div>
-											</ItemDescription>
-										</ItemContent>
+												<div className="min-w-0 space-y-1">
+													<div className="flex flex-wrap items-center gap-2">
+														<Badge variant="outline">
+															{PERSON_TYPE_LABELS[organization.personType]}
+														</Badge>
 
-										<ItemActions className="flex flex-wrap gap-2">
-											<Button
-												variant="outline"
-												size="sm"
-												disabled={pending}
-												onClick={() => openMembershipEditor(organization)}
-											>
-												<Pencil />
-												Membership
-											</Button>
+														{!organization.active && (
+															<Badge variant="destructive">Inactive</Badge>
+														)}
+													</div>
 
-											<DropdownMenu>
-												<DropdownMenuTrigger asChild>
+													{membershipSummary(organization) && (
+														<div className="truncate text-xs text-muted-foreground">
+															{membershipSummary(organization)}
+														</div>
+													)}
+												</div>
+
+												<div>
+													<DropdownMenu>
+														<DropdownMenuTrigger asChild>
+															<Button
+																variant="outline"
+																size="sm"
+																disabled={pending}
+																className="w-full justify-between"
+															>
+																{organization.role}
+
+																<ChevronDown />
+															</Button>
+														</DropdownMenuTrigger>
+
+														<DropdownMenuContent align="end">
+															<DropdownMenuItem
+																disabled={organization.role === "member"}
+																onClick={() =>
+																	void updateRole(organization, "member")
+																}
+															>
+																Member
+															</DropdownMenuItem>
+
+															<DropdownMenuItem
+																disabled={organization.role === "admin"}
+																onClick={() =>
+																	void updateRole(organization, "admin")
+																}
+															>
+																Admin
+															</DropdownMenuItem>
+
+															<DropdownMenuItem
+																disabled={organization.role === "owner"}
+																onClick={() =>
+																	void updateRole(organization, "owner")
+																}
+															>
+																Owner
+															</DropdownMenuItem>
+														</DropdownMenuContent>
+													</DropdownMenu>
+												</div>
+
+												<div className="flex items-center justify-end gap-2">
 													<Button
 														variant="outline"
 														size="sm"
 														disabled={pending}
+														onClick={() => openMembershipEditor(organization)}
 													>
-														{organization.role}
-
-														<ChevronDown />
+														<Pencil />
+														Membership
 													</Button>
-												</DropdownMenuTrigger>
 
-												<DropdownMenuContent align="end">
-													<DropdownMenuItem
-														disabled={organization.role === "member"}
-														onClick={() =>
-															void updateRole(organization, "member")
-														}
+													<Button
+														variant="outline"
+														size="icon"
+														className="text-destructive"
+														disabled={pending}
+														onClick={() => void removeMembership(organization)}
+														aria-label={"Remove from " + organization.name}
 													>
-														Member
-													</DropdownMenuItem>
-
-													<DropdownMenuItem
-														disabled={organization.role === "admin"}
-														onClick={() =>
-															void updateRole(organization, "admin")
-														}
-													>
-														Admin
-													</DropdownMenuItem>
-
-													<DropdownMenuItem
-														disabled={organization.role === "owner"}
-														onClick={() =>
-															void updateRole(organization, "owner")
-														}
-													>
-														Owner
-													</DropdownMenuItem>
-												</DropdownMenuContent>
-											</DropdownMenu>
-
-											<Button
-												variant="outline"
-												size="icon"
-												className="text-destructive"
-												disabled={pending}
-												onClick={() => void removeMembership(organization)}
-												aria-label={"Remove from " + organization.name}
-											>
-												<Trash2 />
-											</Button>
-										</ItemActions>
-									</Item>
+														<Trash2 />
+													</Button>
+												</div>
+											</div>
+										))}
+									</div>
 								</div>
-							))}
-						</ItemGroup>
+							</div>
+
+							{pageCount > 1 && (
+								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+									<div className="text-sm text-muted-foreground">
+										Page {safePage} of {pageCount}
+									</div>
+
+									<div className="flex items-center justify-end gap-2">
+										<Button
+											variant="outline"
+											size="sm"
+											disabled={safePage <= 1}
+											onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+										>
+											Previous
+										</Button>
+
+										<Button
+											variant="outline"
+											size="sm"
+											disabled={safePage >= pageCount}
+											onClick={() =>
+												setCurrentPage(Math.min(pageCount, safePage + 1))
+											}
+										>
+											Next
+										</Button>
+									</div>
+								</div>
+							)}
+						</div>
 					)}
 				</CardContent>
 			</Card>
@@ -706,7 +801,6 @@ function MembershipFields({
 
 function membershipSummary(organization: AdminUserOrganization) {
 	const parts = [
-		PERSON_TYPE_LABELS[organization.personType],
 		organization.vendorCompany,
 		organization.accessExpiresAt
 			? "Expires: " + formatDateOnly(organization.accessExpiresAt)
