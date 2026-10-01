@@ -1598,8 +1598,7 @@ export const inventoryAccess = ({
 						LEFT JOIN "inventoryOrganizationCocktail" oc
 							ON oc."inventoryCocktailId" = c.id
 							AND oc."organizationId" = $1
-						WHERE c.active = true
-						ORDER BY LOWER(c.name), c.id
+						ORDER BY c.active DESC, LOWER(c.name), c.id
 					`,
 					[organizationId],
 				);
