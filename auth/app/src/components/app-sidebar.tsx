@@ -43,7 +43,7 @@ import {
 const CONSOLE_APP = appDefinitionsById.console;
 
 export function AppSidebar() {
-	const { canView, readOnly } = useAdminAccess();
+	const { canView } = useAdminAccess();
 	const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
 	const hostname = useCurrentHostname();
 
@@ -192,6 +192,10 @@ export function AppSidebar() {
 												</SidebarMenuButton>
 											</SidebarMenuItem>
 										))}
+
+										{group.id === "console" && canView
+											? adminNavigation.map(navigationItem)
+											: null}
 									</SidebarMenu>
 								</SidebarGroupContent>
 							</SidebarGroup>
@@ -300,23 +304,6 @@ export function AppSidebar() {
 					</SidebarGroupContent>
 				</SidebarGroup>
 
-				{canView && (
-					<>
-						<SidebarSeparator />
-
-						<SidebarGroup>
-							<SidebarGroupLabel className="text-sm">
-								{readOnly ? "Admin · Read only" : "Admin"}
-							</SidebarGroupLabel>
-
-							<SidebarGroupContent>
-								<SidebarMenu>
-									{adminNavigation.map(navigationItem)}
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</SidebarGroup>
-					</>
-				)}
 			</SidebarContent>
 
 			<SidebarRail />
