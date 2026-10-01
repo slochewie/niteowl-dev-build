@@ -135,6 +135,13 @@ const inventoryCocktailRemoveBodySchema = z.object({
 	organizationCocktailId: z.string().min(1),
 });
 
+const inventoryCocktailMasterUpdateBodySchema = z.object({
+	organizationId: z.string().min(1),
+	inventoryCocktailId: z.string().min(1),
+	name: z.string().trim().min(1).max(160).optional(),
+	active: z.boolean().optional(),
+});
+
 const inventoryLiquorModifierTypeSchema = z.enum([
 	"mixer",
 	"bar_prep",
@@ -1598,6 +1605,93 @@ export const inventoryAccess = ({
 				);
 
 				return ctx.json({ cocktails: result.rows });
+			},
+		),
+
+		updateInventoryCocktailMaster: createAuthEndpoint(
+			"/inventory/cocktail-master",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventoryCocktailMasterUpdateBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed || access.role !== "admin") {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const existing = await pool.query(
+					`
+						SELECT id, name, "normalizedName", active, "createdAt", "updatedAt"
+						FROM "inventoryCocktail"
+						WHERE id = $1
+						LIMIT 1
+					`,
+					[body.inventoryCocktailId],
+				);
+
+				const current = existing.rows[0];
+
+				if (!current) {
+					return ctx.json(
+						{ error: "Cocktail master not found" },
+						{ status: 404 },
+					);
+				}
+
+				const nextName = Object.hasOwn(body, "name")
+					? body.name?.trim() ?? current.name
+					: current.name;
+				const nextNormalizedName = normalizeInventoryName(nextName);
+
+				try {
+					const result = await pool.query(
+						`
+							UPDATE "inventoryCocktail"
+							SET
+								name = $2,
+								"normalizedName" = $3,
+								active = CASE WHEN $4 THEN $5 ELSE active END,
+								"updatedAt" = $6
+							WHERE id = $1
+							RETURNING id, name, "normalizedName", active, "createdAt", "updatedAt"
+						`,
+						[
+							body.inventoryCocktailId,
+							nextName,
+							nextNormalizedName,
+							Object.hasOwn(body, "active"),
+							body.active ?? true,
+							new Date(),
+						],
+					);
+
+					return ctx.json({
+						updated: true,
+						cocktail: result.rows[0],
+					});
+				} catch (error) {
+					if (
+						error &&
+						typeof error === "object" &&
+						"code" in error &&
+						error.code === "23505"
+					) {
+						return ctx.json(
+							{ error: "That Cocktail master already exists." },
+							{ status: 409 },
+						);
+					}
+
+					throw error;
+				}
 			},
 		),
 
