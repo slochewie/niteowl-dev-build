@@ -11,7 +11,7 @@ import {
 	Search,
 	ShieldBan,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { useAdminAccess } from "@/components/auth/admin/admin-access-context";
@@ -28,6 +28,13 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import {
 	Table,
 	TableBody,
@@ -46,6 +53,10 @@ type SortMode = "created-desc" | "created-asc" | "name-asc" | "name-desc";
 
 type StatusFilter = "all" | "active" | "banned";
 
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+
+type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
+
 export function UsersTable({ users }: UsersTableProps) {
 	const navigate = useNavigate();
 
@@ -58,6 +69,10 @@ export function UsersTable({ users }: UsersTableProps) {
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
 	const [organizationFilter, setOrganizationFilter] = useState("all");
+
+	const [pageSize, setPageSize] = useState<PageSize>(25);
+
+	const [currentPage, setCurrentPage] = useState(1);
 
 	const organizations = useMemo(() => {
 		const organizationMap = new Map<
@@ -128,16 +143,38 @@ export function UsersTable({ users }: UsersTableProps) {
 		});
 	}, [users, search, statusFilter, organizationFilter, sortMode]);
 
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [search, statusFilter, organizationFilter, sortMode, pageSize]);
+
+	const pageCount = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+
+	const page = Math.min(currentPage, pageCount);
+
+	const pageStart = filteredUsers.length === 0 ? 0 : (page - 1) * pageSize + 1;
+
+	const pageEnd = Math.min(page * pageSize, filteredUsers.length);
+
+	const paginatedUsers = filteredUsers.slice(
+		(page - 1) * pageSize,
+		page * pageSize,
+	);
+
 	const activeFilterCount =
 		(statusFilter !== "all" ? 1 : 0) + (organizationFilter !== "all" ? 1 : 0);
 
 	const sortLabel = sortMode.startsWith("created") ? "Created" : "Name";
 
+	const paginationLabel =
+		filteredUsers.length === 0
+			? `Showing 0 of ${users.length} users`
+			: `Showing ${pageStart}-${pageEnd} of ${filteredUsers.length} users${
+					filteredUsers.length === users.length ? "" : ` (${users.length} total)`
+				}`;
+
 	return (
 		<div className="flex flex-col gap-5">
-			<div className="text-sm text-muted-foreground">
-				Showing {filteredUsers.length} of {users.length} users
-			</div>
+			<div className="text-sm text-muted-foreground">{paginationLabel}</div>
 
 			<div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 				<div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
@@ -288,7 +325,7 @@ export function UsersTable({ users }: UsersTableProps) {
 								</TableCell>
 							</TableRow>
 						) : (
-							filteredUsers.map((user) => (
+							paginatedUsers.map((user) => (
 								<TableRow
 									key={user.id}
 									className="cursor-pointer"
@@ -356,6 +393,53 @@ export function UsersTable({ users }: UsersTableProps) {
 					</TableBody>
 				</Table>
 			</div>
+
+			{filteredUsers.length > 0 && (
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<div className="flex items-center gap-2 text-sm text-muted-foreground">
+						<span>Rows per page</span>
+						<Select
+							value={String(pageSize)}
+							onValueChange={(value) => setPageSize(Number(value) as PageSize)}
+						>
+							<SelectTrigger size="sm" className="w-[4.5rem]">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent align="start">
+								{PAGE_SIZE_OPTIONS.map((option) => (
+									<SelectItem key={option} value={String(option)}>
+										{option}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="flex items-center gap-2">
+						<div className="text-sm text-muted-foreground">
+							Page {page} of {pageCount}
+						</div>
+
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={page <= 1}
+							onClick={() => setCurrentPage(Math.max(1, page - 1))}
+						>
+							Previous
+						</Button>
+
+						<Button
+							variant="outline"
+							size="sm"
+							disabled={page >= pageCount}
+							onClick={() => setCurrentPage(Math.min(pageCount, page + 1))}
+						>
+							Next
+						</Button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
