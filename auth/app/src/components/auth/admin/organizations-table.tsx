@@ -620,11 +620,48 @@ export function OrganizationsTable({
 									</TableCell>
 
 									<TableCell onClick={(event) => event.stopPropagation()}>
-										<Button variant="ghost" size="icon">
-											<MoreHorizontal />
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<Button variant="ghost" size="icon">
+													<MoreHorizontal />
 
-											<span className="sr-only">Organization actions</span>
-										</Button>
+													<span className="sr-only">Organization actions</span>
+												</Button>
+											</DropdownMenuTrigger>
+
+											<DropdownMenuContent align="end" className="w-52">
+												<DropdownMenuItem
+													onClick={() =>
+														void navigate({
+															to: "/organizations/$organizationId",
+															params: {
+																organizationId: organization.id,
+															},
+														})
+													}
+												>
+													View Organization
+												</DropdownMenuItem>
+
+												<DropdownMenuSeparator />
+
+												<DropdownMenuItem
+													onClick={() =>
+														void navigator.clipboard.writeText(organization.id)
+													}
+												>
+													Copy Organization ID
+												</DropdownMenuItem>
+
+												<DropdownMenuItem
+													onClick={() =>
+														void navigator.clipboard.writeText(organization.slug)
+													}
+												>
+													Copy Slug
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
 									</TableCell>
 								</TableRow>
 							))
