@@ -277,6 +277,7 @@ const inventoryOrganizationVariantBodySchema = z.object({
 	exportToToast: z.boolean().optional(),
 	priceOverrideCents: z.number().int().nullable().optional(),
 	happyHourPriceCents: z.number().int().nullable().optional(),
+	doublePriceCents: z.number().int().nullable().optional(),
 	toastNameOverride: z.string().nullable().optional(),
 	toastCategoryOverride: z.string().nullable().optional(),
 	toastDestinationOverride: z.string().nullable().optional(),
@@ -290,6 +291,7 @@ const inventoryOrganizationVariantsBodySchema = z.object({
 	exportToToast: z.boolean().optional(),
 	priceOverrideCents: z.number().int().nullable().optional(),
 	happyHourPriceCents: z.number().int().nullable().optional(),
+	doublePriceCents: z.number().int().nullable().optional(),
 	toastCategoryOverride: z.string().nullable().optional(),
 	toastDestinationOverride: z.string().nullable().optional(),
 });
@@ -1379,6 +1381,10 @@ export const inventoryAccess = ({
 					required: false,
 				},
 				happyHourPriceCents: {
+					type: "number",
+					required: false,
+				},
+				doublePriceCents: {
 					type: "number",
 					required: false,
 				},
@@ -4288,6 +4294,7 @@ export const inventoryAccess = ({
 							"exportToToast",
 							"priceOverrideCents",
 							"happyHourPriceCents",
+							"doublePriceCents",
 							"toastNameOverride",
 							"toastCategoryOverride",
 							"toastDestinationOverride",
@@ -4299,8 +4306,8 @@ export const inventoryAccess = ({
 							$1, $2, $3,
 							COALESCE($4, true),
 							COALESCE($5, true),
-							$6, $7, $8, $9, $10,
-							$11, $12, $12
+							$6, $7, $8, $9, $10, $11,
+							$12, $13, $13
 						)
 						ON CONFLICT (
 							"organizationId",
@@ -4317,31 +4324,36 @@ export const inventoryAccess = ({
 									ELSE "inventoryOrganizationVariant"."priceOverrideCents"
 								END,
 							"happyHourPriceCents" =
-								CASE WHEN $14
+								CASE WHEN $15
 									THEN $7
 									ELSE "inventoryOrganizationVariant"."happyHourPriceCents"
 								END,
-							"toastNameOverride" =
-								CASE WHEN $15
+							"doublePriceCents" =
+								CASE WHEN $16
 									THEN $8
+									ELSE "inventoryOrganizationVariant"."doublePriceCents"
+								END,
+							"toastNameOverride" =
+								CASE WHEN $17
+									THEN $9
 									ELSE "inventoryOrganizationVariant"."toastNameOverride"
 								END,
 							"toastCategoryOverride" =
-								CASE WHEN $16
-									THEN $9
+								CASE WHEN $18
+									THEN $10
 									ELSE "inventoryOrganizationVariant"."toastCategoryOverride"
 								END,
 							"toastDestinationOverride" =
-								CASE WHEN $17
-									THEN $10
+								CASE WHEN $19
+									THEN $11
 									ELSE "inventoryOrganizationVariant"."toastDestinationOverride"
 								END,
 							"toastSlot" =
-								CASE WHEN $18
-									THEN $11
+								CASE WHEN $20
+									THEN $12
 									ELSE "inventoryOrganizationVariant"."toastSlot"
 								END,
-							"updatedAt" = $12
+							"updatedAt" = $13
 					`,
 					[
 						randomUUID(),
@@ -4351,6 +4363,7 @@ export const inventoryAccess = ({
 						body.exportToToast ?? null,
 						body.priceOverrideCents ?? null,
 						body.happyHourPriceCents ?? null,
+						body.doublePriceCents ?? null,
 						body.toastNameOverride ?? null,
 						body.toastCategoryOverride ?? null,
 						body.toastDestinationOverride ?? null,
@@ -4358,6 +4371,7 @@ export const inventoryAccess = ({
 						new Date(),
 						Object.hasOwn(body, "priceOverrideCents"),
 						Object.hasOwn(body, "happyHourPriceCents"),
+						Object.hasOwn(body, "doublePriceCents"),
 						Object.hasOwn(body, "toastNameOverride"),
 						Object.hasOwn(body, "toastCategoryOverride"),
 						Object.hasOwn(body, "toastDestinationOverride"),
@@ -4963,6 +4977,11 @@ export const inventoryAccess = ({
 													"happyHourPriceCents",
 													$4
 												),
+											"doublePriceCents" =
+												COALESCE(
+													"doublePriceCents",
+													$5
+												),
 											"toastNameOverride" =
 												COALESCE(
 													"toastNameOverride",
@@ -4991,6 +5010,7 @@ export const inventoryAccess = ({
 										organizationVariant.exportToToast,
 										organizationVariant.priceOverrideCents,
 										organizationVariant.happyHourPriceCents,
+										organizationVariant.doublePriceCents,
 										organizationVariant.toastNameOverride,
 										organizationVariant.toastCategoryOverride,
 										organizationVariant.toastDestinationOverride,
@@ -5987,6 +6007,7 @@ export const inventoryAccess = ({
 							ov."exportToToast",
 							ov."priceOverrideCents",
 							ov."happyHourPriceCents",
+							ov."doublePriceCents",
 							ov."toastNameOverride",
 							ov."toastCategoryOverride",
 							ov."toastDestinationOverride",
