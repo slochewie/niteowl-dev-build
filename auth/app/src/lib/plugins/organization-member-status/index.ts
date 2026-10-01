@@ -19,9 +19,37 @@ type OrganizationMemberStatusOptions = {
 	pool: Pool;
 };
 
+type OrganizationPersonType =
+	| "employee"
+	| "vendor"
+	| "contractor"
+	| "it_support"
+	| "accountant"
+	| "owner"
+	| "service_account"
+	| "other";
+
+const organizationPersonTypeSchema = z.enum([
+	"employee",
+	"vendor",
+	"contractor",
+	"it_support",
+	"accountant",
+	"owner",
+	"service_account",
+	"other",
+]);
+
+const DEFAULT_PERSON_TYPE: OrganizationPersonType = "employee";
+
 type OrganizationMemberStatusRow = {
 	memberId: string;
 	active: boolean;
+	personType: OrganizationPersonType;
+	vendorCompany: string | null;
+	sponsorUserId: string | null;
+	accessExpiresAt: Date | null;
+	notes: string | null;
 	source: string | null;
 	reason: string | null;
 	deactivatedAt: Date | null;
@@ -34,7 +62,20 @@ const setMemberStatusBodySchema = z.object({
 	active: z.boolean(),
 	source: z.string().trim().min(1).nullable().optional(),
 	reason: z.string().trim().min(1).nullable().optional(),
+	personType: organizationPersonTypeSchema.optional(),
+	vendorCompany: z.string().trim().min(1).max(200).nullable().optional(),
+	sponsorUserId: z.string().min(1).nullable().optional(),
+	accessExpiresAt: z.string().datetime().nullable().optional(),
+	notes: z.string().trim().min(1).max(1000).nullable().optional(),
 });
+
+function normalizeAccessExpiresAt(value?: string | Date | null) {
+	if (!value) {
+		return null;
+	}
+
+	return value instanceof Date ? value : new Date(value);
+}
 
 const organizationQuerySchema = z.object({
 	organizationId: z.string().min(1),
@@ -48,6 +89,11 @@ export async function setOrganizationMemberStatus({
 	active,
 	source,
 	reason,
+	personType,
+	vendorCompany,
+	sponsorUserId,
+	accessExpiresAt,
+	notes,
 }: {
 	pool: Pool;
 	memberId: string;
@@ -56,7 +102,14 @@ export async function setOrganizationMemberStatus({
 	active: boolean;
 	source?: string | null;
 	reason?: string | null;
+	personType?: OrganizationPersonType;
+	vendorCompany?: string | null;
+	sponsorUserId?: string | null;
+	accessExpiresAt?: string | Date | null;
+	notes?: string | null;
 }) {
+	const accessExpiresAtValue = normalizeAccessExpiresAt(accessExpiresAt);
+
 	const result = await pool.query<OrganizationMemberStatusRow>(
 		`
         INSERT INTO
@@ -66,6 +119,11 @@ export async function setOrganizationMemberStatus({
             active,
             source,
             reason,
+            "personType",
+            "vendorCompany",
+            "sponsorUserId",
+            "accessExpiresAt",
+            notes,
             "deactivatedAt",
             "reactivatedAt",
             "createdAt",
@@ -77,6 +135,11 @@ export async function setOrganizationMemberStatus({
           $2,
           $3,
           $4,
+          $5,
+          $7,
+          $9,
+          $11,
+          $13,
 
           CASE
             WHEN $2 = false
@@ -108,6 +171,41 @@ export async function setOrganizationMemberStatus({
           reason =
             EXCLUDED.reason,
 
+          "personType" =
+            CASE
+              WHEN $6::boolean
+              THEN EXCLUDED."personType"
+              ELSE "organizationMemberStatus"."personType"
+            END,
+
+          "vendorCompany" =
+            CASE
+              WHEN $8::boolean
+              THEN EXCLUDED."vendorCompany"
+              ELSE "organizationMemberStatus"."vendorCompany"
+            END,
+
+          "sponsorUserId" =
+            CASE
+              WHEN $10::boolean
+              THEN EXCLUDED."sponsorUserId"
+              ELSE "organizationMemberStatus"."sponsorUserId"
+            END,
+
+          "accessExpiresAt" =
+            CASE
+              WHEN $12::boolean
+              THEN EXCLUDED."accessExpiresAt"
+              ELSE "organizationMemberStatus"."accessExpiresAt"
+            END,
+
+          notes =
+            CASE
+              WHEN $14::boolean
+              THEN EXCLUDED.notes
+              ELSE "organizationMemberStatus".notes
+            END,
+
           "deactivatedAt" =
             CASE
               WHEN
@@ -136,13 +234,34 @@ export async function setOrganizationMemberStatus({
         RETURNING
           "memberId",
           active,
+          "personType",
+          "vendorCompany",
+          "sponsorUserId",
+          "accessExpiresAt",
+          notes,
           source,
           reason,
           "deactivatedAt",
           "reactivatedAt"
       `,
-		[memberId, active, source ?? null, reason ?? null],
+		[
+			memberId,
+			active,
+			source ?? null,
+			reason ?? null,
+			personType ?? DEFAULT_PERSON_TYPE,
+			personType !== undefined,
+			vendorCompany ?? null,
+			vendorCompany !== undefined,
+			sponsorUserId ?? null,
+			sponsorUserId !== undefined,
+			accessExpiresAtValue,
+			accessExpiresAt !== undefined,
+			notes ?? null,
+			notes !== undefined,
+		],
 	);
+
 
 	if (!active) {
 		await pool.query(
@@ -290,6 +409,10 @@ export const organizationMemberStatus = ({
                     ON oms."memberId" =
                       m.id
 
+                  LEFT JOIN "user" sponsor
+                    ON sponsor.id =
+                      oms."sponsorUserId"
+
                   WHERE
                     m."organizationId" =
                       $1
@@ -356,6 +479,13 @@ export const organizationMemberStatus = ({
 						reason: string | null;
 						deactivatedAt: Date | null;
 						reactivatedAt: Date | null;
+						personType: OrganizationPersonType;
+						vendorCompany: string | null;
+						sponsorUserId: string | null;
+						sponsorName: string | null;
+						sponsorEmail: string | null;
+						accessExpiresAt: Date | null;
+						notes: string | null;
 					}>(
 						`
                   SELECT
@@ -378,7 +508,19 @@ export const organizationMemberStatus = ({
                     oms.source,
                     oms.reason,
                     oms."deactivatedAt",
-                    oms."reactivatedAt"
+                    oms."reactivatedAt",
+
+                    COALESCE(
+                      oms."personType",
+                      'employee'
+                    ) AS "personType",
+
+                    oms."vendorCompany",
+                    oms."sponsorUserId",
+                    sponsor.name AS "sponsorName",
+                    sponsor.email AS "sponsorEmail",
+                    oms."accessExpiresAt",
+                    oms.notes
 
                   FROM member m
 
@@ -390,6 +532,10 @@ export const organizationMemberStatus = ({
                     "organizationMemberStatus" oms
                     ON oms."memberId" =
                       m.id
+
+                  LEFT JOIN "user" sponsor
+                    ON sponsor.id =
+                      oms."sponsorUserId"
 
                   WHERE
                     m."organizationId" =
@@ -458,6 +604,11 @@ export const organizationMemberStatus = ({
 						active: ctx.body.active,
 						source: ctx.body.source,
 						reason: ctx.body.reason,
+						personType: ctx.body.personType,
+						vendorCompany: ctx.body.vendorCompany,
+						sponsorUserId: ctx.body.sponsorUserId,
+						accessExpiresAt: ctx.body.accessExpiresAt,
+						notes: ctx.body.notes,
 					});
 
 					return ctx.json(status);
@@ -485,6 +636,31 @@ export const organizationMemberStatus = ({
 						type: "boolean",
 						required: true,
 						defaultValue: () => true,
+					},
+
+					personType: {
+						type: "string",
+						required: false,
+					},
+
+					vendorCompany: {
+						type: "string",
+						required: false,
+					},
+
+					sponsorUserId: {
+						type: "string",
+						required: false,
+					},
+
+					accessExpiresAt: {
+						type: "date",
+						required: false,
+					},
+
+					notes: {
+						type: "string",
+						required: false,
 					},
 
 					source: {
