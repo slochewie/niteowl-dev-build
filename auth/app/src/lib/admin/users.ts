@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireAdminRead, requireAdminWrite } from "@/lib/admin/access";
 import { auth, pool, redis } from "@/lib/auth";
+import type { OrganizationPersonType } from "@/lib/admin/organizations";
 import {
 	getUserProfile,
 	upsertUserProfile,
@@ -15,6 +16,14 @@ export type AdminUserOrganization = {
 	logo: string | null;
 	role: string;
 	joinedAt: Date;
+	active: boolean;
+	personType: OrganizationPersonType;
+	vendorCompany: string | null;
+	sponsorUserId: string | null;
+	sponsorName: string | null;
+	sponsorEmail: string | null;
+	accessExpiresAt: Date | null;
+	notes: string | null;
 };
 
 export type AdminUserListItem = {
@@ -105,7 +114,15 @@ export const getAdminUsers = createServerFn({
             'slug', o.slug,
             'logo', o.logo,
             'role', m.role,
-            'joinedAt', m."createdAt"
+            'joinedAt', m."createdAt",
+            'active', COALESCE(oms.active, true),
+            'personType', COALESCE(oms."personType", 'employee'),
+            'vendorCompany', oms."vendorCompany",
+            'sponsorUserId', oms."sponsorUserId",
+            'sponsorName', sponsor.name,
+            'sponsorEmail', sponsor.email,
+            'accessExpiresAt', oms."accessExpiresAt",
+            'notes', oms.notes
           )
         ) FILTER (
           WHERE o.id IS NOT NULL
@@ -117,6 +134,10 @@ export const getAdminUsers = createServerFn({
       ON m."userId" = u.id
     LEFT JOIN organization o
       ON o.id = m."organizationId"
+    LEFT JOIN "organizationMemberStatus" oms
+      ON oms."memberId" = m.id
+    LEFT JOIN "user" sponsor
+      ON sponsor.id = oms."sponsorUserId"
     GROUP BY
       u.id
     ORDER BY
@@ -224,10 +245,28 @@ export const getAdminUser = createServerFn({
             o.slug,
             o.logo,
             m.role,
-            m."createdAt" AS "joinedAt"
+            m."createdAt" AS "joinedAt",
+            COALESCE(
+              oms.active,
+              true
+            ) AS active,
+            COALESCE(
+              oms."personType",
+              'employee'
+            ) AS "personType",
+            oms."vendorCompany",
+            oms."sponsorUserId",
+            sponsor.name AS "sponsorName",
+            sponsor.email AS "sponsorEmail",
+            oms."accessExpiresAt",
+            oms.notes
           FROM member m
           INNER JOIN organization o
             ON o.id = m."organizationId"
+          LEFT JOIN "organizationMemberStatus" oms
+            ON oms."memberId" = m.id
+          LEFT JOIN "user" sponsor
+            ON sponsor.id = oms."sponsorUserId"
           WHERE m."userId" = $1
           ORDER BY o.name ASC
         `,

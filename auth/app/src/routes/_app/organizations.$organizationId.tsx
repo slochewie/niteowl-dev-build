@@ -849,13 +849,13 @@ function MemberRow({
 				},
 			});
 
-			toast.success("Member relationship updated");
+			toast.success("Membership updated");
 
 			setEditProfileOpen(false);
 
 			await onRefresh();
 		} catch (error) {
-			toast.error(getErrorMessage(error, "Unable to update member relationship"));
+			toast.error(getErrorMessage(error, "Unable to update membership"));
 		} finally {
 			setPending(false);
 		}
@@ -991,7 +991,7 @@ function MemberRow({
 
 							<DropdownMenuItem onClick={openProfileEditor}>
 								<Pencil />
-								Edit Relationship
+								Edit Membership
 							</DropdownMenuItem>
 
 							<DropdownMenuSeparator />
@@ -1027,16 +1027,16 @@ function MemberRow({
 			<Dialog open={editProfileOpen} onOpenChange={setEditProfileOpen}>
 				<DialogContent className="sm:max-w-xl">
 					<DialogHeader>
-						<DialogTitle>Edit Relationship</DialogTitle>
+						<DialogTitle>Edit Membership</DialogTitle>
 
 						<DialogDescription>
-							Update how {member.name} is related to this organization.
+							Update this member's organization membership details.
 						</DialogDescription>
 					</DialogHeader>
 
 					<div className="grid gap-4 py-2">
 						<div className="grid gap-2">
-							<label className="text-sm font-medium">Relationship</label>
+							<label className="text-sm font-medium">Membership Type</label>
 
 							<Select
 								value={personType}
@@ -1121,7 +1121,7 @@ function MemberRow({
 						</Button>
 
 						<Button disabled={pending} onClick={() => void saveProfile()}>
-							Save Relationship
+							Save Membership
 						</Button>
 					</DialogFooter>
 				</DialogContent>
