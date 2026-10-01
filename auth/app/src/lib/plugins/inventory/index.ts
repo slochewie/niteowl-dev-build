@@ -140,14 +140,48 @@ const inventoryLiquorModifierTypeSchema = z.enum([
 	"bar_prep",
 ]);
 
-const inventoryLiquorModifierCreateBodySchema = z.object({
+const inventoryLiquorModifierMastersQuerySchema =
+	organizationQuerySchema.extend({
+		type: inventoryLiquorModifierTypeSchema,
+	});
+
+const inventoryLiquorModifierMasterCreateBodySchema = z.object({
 	organizationId: z.string().min(1),
 	type: inventoryLiquorModifierTypeSchema,
 	name: z.string().trim().min(1).max(160),
-	upchargeCents: z.number().int().nonnegative().default(0),
-	enabled: z.boolean().default(true),
-	sortOrder: z.number().int().nonnegative().default(0),
+	active: z.boolean().default(true),
 });
+
+const inventoryLiquorModifierMasterUpdateBodySchema = z.object({
+	organizationId: z.string().min(1),
+	inventoryLiquorModifierId: z.string().min(1),
+	name: z.string().trim().min(1).max(160).optional(),
+	active: z.boolean().optional(),
+});
+
+const inventoryLiquorModifierCreateBodySchema = z
+	.object({
+		organizationId: z.string().min(1),
+		inventoryLiquorModifierId: z.string().min(1).optional(),
+		type: inventoryLiquorModifierTypeSchema.optional(),
+		name: z.string().trim().min(1).max(160).optional(),
+		upchargeCents: z.number().int().nonnegative().default(0),
+		enabled: z.boolean().default(true),
+		exportToToast: z.boolean().default(true),
+		sortOrder: z.number().int().nonnegative().default(0),
+	})
+	.superRefine((body, ctx) => {
+		if (
+			!body.inventoryLiquorModifierId &&
+			(!body.type || !body.name?.trim())
+		) {
+			ctx.addIssue({
+				code: "custom",
+				message:
+					"Select an existing Liquor Mod master or provide a type and name.",
+			});
+		}
+	});
 
 const inventoryLiquorModifierUpdateBodySchema = z.object({
 	organizationId: z.string().min(1),
@@ -156,6 +190,7 @@ const inventoryLiquorModifierUpdateBodySchema = z.object({
 	name: z.string().trim().min(1).max(160).optional(),
 	upchargeCents: z.number().int().nonnegative().optional(),
 	enabled: z.boolean().optional(),
+	exportToToast: z.boolean().optional(),
 	sortOrder: z.number().int().nonnegative().optional(),
 });
 
@@ -611,28 +646,48 @@ async function getOrganizationName(
 	return result.rows[0]?.name ?? null;
 }
 
-type InventoryLiquorModifierRow = {
+type InventoryLiquorModifierMasterRow = {
 	id: string;
-	organizationId: string;
 	type: string;
 	name: string;
 	normalizedName: string;
+	active: boolean;
+	createdAt: Date | string;
+	updatedAt: Date | string;
+};
+
+type InventoryOrganizationLiquorModifierRow = {
+	id: string;
+	organizationId: string;
+	inventoryLiquorModifierId: string;
+	type: string;
+	masterName: string;
+	normalizedName: string;
+	nameOverride: string | null;
+	name: string;
 	upchargeCents: number;
 	enabled: boolean;
+	exportToToast: boolean;
 	sortOrder: number;
 	createdAt: Date | string;
 	updatedAt: Date | string;
 };
 
-function serializeInventoryLiquorModifier(row: InventoryLiquorModifierRow) {
+function serializeInventoryLiquorModifier(
+	row: InventoryOrganizationLiquorModifierRow,
+) {
 	return {
 		id: row.id,
 		organizationId: row.organizationId,
+		inventoryLiquorModifierId: row.inventoryLiquorModifierId,
 		type: row.type,
-		name: row.name,
+		masterName: row.masterName,
 		normalizedName: row.normalizedName,
+		nameOverride: row.nameOverride,
+		name: row.name,
 		upchargeCents: row.upchargeCents,
 		enabled: row.enabled,
+		exportToToast: row.exportToToast,
 		sortOrder: row.sortOrder,
 		createdAt: new Date(row.createdAt).toISOString(),
 		updatedAt: new Date(row.updatedAt).toISOString(),
@@ -870,15 +925,6 @@ export const inventoryAccess = ({
 
 		inventoryLiquorModifier: {
 			fields: {
-				organizationId: {
-					type: "string",
-					required: true,
-					references: {
-						model: "organization",
-						field: "id",
-						onDelete: "cascade",
-					},
-				},
 				type: {
 					type: "string",
 					required: true,
@@ -892,15 +938,69 @@ export const inventoryAccess = ({
 					type: "string",
 					required: true,
 				},
-				upchargeCents: {
-					type: "number",
+				active: {
+					type: "boolean",
 					required: true,
-					defaultValue: 0,
+					defaultValue: true,
+				},
+				createdAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+				updatedAt: {
+					type: "date",
+					required: true,
+					defaultValue: () => new Date(),
+				},
+			},
+			indexes: [
+				{ fields: ["type"] },
+				{
+					fields: ["type", "normalizedName"],
+					unique: true,
+				},
+			],
+		},
+
+		inventoryOrganizationLiquorModifier: {
+			fields: {
+				organizationId: {
+					type: "string",
+					required: true,
+					references: {
+						model: "organization",
+						field: "id",
+						onDelete: "cascade",
+					},
+				},
+				inventoryLiquorModifierId: {
+					type: "string",
+					required: true,
+					references: {
+						model: "inventoryLiquorModifier",
+						field: "id",
+						onDelete: "cascade",
+					},
 				},
 				enabled: {
 					type: "boolean",
 					required: true,
 					defaultValue: true,
+				},
+				exportToToast: {
+					type: "boolean",
+					required: true,
+					defaultValue: true,
+				},
+				nameOverride: {
+					type: "string",
+					required: false,
+				},
+				upchargeCents: {
+					type: "number",
+					required: true,
+					defaultValue: 0,
 				},
 				sortOrder: {
 					type: "number",
@@ -920,12 +1020,11 @@ export const inventoryAccess = ({
 			},
 			indexes: [
 				{ fields: ["organizationId"] },
-				{ fields: ["organizationId", "type"] },
+				{ fields: ["inventoryLiquorModifierId"] },
 				{
 					fields: [
 						"organizationId",
-						"type",
-						"normalizedName",
+						"inventoryLiquorModifierId",
 					],
 					unique: true,
 				},
@@ -1875,6 +1974,241 @@ export const inventoryAccess = ({
 			},
 		),
 
+		listInventoryLiquorModifierMasters: createAuthEndpoint(
+			"/inventory/liquor-mod-masters",
+			{
+				method: "GET",
+				use: [sessionMiddleware],
+				query: inventoryLiquorModifierMastersQuerySchema,
+			},
+			async (ctx) => {
+				const organizationId = ctx.query.organizationId;
+				const access = await resolveInventoryAccess(
+					pool,
+					organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed) {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const result = await pool.query(
+					`
+						SELECT
+							m.id,
+							m.type,
+							m.name,
+							m."normalizedName",
+							m.active,
+							m."createdAt",
+							m."updatedAt",
+							om.id AS "organizationModifierId",
+							(om.id IS NOT NULL) AS assigned
+						FROM "inventoryLiquorModifier" m
+						LEFT JOIN "inventoryOrganizationLiquorModifier" om
+							ON om."inventoryLiquorModifierId" = m.id
+							AND om."organizationId" = $1
+						WHERE m.type = $2
+						ORDER BY
+							m.active DESC,
+							LOWER(m.name),
+							m.id
+					`,
+					[organizationId, ctx.query.type],
+				);
+
+				return ctx.json({
+					organizationId,
+					role: access.role,
+					modifiers: result.rows,
+				});
+			},
+		),
+
+		createInventoryLiquorModifierMaster: createAuthEndpoint(
+			"/inventory/liquor-mod-master",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: inventoryLiquorModifierMasterCreateBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed || access.role !== "admin") {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const id = randomUUID();
+				const name = body.name.trim();
+				const normalizedName = normalizeInventoryName(name);
+				const now = new Date();
+
+				try {
+					const result =
+						await pool.query<InventoryLiquorModifierMasterRow>(
+							`
+								INSERT INTO "inventoryLiquorModifier" (
+									id,
+									type,
+									name,
+									"normalizedName",
+									active,
+									"createdAt",
+									"updatedAt"
+								)
+								VALUES ($1, $2, $3, $4, $5, $6, $6)
+								RETURNING
+									id,
+									type,
+									name,
+									"normalizedName",
+									active,
+									"createdAt",
+									"updatedAt"
+							`,
+							[
+								id,
+								body.type,
+								name,
+								normalizedName,
+								body.active,
+								now,
+							],
+						);
+
+					return ctx.json({
+						created: true,
+						modifier: result.rows[0],
+					});
+				} catch (error) {
+					if (
+						error &&
+						typeof error === "object" &&
+						"code" in error &&
+						error.code === "23505"
+					) {
+						return ctx.json(
+							{ error: "That Liquor Mod master already exists." },
+							{ status: 409 },
+						);
+					}
+
+					throw error;
+				}
+			},
+		),
+
+		updateInventoryLiquorModifierMaster: createAuthEndpoint(
+			"/inventory/liquor-mod-master",
+			{
+				method: "PATCH",
+				use: [sessionMiddleware],
+				body: inventoryLiquorModifierMasterUpdateBodySchema,
+			},
+			async (ctx) => {
+				const body = ctx.body;
+				const access = await resolveInventoryAccess(
+					pool,
+					body.organizationId,
+					ctx.context.session.user.id,
+				);
+
+				if (!access.allowed || access.role !== "admin") {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
+				const existing =
+					await pool.query<InventoryLiquorModifierMasterRow>(
+						`
+							SELECT
+								id,
+								type,
+								name,
+								"normalizedName",
+								active,
+								"createdAt",
+								"updatedAt"
+							FROM "inventoryLiquorModifier"
+							WHERE id = $1
+							LIMIT 1
+						`,
+						[body.inventoryLiquorModifierId],
+					);
+
+				const current = existing.rows[0];
+
+				if (!current) {
+					return ctx.json(
+						{ error: "Liquor Mod master not found" },
+						{ status: 404 },
+					);
+				}
+
+				const nextName = Object.hasOwn(body, "name")
+					? body.name?.trim() ?? current.name
+					: current.name;
+				const nextNormalizedName =
+					normalizeInventoryName(nextName);
+
+				try {
+					const result =
+						await pool.query<InventoryLiquorModifierMasterRow>(
+							`
+								UPDATE "inventoryLiquorModifier"
+								SET
+									name = $2,
+									"normalizedName" = $3,
+									active = CASE WHEN $4 THEN $5 ELSE active END,
+									"updatedAt" = $6
+								WHERE id = $1
+								RETURNING
+									id,
+									type,
+									name,
+									"normalizedName",
+									active,
+									"createdAt",
+									"updatedAt"
+							`,
+							[
+								body.inventoryLiquorModifierId,
+								nextName,
+								nextNormalizedName,
+								Object.hasOwn(body, "active"),
+								body.active ?? true,
+								new Date(),
+							],
+						);
+
+					return ctx.json({
+						updated: true,
+						modifier: result.rows[0],
+					});
+				} catch (error) {
+					if (
+						error &&
+						typeof error === "object" &&
+						"code" in error &&
+						error.code === "23505"
+					) {
+						return ctx.json(
+							{ error: "That Liquor Mod master already exists." },
+							{ status: 409 },
+						);
+					}
+
+					throw error;
+				}
+			},
+		),
+
 		listInventoryLiquorModifiers: createAuthEndpoint(
 			"/inventory/liquor-mods",
 			{
@@ -1894,30 +2228,53 @@ export const inventoryAccess = ({
 					return ctx.json({ error: "Forbidden" }, { status: 403 });
 				}
 
-				const result = await pool.query<InventoryLiquorModifierRow>(
-					`
-						SELECT
-							id,
-							"organizationId",
-							type,
-							name,
-							"normalizedName",
-							"upchargeCents",
-							enabled,
-							"sortOrder",
-							"createdAt",
-							"updatedAt"
-						FROM "inventoryLiquorModifier"
-						WHERE "organizationId" = $1
-						ORDER BY type ASC, "sortOrder" ASC, name ASC
-					`,
-					[organizationId],
-				);
+				const result =
+					await pool.query<InventoryOrganizationLiquorModifierRow>(
+						`
+							SELECT
+								om.id,
+								om."organizationId",
+								om."inventoryLiquorModifierId",
+								m.type,
+								m.name AS "masterName",
+								m."normalizedName",
+								om."nameOverride",
+								COALESCE(
+									NULLIF(TRIM(om."nameOverride"), ''),
+									m.name
+								) AS name,
+								om."upchargeCents",
+								om.enabled,
+								om."exportToToast",
+								om."sortOrder",
+								om."createdAt",
+								om."updatedAt"
+							FROM "inventoryOrganizationLiquorModifier" om
+							INNER JOIN "inventoryLiquorModifier" m
+								ON m.id = om."inventoryLiquorModifierId"
+							WHERE
+								om."organizationId" = $1
+								AND m.active = true
+							ORDER BY
+								m.type ASC,
+								om."sortOrder" ASC,
+								LOWER(
+									COALESCE(
+										NULLIF(TRIM(om."nameOverride"), ''),
+										m.name
+									)
+								),
+								om.id
+						`,
+						[organizationId],
+					);
 
 				return ctx.json({
 					organizationId,
 					role: access.role,
-					modifiers: result.rows.map(serializeInventoryLiquorModifier),
+					modifiers: result.rows.map(
+						serializeInventoryLiquorModifier,
+					),
 				});
 			},
 		),
@@ -1939,78 +2296,274 @@ export const inventoryAccess = ({
 
 				if (
 					!access.allowed ||
-					(access.role !== "manager" && access.role !== "admin")
+					(access.role !== "manager" &&
+						access.role !== "admin")
 				) {
-					return ctx.json({ error: "Forbidden" }, { status: 403 });
-				}
-
-				const normalizedName = normalizeInventoryName(body.name);
-				const now = new Date();
-
-				const capacity = await pool.query<{ count: string }>(
-					`
-						SELECT COUNT(*) AS count
-						FROM "inventoryLiquorModifier"
-						WHERE "organizationId" = $1 AND type = $2
-					`,
-					[body.organizationId, body.type],
-				);
-
-				if (Number(capacity.rows[0]?.count ?? 0) >= 100) {
 					return ctx.json(
-						{ error: "Liquor Mods supports up to 100 rows per section." },
-						{ status: 409 },
+						{ error: "Forbidden" },
+						{ status: 403 },
 					);
 				}
 
-				const modifierId = randomUUID();
+				const client = await pool.connect();
 
 				try {
-					const result = await pool.query<InventoryLiquorModifierRow>(
+					await client.query("BEGIN");
+
+					let masterId =
+						body.inventoryLiquorModifierId ?? null;
+					let masterType = body.type ?? null;
+					let masterName = body.name?.trim() ?? null;
+
+					if (masterId) {
+						const master =
+							await client.query<InventoryLiquorModifierMasterRow>(
+								`
+									SELECT
+										id,
+										type,
+										name,
+										"normalizedName",
+										active,
+										"createdAt",
+										"updatedAt"
+									FROM "inventoryLiquorModifier"
+									WHERE id = $1 AND active = true
+									LIMIT 1
+									FOR UPDATE
+								`,
+								[masterId],
+							);
+
+						if (!master.rows[0]) {
+							await client.query("ROLLBACK");
+							return ctx.json(
+								{ error: "Liquor Mod master not found" },
+								{ status: 404 },
+							);
+						}
+
+						if (
+							body.type &&
+							body.type !== master.rows[0].type
+						) {
+							await client.query("ROLLBACK");
+							return ctx.json(
+								{
+									error:
+										"Liquor Mod master type does not match the requested section.",
+								},
+								{ status: 409 },
+							);
+						}
+
+						masterType = master.rows[0].type;
+						masterName = master.rows[0].name;
+					} else {
+						if (!masterType || !masterName) {
+							await client.query("ROLLBACK");
+							return ctx.json(
+								{
+									error:
+										"Liquor Mod type and name are required.",
+								},
+								{ status: 400 },
+							);
+						}
+
+						const normalizedName =
+							normalizeInventoryName(masterName);
+
+						const existing =
+							await client.query<InventoryLiquorModifierMasterRow>(
+								`
+									SELECT
+										id,
+										type,
+										name,
+										"normalizedName",
+										active,
+										"createdAt",
+										"updatedAt"
+									FROM "inventoryLiquorModifier"
+									WHERE
+										type = $1
+										AND "normalizedName" = $2
+									LIMIT 1
+									FOR UPDATE
+								`,
+								[masterType, normalizedName],
+							);
+
+						if (existing.rows[0]) {
+							masterId = existing.rows[0].id;
+							masterName = existing.rows[0].name;
+
+							if (!existing.rows[0].active) {
+								await client.query(
+									`
+										UPDATE "inventoryLiquorModifier"
+										SET active = true, "updatedAt" = $2
+										WHERE id = $1
+									`,
+									[masterId, new Date()],
+								);
+							}
+						} else {
+							masterId = randomUUID();
+							const now = new Date();
+
+							await client.query(
+								`
+									INSERT INTO "inventoryLiquorModifier" (
+										id,
+										type,
+										name,
+										"normalizedName",
+										active,
+										"createdAt",
+										"updatedAt"
+									)
+									VALUES ($1, $2, $3, $4, true, $5, $5)
+								`,
+								[
+									masterId,
+									masterType,
+									masterName,
+									normalizedName,
+									now,
+								],
+							);
+						}
+					}
+
+					const capacity = await client.query<{
+						count: string;
+					}>(
 						`
-							INSERT INTO "inventoryLiquorModifier" (
+							SELECT COUNT(*) AS count
+							FROM "inventoryOrganizationLiquorModifier" om
+							INNER JOIN "inventoryLiquorModifier" m
+								ON m.id = om."inventoryLiquorModifierId"
+							WHERE
+								om."organizationId" = $1
+								AND m.type = $2
+						`,
+						[body.organizationId, masterType],
+					);
+
+					if (
+						Number(capacity.rows[0]?.count ?? 0) >= 100
+					) {
+						await client.query("ROLLBACK");
+						return ctx.json(
+							{
+								error:
+									"Liquor Mods supports up to 100 rows per section.",
+							},
+							{ status: 409 },
+						);
+					}
+
+					const assigned = await client.query(
+						`
+							SELECT id
+							FROM "inventoryOrganizationLiquorModifier"
+							WHERE
+								"organizationId" = $1
+								AND "inventoryLiquorModifierId" = $2
+							LIMIT 1
+						`,
+						[body.organizationId, masterId],
+					);
+
+					if (assigned.rows[0]) {
+						await client.query("ROLLBACK");
+						return ctx.json(
+							{
+								error:
+									String(masterName) +
+									" is already assigned to this organization.",
+							},
+							{ status: 409 },
+						);
+					}
+
+					const modifierId = randomUUID();
+					const now = new Date();
+
+					await client.query(
+						`
+							INSERT INTO "inventoryOrganizationLiquorModifier" (
 								id,
 								"organizationId",
-								type,
-								name,
-								"normalizedName",
-								"upchargeCents",
+								"inventoryLiquorModifierId",
 								enabled,
+								"exportToToast",
+								"nameOverride",
+								"upchargeCents",
 								"sortOrder",
 								"createdAt",
 								"updatedAt"
 							)
-							VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)
-							RETURNING
-								id,
-								"organizationId",
-								type,
-								name,
-								"normalizedName",
-								"upchargeCents",
-								enabled,
-								"sortOrder",
-								"createdAt",
-								"updatedAt"
+							VALUES (
+								$1, $2, $3, $4, $5,
+								NULL, $6, $7, $8, $8
+							)
 						`,
 						[
 							modifierId,
 							body.organizationId,
-							body.type,
-							body.name.trim(),
-							normalizedName,
-							body.upchargeCents,
+							masterId,
 							body.enabled,
+							body.exportToToast,
+							body.upchargeCents,
 							body.sortOrder,
 							now,
 						],
 					);
 
+					const result =
+						await client.query<InventoryOrganizationLiquorModifierRow>(
+							`
+								SELECT
+									om.id,
+									om."organizationId",
+									om."inventoryLiquorModifierId",
+									m.type,
+									m.name AS "masterName",
+									m."normalizedName",
+									om."nameOverride",
+									COALESCE(
+										NULLIF(TRIM(om."nameOverride"), ''),
+										m.name
+									) AS name,
+									om."upchargeCents",
+									om.enabled,
+									om."exportToToast",
+									om."sortOrder",
+									om."createdAt",
+									om."updatedAt"
+								FROM "inventoryOrganizationLiquorModifier" om
+								INNER JOIN "inventoryLiquorModifier" m
+									ON m.id = om."inventoryLiquorModifierId"
+								WHERE om.id = $1
+								LIMIT 1
+							`,
+							[modifierId],
+						);
+
+					await client.query("COMMIT");
+
 					return ctx.json({
 						created: true,
-						modifier: serializeInventoryLiquorModifier(result.rows[0]),
+						modifier: serializeInventoryLiquorModifier(
+							result.rows[0],
+						),
 					});
 				} catch (error) {
+					await client.query("ROLLBACK");
+
 					if (
 						error &&
 						typeof error === "object" &&
@@ -2018,12 +2571,17 @@ export const inventoryAccess = ({
 						error.code === "23505"
 					) {
 						return ctx.json(
-							{ error: "That Liquor Mod already exists in this section." },
+							{
+								error:
+									"That Liquor Mod is already assigned to this organization.",
+							},
 							{ status: 409 },
 						);
 					}
 
 					throw error;
+				} finally {
+					client.release();
 				}
 			},
 		),
@@ -2045,89 +2603,229 @@ export const inventoryAccess = ({
 
 				if (
 					!access.allowed ||
-					(access.role !== "manager" && access.role !== "admin")
+					(access.role !== "manager" &&
+						access.role !== "admin")
 				) {
-					return ctx.json({ error: "Forbidden" }, { status: 403 });
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
 				}
 
-				const existing = await pool.query<InventoryLiquorModifierRow>(
-					`
-						SELECT
-							id,
-							"organizationId",
-							type,
-							name,
-							"normalizedName",
-							"upchargeCents",
-							enabled,
-							"sortOrder",
-							"createdAt",
-							"updatedAt"
-						FROM "inventoryLiquorModifier"
-						WHERE id = $1 AND "organizationId" = $2
-						LIMIT 1
-					`,
-					[body.modifierId, body.organizationId],
-				);
-
-				const current = existing.rows[0];
-
-				if (!current) {
-					return ctx.json({ error: "Liquor Mod not found" }, { status: 404 });
-				}
-
-				const nextType = body.type ?? current.type;
-				const nextName = Object.hasOwn(body, "name")
-					? body.name?.trim() ?? current.name
-					: current.name;
-				const nextNormalizedName = normalizeInventoryName(nextName);
+				const client = await pool.connect();
 
 				try {
-					const result = await pool.query<InventoryLiquorModifierRow>(
+					await client.query("BEGIN");
+
+					const existing =
+						await client.query<InventoryOrganizationLiquorModifierRow>(
+							`
+								SELECT
+									om.id,
+									om."organizationId",
+									om."inventoryLiquorModifierId",
+									m.type,
+									m.name AS "masterName",
+									m."normalizedName",
+									om."nameOverride",
+									COALESCE(
+										NULLIF(TRIM(om."nameOverride"), ''),
+										m.name
+									) AS name,
+									om."upchargeCents",
+									om.enabled,
+									om."exportToToast",
+									om."sortOrder",
+									om."createdAt",
+									om."updatedAt"
+								FROM "inventoryOrganizationLiquorModifier" om
+								INNER JOIN "inventoryLiquorModifier" m
+									ON m.id = om."inventoryLiquorModifierId"
+								WHERE
+									om.id = $1
+									AND om."organizationId" = $2
+								LIMIT 1
+								FOR UPDATE OF om
+							`,
+							[body.modifierId, body.organizationId],
+						);
+
+					const current = existing.rows[0];
+
+					if (!current) {
+						await client.query("ROLLBACK");
+						return ctx.json(
+							{ error: "Liquor Mod not found" },
+							{ status: 404 },
+						);
+					}
+
+					const nextType = body.type ?? current.type;
+					const requestedName = Object.hasOwn(body, "name")
+						? body.name?.trim() ?? current.name
+						: current.name;
+
+					let nextMasterId =
+						current.inventoryLiquorModifierId;
+					let nextMasterName = current.masterName;
+					let nextNameOverride =
+						current.nameOverride ?? null;
+
+					if (nextType !== current.type) {
+						const normalizedName =
+							normalizeInventoryName(requestedName);
+
+						const target =
+							await client.query<InventoryLiquorModifierMasterRow>(
+								`
+									SELECT
+										id,
+										type,
+										name,
+										"normalizedName",
+										active,
+										"createdAt",
+										"updatedAt"
+									FROM "inventoryLiquorModifier"
+									WHERE
+										type = $1
+										AND "normalizedName" = $2
+									LIMIT 1
+									FOR UPDATE
+								`,
+								[nextType, normalizedName],
+							);
+
+						if (target.rows[0]) {
+							nextMasterId = target.rows[0].id;
+							nextMasterName = target.rows[0].name;
+
+							if (!target.rows[0].active) {
+								await client.query(
+									`
+										UPDATE "inventoryLiquorModifier"
+										SET active = true, "updatedAt" = $2
+										WHERE id = $1
+									`,
+									[nextMasterId, new Date()],
+								);
+							}
+						} else {
+							nextMasterId = randomUUID();
+							nextMasterName = requestedName;
+							const now = new Date();
+
+							await client.query(
+								`
+									INSERT INTO "inventoryLiquorModifier" (
+										id,
+										type,
+										name,
+										"normalizedName",
+										active,
+										"createdAt",
+										"updatedAt"
+									)
+									VALUES ($1, $2, $3, $4, true, $5, $5)
+								`,
+								[
+									nextMasterId,
+									nextType,
+									nextMasterName,
+									normalizedName,
+									now,
+								],
+							);
+						}
+
+						nextNameOverride =
+							requestedName === nextMasterName
+								? null
+								: requestedName;
+					} else if (Object.hasOwn(body, "name")) {
+						nextNameOverride =
+							requestedName === current.masterName
+								? null
+								: requestedName;
+					}
+
+					await client.query(
 						`
-							UPDATE "inventoryLiquorModifier"
+							UPDATE "inventoryOrganizationLiquorModifier"
 							SET
-								type = $3,
-								name = $4,
-								"normalizedName" = $5,
-								"upchargeCents" = CASE WHEN $6 THEN $7 ELSE "upchargeCents" END,
-								enabled = CASE WHEN $8 THEN $9 ELSE enabled END,
-								"sortOrder" = CASE WHEN $10 THEN $11 ELSE "sortOrder" END,
-								"updatedAt" = $12
-							WHERE id = $1 AND "organizationId" = $2
-							RETURNING
-								id,
-								"organizationId",
-								type,
-								name,
-								"normalizedName",
-								"upchargeCents",
-								enabled,
-								"sortOrder",
-								"createdAt",
-								"updatedAt"
+								"inventoryLiquorModifierId" = $3,
+								"nameOverride" = $4,
+								"upchargeCents" =
+									CASE WHEN $5 THEN $6 ELSE "upchargeCents" END,
+								enabled =
+									CASE WHEN $7 THEN $8 ELSE enabled END,
+								"exportToToast" =
+									CASE WHEN $9 THEN $10 ELSE "exportToToast" END,
+								"sortOrder" =
+									CASE WHEN $11 THEN $12 ELSE "sortOrder" END,
+								"updatedAt" = $13
+							WHERE
+								id = $1
+								AND "organizationId" = $2
 						`,
 						[
 							body.modifierId,
 							body.organizationId,
-							nextType,
-							nextName,
-							nextNormalizedName,
+							nextMasterId,
+							nextNameOverride,
 							Object.hasOwn(body, "upchargeCents"),
 							body.upchargeCents ?? 0,
 							Object.hasOwn(body, "enabled"),
 							body.enabled ?? true,
+							Object.hasOwn(body, "exportToToast"),
+							body.exportToToast ?? true,
 							Object.hasOwn(body, "sortOrder"),
 							body.sortOrder ?? 0,
 							new Date(),
 						],
 					);
 
+					const result =
+						await client.query<InventoryOrganizationLiquorModifierRow>(
+							`
+								SELECT
+									om.id,
+									om."organizationId",
+									om."inventoryLiquorModifierId",
+									m.type,
+									m.name AS "masterName",
+									m."normalizedName",
+									om."nameOverride",
+									COALESCE(
+										NULLIF(TRIM(om."nameOverride"), ''),
+										m.name
+									) AS name,
+									om."upchargeCents",
+									om.enabled,
+									om."exportToToast",
+									om."sortOrder",
+									om."createdAt",
+									om."updatedAt"
+								FROM "inventoryOrganizationLiquorModifier" om
+								INNER JOIN "inventoryLiquorModifier" m
+									ON m.id = om."inventoryLiquorModifierId"
+								WHERE om.id = $1
+								LIMIT 1
+							`,
+							[body.modifierId],
+						);
+
+					await client.query("COMMIT");
+
 					return ctx.json({
 						updated: true,
-						modifier: serializeInventoryLiquorModifier(result.rows[0]),
+						modifier: serializeInventoryLiquorModifier(
+							result.rows[0],
+						),
 					});
 				} catch (error) {
+					await client.query("ROLLBACK");
+
 					if (
 						error &&
 						typeof error === "object" &&
@@ -2135,12 +2833,17 @@ export const inventoryAccess = ({
 						error.code === "23505"
 					) {
 						return ctx.json(
-							{ error: "That Liquor Mod already exists in this section." },
+							{
+								error:
+									"That Liquor Mod is already assigned to this organization.",
+							},
 							{ status: 409 },
 						);
 					}
 
 					throw error;
+				} finally {
+					client.release();
 				}
 			},
 		),
@@ -2162,21 +2865,30 @@ export const inventoryAccess = ({
 
 				if (
 					!access.allowed ||
-					(access.role !== "manager" && access.role !== "admin")
+					(access.role !== "manager" &&
+						access.role !== "admin")
 				) {
-					return ctx.json({ error: "Forbidden" }, { status: 403 });
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
 				}
 
 				const result = await pool.query(
 					`
-						DELETE FROM "inventoryLiquorModifier"
-						WHERE id = $1 AND "organizationId" = $2
+						DELETE FROM "inventoryOrganizationLiquorModifier"
+						WHERE
+							id = $1
+							AND "organizationId" = $2
 					`,
 					[body.modifierId, body.organizationId],
 				);
 
 				if (result.rowCount !== 1) {
-					return ctx.json({ error: "Liquor Mod not found" }, { status: 404 });
+					return ctx.json(
+						{ error: "Liquor Mod not found" },
+						{ status: 404 },
+					);
 				}
 
 				return ctx.json({ removed: true });
@@ -2200,9 +2912,13 @@ export const inventoryAccess = ({
 
 				if (
 					!access.allowed ||
-					(access.role !== "manager" && access.role !== "admin")
+					(access.role !== "manager" &&
+						access.role !== "admin")
 				) {
-					return ctx.json({ error: "Forbidden" }, { status: 403 });
+					return ctx.json(
+						{ error: "Forbidden" },
+						{ status: 403 },
+					);
 				}
 
 				const client = await pool.connect();
@@ -2210,12 +2926,22 @@ export const inventoryAccess = ({
 				try {
 					await client.query("BEGIN");
 
-					for (const [index, modifierId] of body.modifierIds.entries()) {
+					for (
+						const [index, modifierId] of
+						body.modifierIds.entries()
+					) {
 						await client.query(
 							`
-								UPDATE "inventoryLiquorModifier"
-								SET "sortOrder" = $4, "updatedAt" = $5
-								WHERE id = $1 AND "organizationId" = $2 AND type = $3
+								UPDATE "inventoryOrganizationLiquorModifier" om
+								SET
+									"sortOrder" = $4,
+									"updatedAt" = $5
+								FROM "inventoryLiquorModifier" m
+								WHERE
+									om.id = $1
+									AND om."organizationId" = $2
+									AND m.id = om."inventoryLiquorModifierId"
+									AND m.type = $3
 							`,
 							[
 								modifierId,
@@ -2227,32 +2953,55 @@ export const inventoryAccess = ({
 						);
 					}
 
-					const result = await client.query<InventoryLiquorModifierRow>(
-						`
-							SELECT
-								id,
-								"organizationId",
-								type,
-								name,
-								"normalizedName",
-								"upchargeCents",
-								enabled,
-								"sortOrder",
-								"createdAt",
-								"updatedAt"
-							FROM "inventoryLiquorModifier"
-							WHERE "organizationId" = $1 AND type = $2
-							ORDER BY "sortOrder" ASC, name ASC
-						`,
-						[body.organizationId, body.type],
-					);
+					const result =
+						await client.query<InventoryOrganizationLiquorModifierRow>(
+							`
+								SELECT
+									om.id,
+									om."organizationId",
+									om."inventoryLiquorModifierId",
+									m.type,
+									m.name AS "masterName",
+									m."normalizedName",
+									om."nameOverride",
+									COALESCE(
+										NULLIF(TRIM(om."nameOverride"), ''),
+										m.name
+									) AS name,
+									om."upchargeCents",
+									om.enabled,
+									om."exportToToast",
+									om."sortOrder",
+									om."createdAt",
+									om."updatedAt"
+								FROM "inventoryOrganizationLiquorModifier" om
+								INNER JOIN "inventoryLiquorModifier" m
+									ON m.id = om."inventoryLiquorModifierId"
+								WHERE
+									om."organizationId" = $1
+									AND m.type = $2
+									AND m.active = true
+								ORDER BY
+									om."sortOrder" ASC,
+									LOWER(
+										COALESCE(
+											NULLIF(TRIM(om."nameOverride"), ''),
+											m.name
+										)
+									),
+									om.id
+							`,
+							[body.organizationId, body.type],
+						);
 
 					await client.query("COMMIT");
 
 					return ctx.json({
 						organizationId: body.organizationId,
 						role: access.role,
-						modifiers: result.rows.map(serializeInventoryLiquorModifier),
+						modifiers: result.rows.map(
+							serializeInventoryLiquorModifier,
+						),
 					});
 				} catch (error) {
 					await client.query("ROLLBACK");
