@@ -311,6 +311,7 @@ const inventoryImportBodySchema = z.object({
 			toastDestination: z.string(),
 			basePriceCents: z.number().int().nullable(),
 			happyHourPriceCents: z.number().int().nullable(),
+			doublePriceCents: z.number().int().nullable().optional(),
 			status: z.enum(["ready", "review", "ignored"]),
 			exportIncluded: z.boolean(),
 			targetVariantId: z.string().min(1).optional(),
@@ -3750,6 +3751,7 @@ export const inventoryAccess = ({
 									"exportToToast",
 									"priceOverrideCents",
 									"happyHourPriceCents",
+									"doublePriceCents",
 									"toastNameOverride",
 									"toastCategoryOverride",
 									"toastDestinationOverride",
@@ -3759,8 +3761,8 @@ export const inventoryAccess = ({
 								)
 								VALUES (
 									$1, $2, $3, true, $4,
-									$5, $6, NULL, $7, $8,
-									NULL, $9, $9
+									$5, $6, $7, NULL, $8, $9,
+									NULL, $10, $10
 								)
 								ON CONFLICT (
 									"organizationId",
@@ -3774,6 +3776,8 @@ export const inventoryAccess = ({
 										EXCLUDED."priceOverrideCents",
 									"happyHourPriceCents" =
 										EXCLUDED."happyHourPriceCents",
+									"doublePriceCents" =
+										EXCLUDED."doublePriceCents",
 									"toastCategoryOverride" =
 										EXCLUDED."toastCategoryOverride",
 									"toastDestinationOverride" =
@@ -3788,6 +3792,7 @@ export const inventoryAccess = ({
 								item.exportIncluded,
 								priceOverrideCents,
 								item.happyHourPriceCents,
+								item.doublePriceCents ?? null,
 								item.toastCategory,
 								item.toastDestination,
 								now,
