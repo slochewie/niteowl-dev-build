@@ -4324,7 +4324,7 @@ export const inventoryAccess = ({
 							"exportToToast" = COALESCE($5,
 								"inventoryOrganizationVariant"."exportToToast"),
 							"priceOverrideCents" =
-								CASE WHEN $13
+								CASE WHEN $14
 									THEN $6
 									ELSE "inventoryOrganizationVariant"."priceOverrideCents"
 								END,
@@ -5987,6 +5987,7 @@ export const inventoryAccess = ({
 					exportToToast: boolean | null;
 					priceOverrideCents: number | null;
 					happyHourPriceCents: number | null;
+					doublePriceCents: number | null;
 					toastNameOverride: string | null;
 					toastCategoryOverride: string | null;
 					toastDestinationOverride: string | null;
@@ -6065,6 +6066,7 @@ export const inventoryAccess = ({
 							exportToToast: row.exportToToast ?? true,
 							priceOverrideCents: row.priceOverrideCents,
 							happyHourPriceCents: row.happyHourPriceCents,
+							doublePriceCents: row.doublePriceCents,
 							toastNameOverride: row.toastNameOverride,
 							toastCategoryOverride:
 								row.toastCategoryOverride,
