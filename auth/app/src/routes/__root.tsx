@@ -15,6 +15,24 @@ import appCss from '../styles.css?url'
 
 import type { QueryClient } from '@tanstack/react-query'
 
+function isMccarthysHost(hostname: string) {
+  return (
+    hostname === "mccarthysirishpub.com" ||
+    hostname.endsWith(".mccarthysirishpub.com")
+  )
+}
+
+function getAdminConsoleTitle() {
+  if (
+    typeof window !== "undefined" &&
+    isMccarthysHost(window.location.hostname)
+  ) {
+    return "Admin Console"
+  }
+
+  return "NiteOwl.dev Admin Console"
+}
+
 interface MyRouterContext {
   queryClient: QueryClient
 }
@@ -30,7 +48,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'NiteOwl.dev Admin Console',
+        title: getAdminConsoleTitle(),
       },
     ],
     links: [
