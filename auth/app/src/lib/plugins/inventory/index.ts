@@ -1600,7 +1600,23 @@ export const inventoryAccess = ({
 							c."normalizedName",
 							c.active,
 							oc.id AS "organizationCocktailId",
-							(oc.id IS NOT NULL) AS assigned
+							(oc.id IS NOT NULL) AS assigned,
+							COALESCE(
+								(
+									SELECT JSON_AGG(
+										JSON_BUILD_OBJECT(
+											'organizationId', o.id,
+											'organizationName', o.name
+										)
+										ORDER BY LOWER(o.name), o.id
+									)
+									FROM "inventoryOrganizationCocktail" all_oc
+									INNER JOIN organization o
+										ON o.id = all_oc."organizationId"
+									WHERE all_oc."inventoryCocktailId" = c.id
+								),
+								'[]'::json
+							) AS organizations
 						FROM "inventoryCocktail" c
 						LEFT JOIN "inventoryOrganizationCocktail" oc
 							ON oc."inventoryCocktailId" = c.id
@@ -2104,7 +2120,23 @@ export const inventoryAccess = ({
 							m."createdAt",
 							m."updatedAt",
 							om.id AS "organizationModifierId",
-							(om.id IS NOT NULL) AS assigned
+							(om.id IS NOT NULL) AS assigned,
+							COALESCE(
+								(
+									SELECT JSON_AGG(
+										JSON_BUILD_OBJECT(
+											'organizationId', o.id,
+											'organizationName', o.name
+										)
+										ORDER BY LOWER(o.name), o.id
+									)
+									FROM "inventoryOrganizationLiquorModifier" all_om
+									INNER JOIN organization o
+										ON o.id = all_om."organizationId"
+									WHERE all_om."inventoryLiquorModifierId" = m.id
+								),
+								'[]'::json
+							) AS organizations
 						FROM "inventoryLiquorModifier" m
 						LEFT JOIN "inventoryOrganizationLiquorModifier" om
 							ON om."inventoryLiquorModifierId" = m.id
