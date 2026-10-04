@@ -1,16 +1,17 @@
 # 7shifts API Better Auth plugin
 
-Connects NiteOwl to the 7shifts API, stores encrypted source credentials, previews synchronization, and imports workforce data into the normalized 7shifts and Better Auth models.
+Connects NiteOwl Auth to the 7shifts API, stores encrypted source credentials, discovers upstream locations, previews synchronization, and reconciles workforce data into Better Auth plus the normalized 7shifts models.
 
 ## Registration
 
 ```ts
-import { sevenShiftsApi } from "./src/lib/plugins/seven-shifts-api/index.js";
-
-const plugins = [sevenShiftsApi({ pool, encryptionKey })];
+sevenShiftsApi({
+  pool,
+  encryptionKey: env.integrationEncryptionKey,
+})
 ```
 
-`encryptionKey` protects stored API access tokens. Supply a stable secret from the runtime environment; changing it makes existing encrypted tokens unreadable.
+The encryption key protects stored API access tokens. Keep it stable; changing it without migrating ciphertext makes existing source credentials unreadable.
 
 ## Endpoints
 
@@ -20,22 +21,27 @@ const plugins = [sevenShiftsApi({ pool, encryptionKey })];
 | `POST` | `/seven-shifts-api/sources/create` | Create a named source and encrypt its token. |
 | `POST` | `/seven-shifts-api/sources/update` | Update source metadata or credentials. |
 | `POST` | `/seven-shifts-api/sources/test` | Validate a source against 7shifts. |
-| `GET` | `/seven-shifts-api/sources/locations` | List upstream locations for assignment. |
+| `GET` | `/seven-shifts-api/sources/locations` | List upstream locations for mapping. |
 | `POST` | `/seven-shifts-api/sources/sync-preview` | Preview synchronization effects. |
 | `POST` | `/seven-shifts-api/sources/sync` | Synchronize workforce data. |
-| `POST` | `/seven-shifts-api/sources/assign` | Assign a 7shifts location/source to an organization. |
+| `POST` | `/seven-shifts-api/sources/delete` | Delete a source. |
+| `POST` | `/seven-shifts-api/sources/unassign` | Remove an organization/source-location mapping. |
+| `POST` | `/seven-shifts-api/sources/assign` | Assign a source/location to an organization. |
 
 ## Data model
 
-`sevenShiftsApiSource` stores encrypted access tokens, company identity, API version, and test/sync timestamps. `sevenShiftsApiOrganizationSource` maps a Better Auth organization to a source and upstream 7shifts location.
+- `sevenShiftsApiSource` — encrypted access token, company identity, API version, and test/sync metadata.
+- `sevenShiftsApiOrganizationSource` — NiteOwl organization to 7shifts source/location mapping.
 
-The plugin depends on the core `seven-shifts` models and uses `user-profile` helpers while reconciling employee profile data.
+The plugin writes normalized workforce records through the core `seven-shifts` model and updates extended user/membership state through shared helpers where appropriate.
+
+## Relationship to schedules
+
+`seven-shifts-schedules` reuses the source credentials and organization/location mappings defined here. Deleting or remapping a source therefore affects later schedule synchronization as well as workforce sync.
 
 ## Security and operations
 
 - Never log, return, or commit access tokens or the encryption key.
-- Run preview before synchronization after changing mappings.
-- Keep the encryption key stable and backed up in the deployment secret store.
-- Review bidirectional updates carefully; upstream user updates are external side effects.
-- Test with a non-production 7shifts company before changing reconciliation behavior.
-
+- Run sync preview before synchronization after changing mappings.
+- Review user disable/reactivation and membership effects before applying large syncs.
+- External 7shifts updates are side effects; keep any upstream-write behavior tightly authorized.

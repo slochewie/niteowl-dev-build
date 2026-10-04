@@ -1,78 +1,220 @@
 # NiteOwl Auth Service
 
-NiteOwl Auth Service is a self-hosted identity, authentication, organization-management, and application-integration platform built around Better Auth.
+NiteOwl Auth Service is the central authentication, authorization, organization, and application-access service for NiteOwl applications. It is built on Better Auth and adds organization-aware application permissions, workforce synchronization, infrastructure integrations, and an administration console.
 
-It provides a central identity and authorization layer for NiteOwl applications while connecting external workforce, infrastructure, and directory services.
+The service runs as part of the `niteowl-dev-build` repository and is developed primarily under `auth/app/`.
 
 ## Architecture
 
 ```text
-External workforce and infrastructure systems
-              ↓
-       Better Auth service
-              ↓
-Users • Organizations • Roles • Permissions
-              ↓
-NiteOwl applications • UniFi • GLAuth/LDAP
+External workforce / infrastructure systems
+                |
+                v
+          NiteOwl Auth
+        (Better Auth)
+                |
+        +-------+-------+
+        |               |
+        v               v
+  Users / Orgs      App access
+  Memberships       assignments
+  Roles / Status    and policies
+        |               |
+        +-------+-------+
+                |
+                v
+ Counter | Tip Calculator | Inventory | Network Status | UniFi | GLAuth
 ```
 
-Better Auth can consume identity data from external authoritative systems or act as the authoritative source itself.
+Better Auth supplies the core user, account, session, organization, team, admin, OAuth, API-key, JWT, passkey, email OTP, magic-link, and password flows. NiteOwl plugins add application-specific persistence and authorization on top of that core.
 
-Examples include:
+## Current stack
 
-- **7shifts** for employees, locations, departments, roles, and employment status
-- **UniFi Identity** for infrastructure identity, access, and Wi-Fi provisioning
-- **GLAuth** for LDAP-compatible access to identities managed through Better Auth
-- **NiteOwl Counter** and other custom applications for organization-scoped authorization
+- **Better Auth 1.7.x** — authentication, sessions, organizations, admin roles, OAuth provider, API keys, JWT, passkeys, email OTP, magic links, and password authentication
+- **Better Auth UI** — authentication/account-management components
+- **TanStack Start / Router / Query** — application framework and routing
+- **React 19** and **shadcn/ui** — administration UI
+- **PostgreSQL 18** — primary persistent store
+- **Redis 8** — Better Auth secondary storage
+- **Node.js 26** — runtime
+- **Resend** — transactional authentication email
+- **Docker Compose** — local/self-hosted orchestration
+- **GLAuth** — LDAP projection for systems that require LDAP
 
-Integrations are optional. The service can operate as a standalone authentication and authorization system using Better Auth users, sessions, organizations, memberships, and permissions.
-
-## Stack
-
-- **Better Auth** — authentication, sessions, users, organizations, teams, and authorization
-- **Better Auth UI** — authentication and account-management UI
-- **TanStack Start** — full-stack React framework
-- **shadcn/ui** — application and administration components
-- **PostgreSQL 18** — primary persistent database
-- **Redis 8** — session and supporting authentication storage
-- **Node.js 26** — application runtime
-- **Docker Compose** — local and self-hosted orchestration
-- **GLAuth** — dynamically provisioned LDAP-compatible directories
-
-## Repository Layout
+## Repository layout
 
 ```text
 .
-├── auth/
-│   └── app/                    # Better Auth application and admin interface
-├── glauth/                     # Static GLAuth service resources
-├── glauth-postgres/            # GLAuth PostgreSQL resources
-├── glauth-runtime-manager/     # Creates and removes GLAuth instances
-├── glauth-runtimes/            # Generated runtime instances; ignored by Git
-├── postgres/                   # Local PostgreSQL data; ignored by Git
-├── redis/                      # Local Redis data; ignored by Git
+├── AGENTS.md                         # Repository development rules
+├── README.md                         # This file
 ├── docker-compose.yml
-└── README.md
+├── auth/
+│   └── app/
+│       ├── AGENTS.md                 # TanStack intent guidance
+│       ├── README.md                 # Auth application architecture/development docs
+│       └── src/lib/plugins/          # NiteOwl Better Auth plugins
+└── glauth-runtime-manager/           # Dynamic GLAuth runtime manager
 ```
 
-Some local reference or upstream source directories are intentionally excluded from version control.
+Local runtime data such as PostgreSQL, Redis, generated GLAuth instances, uploaded integration files, and environment files is intentionally kept outside version control.
 
-## Docker Compose Services
+## Docker Compose services
 
 | Service | Purpose | Host port |
 | --- | --- | --- |
-| `postgres` | Primary PostgreSQL database | Internal only |
-| `redis` | Persistent Redis service | Internal only |
-| `auth` | NiteOwl Better Auth application | `3031` |
-| `admin` | Separate local administration application | `3030` |
-| `node-upstream` | Local upstream Node reference environment | `3040` |
-| `glauth-runtime-manager` | Manages dynamic GLAuth containers | Internal only |
+| `postgres` | Primary PostgreSQL database | internal only |
+| `redis` | Redis secondary storage | internal only |
+| `auth` | NiteOwl Auth application/admin console | `3031` |
+| `admin` | Separate local administration/reference application | `3030` |
+| `node-upstream` | Local upstream/reference Node environment | `3040` |
+| `glauth-runtime-manager` | Creates/removes dynamic GLAuth containers | internal only |
 
-All services communicate through the `niteowl-dev` Docker network.
+All services use the `niteowl-dev` Docker network.
+
+## Authentication and system administration
+
+The Better Auth instance currently includes:
+
+- username/password authentication;
+- email verification and password-reset email through Resend;
+- email OTP and magic-link sign-in;
+- GitHub social-provider configuration in the auth backend;
+- passkeys;
+- multi-session support;
+- Better Auth admin roles;
+- organizations and teams;
+- API keys;
+- JWTs;
+- OpenAPI support;
+- OAuth provider support;
+- Have I Been Pwned password checking;
+- Better Auth Infra Dash/Sentinel components;
+- PostgreSQL-backed sessions with Redis secondary storage.
+
+System admin roles are:
+
+- `admin` — full Better Auth/NiteOwl administration;
+- `admin-viewer` — read-only Better Auth admin access for users/sessions;
+- `user` — no global admin privileges.
+
+Only global admins may create organizations through the current organization policy.
+
+## Organization status and membership status
+
+NiteOwl extends Better Auth organizations with two separate status layers:
+
+- **Organization status** can disable an organization globally. Disabled organizations cannot be made active and are excluded from application-access checks.
+- **Organization member status** can independently activate/deactivate a membership and store relationship metadata such as person type, vendor company, sponsor, expiration, notes, source, and reason.
+
+Application plugins consistently consider the user, membership, organization status, and application-specific assignment before granting access.
+
+## Application-access plugins
+
+### Counter
+
+Organization-scoped Counter definitions, per-counter user assignments, delegated Counter Managers, internal service checks, and organization availability.
+
+[Counter plugin documentation](auth/app/src/lib/plugins/counter/README.md)
+
+### Tip Claim / Tip Calculator
+
+Organization-scoped application access, assignment management, role eligibility, staffing snapshots, weight presets, saved claim shifts, and tip-pool shifts. It exposes both session-authenticated administration endpoints and internal-secret endpoints used by the Tip Calculator application.
+
+[Tip Claim plugin documentation](auth/app/src/lib/plugins/tip-claim/README.md)
+
+### Inventory
+
+Organization-scoped inventory authorization plus shared master data, organization variants, source mappings, imports, categories, cocktails, liquor modifiers, pricing/configuration, and catalog APIs.
+
+[Inventory plugin documentation](auth/app/src/lib/plugins/inventory/README.md)
+
+### Network Status
+
+Organization-scoped Network Status access, delegated managers, Fabric Overview permission, and internal service authorization.
+
+[Network Status plugin documentation](auth/app/src/lib/plugins/network-status/README.md)
+
+## Organization-control plugins
+
+- [Organization Status](auth/app/src/lib/plugins/organization-status/README.md)
+- [Organization Member Status](auth/app/src/lib/plugins/organization-member-status/README.md)
+- [Revision History](auth/app/src/lib/plugins/revision-history/README.md)
+
+Revision history is a reusable schema/helper layer used by features that need immutable resource revisions; it is not itself a public HTTP API.
+
+## Workforce and schedule integrations
+
+### 7shifts core
+
+Normalizes 7shifts employees, locations, departments, roles, and assignments and maps selected 7shifts roles to NiteOwl application permissions.
+
+[7shifts core documentation](auth/app/src/lib/plugins/seven-shifts/README.md)
+
+### 7shifts CSV
+
+Imports 7shifts CSV exports and reconciles them into Better Auth and normalized 7shifts records.
+
+[7shifts CSV documentation](auth/app/src/lib/plugins/seven-shifts-csv/README.md)
+
+### 7shifts API
+
+Stores encrypted API credentials, discovers locations, previews/synchronizes workforce data, and maps upstream locations to NiteOwl organizations.
+
+[7shifts API documentation](auth/app/src/lib/plugins/seven-shifts-api/README.md)
+
+### 7shifts Schedules
+
+Persists organization schedules from the 7shifts API, exposes week reads and sync controls, and supports both manual/global and per-organization schedule synchronization.
+
+[7shifts Schedules documentation](auth/app/src/lib/plugins/seven-shifts-schedules/README.md)
+
+## Infrastructure integrations
+
+### UniFi Access
+
+Connects to the local UniFi Access developer API, stores encrypted source tokens, discovers users/groups/resources, assigns sources to organizations, and provides reconciliation/provisioning controls.
+
+[UniFi Access documentation](auth/app/src/lib/plugins/unifi-access/README.md)
+
+### UniFi Identity
+
+Stores encrypted organization-level UniFi Identity configuration and supports resource/group discovery, entitlements, user reconciliation, and provisioning.
+
+[UniFi Identity documentation](auth/app/src/lib/plugins/unifi-identity/README.md)
+
+### GLAuth
+
+Projects Better Auth identities and memberships into dynamically managed LDAP-compatible GLAuth instances.
+
+[GLAuth documentation](auth/app/src/lib/plugins/glauth/README.md)
+
+### Integration Manager
+
+Provides the administration catalog/control plane for organization integration enablement, configuration ownership, and synchronization direction.
+
+[Integration Manager documentation](auth/app/src/lib/plugins/integration-manager/README.md)
+
+### User Profile
+
+Stores the extended personal/workforce profile used by workforce integrations.
+
+[User Profile documentation](auth/app/src/lib/plugins/user-profile/README.md)
+
+## OAuth resources and scopes
+
+The Better Auth OAuth provider currently advertises application scopes for:
+
+- `counter:read`, `counter:write`;
+- `tip-claim:read`, `tip-claim:write`, `tip-claim:manage`;
+- `inventory:read`, `inventory:write`, `inventory:manage`.
+
+Resource identifiers are configured for both McCarthy's production domains and NiteOwl domains for Counter, Tip Calculator, and Inventory.
+
+Application access is still enforced by the corresponding NiteOwl plugin; possession of an OAuth scope alone is not sufficient to bypass organization/application assignments.
 
 ## Configuration
 
-The Compose environment expects local environment files including:
+The Compose stack expects local environment files such as:
 
 ```text
 .env-postgres
@@ -80,20 +222,19 @@ The Compose environment expects local environment files including:
 .env-btst
 ```
 
-Environment files can contain credentials and must not be committed. The repository’s `.gitignore` excludes `.env` variants throughout the project.
+The Auth application requires, at minimum:
 
-At minimum, configure:
+- `BETTER_AUTH_SECRET`
+- `BETTER_AUTH_ALLOWED_HOSTS`
+- PostgreSQL connection variables (`PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`)
+- Redis connection variables (`REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`)
+- `INTEGRATION_ENCRYPTION_KEY`
 
-- PostgreSQL database credentials
-- Redis password
-- Better Auth secrets and URLs
-- Application database and Redis connections
-- Encryption keys used by integrations
-- External API credentials where required
+Optional/feature-specific values include trusted origins, Resend credentials, social-provider credentials, application internal secrets, and the 7shifts CSV storage root.
 
-Use stable encryption keys in deployed environments. Changing a plugin encryption key can make previously stored credentials unreadable.
+Keep integration encryption keys stable. Rotating a key without migrating encrypted values makes stored external API credentials unreadable.
 
-## Running the Service
+## Running the stack
 
 Start the primary services:
 
@@ -101,19 +242,19 @@ Start the primary services:
 docker compose up -d postgres redis auth glauth-runtime-manager
 ```
 
-Start every configured service:
+Start all configured services:
 
 ```bash
 docker compose up -d
 ```
 
-Check service state:
+Inspect service state:
 
 ```bash
 docker compose ps
 ```
 
-Follow the authentication service logs:
+Follow Auth logs:
 
 ```bash
 docker compose logs -f auth
@@ -125,131 +266,55 @@ Stop the stack:
 docker compose down
 ```
 
-PostgreSQL and Redis data remain in their local persistent directories after the containers stop.
+## Database migrations
 
-## Administration
+Better Auth schema changes are migrated through the Better Auth CLI. The repository development rules require reviewing the generated migration interactively rather than applying broad schema changes blindly.
 
-The application includes a custom administration interface for managing:
+Use the repository's established migration workflow and review the source diff before building, testing, committing, or pushing.
 
-- users and account state;
-- organizations, memberships, and teams;
-- authentication methods;
-- plugins and integrations;
-- integration sources;
-- organization-level enablement and configuration;
-- workforce synchronization;
-- GLAuth LDAP sources;
-- UniFi Identity access.
+## Security boundaries
 
-Project-specific administration components are maintained separately from upstream Better Auth UI components.
+The codebase intentionally uses multiple authorization layers:
 
-## Custom Better Auth Plugins
+1. authentication/session validation;
+2. global Better Auth admin role checks;
+3. enabled organization checks;
+4. active organization membership checks;
+5. application-specific assignments/manager roles;
+6. internal shared-secret checks for service-to-service endpoints;
+7. encrypted storage for external integration credentials.
 
-### Integration Manager
+UI visibility is not treated as the security boundary; backend plugin endpoints enforce their own authorization.
 
-Controls organization-level integration enablement, configuration ownership, and synchronization direction.
+## Sensitive/runtime data
 
-[Integration Manager documentation](auth/app/src/lib/plugins/integration-manager/README.md)
+Never commit:
 
-### User Profile
+- `.env` files or secrets;
+- PostgreSQL or Redis data;
+- integration API tokens or encryption keys;
+- uploaded 7shifts CSVs;
+- generated onboarding credentials/password exports;
+- GLAuth runtime configuration or password hashes;
+- local backups or migration dumps.
 
-Adds application-specific personal and workforce profile fields to Better Auth users.
+If a secret is committed, deleting it in a later commit is not sufficient. Rotate it and, where necessary, rewrite repository history.
 
-[User Profile documentation](auth/app/src/lib/plugins/user-profile/README.md)
+## Development workflow
 
-### 7shifts Core
+Read `AGENTS.md` before modifying the repository. Important rules include:
 
-Provides the normalized employee, location, department, role, assignment, and application-permission model shared by 7shifts integrations.
+- ChatGPT access to this repository is read-only;
+- source edits are applied locally by the user;
+- Auth edits should use guarded Node.js heredoc scripts rather than Python;
+- never use a Git pager;
+- inspect `git status --short` and `git --no-pager diff` after changes;
+- avoid broad Biome formatting;
+- build/test only after the source diff is correct;
+- commit/push only after validation.
 
-[7shifts core documentation](auth/app/src/lib/plugins/seven-shifts/README.md)
+The Auth application also contains `auth/app/AGENTS.md`, which defines TanStack intent guidance for changes that touch TanStack APIs.
 
-### 7shifts CSV
+## Development status
 
-Imports workforce data from 7shifts CSV exports. Sources can be assigned to organizations and reconciled into Better Auth users, memberships, roles, locations, and profiles.
-
-[7shifts CSV documentation](auth/app/src/lib/plugins/seven-shifts-csv/README.md)
-
-### 7shifts API
-
-Synchronizes workforce and location data directly with the 7shifts API. API credentials are encrypted before storage.
-
-[7shifts API documentation](auth/app/src/lib/plugins/seven-shifts-api/README.md)
-
-### UniFi Identity
-
-Connects Better Auth organizations and users to UniFi Identity for provisioning, access management, groups, resources, and Wi-Fi entitlements.
-
-[UniFi Identity documentation](auth/app/src/lib/plugins/unifi-identity/README.md)
-
-### GLAuth
-
-Projects selected Better Auth identities and organization memberships into dynamically managed LDAP-compatible directories.
-
-[GLAuth documentation](auth/app/src/lib/plugins/glauth/README.md)
-
-## GLAuth Runtime Management
-
-GLAuth acts as a compatibility bridge for infrastructure and legacy applications that require LDAP.
-
-```text
-External systems → Better Auth → GLAuth → LDAP consumers
-```
-
-The `glauth-runtime-manager` service monitors the database and dynamically creates or removes GLAuth instances.
-
-Generated instances are stored under:
-
-```text
-glauth-runtimes/
-```
-
-This directory is runtime state and is ignored by Git. Individual instance directories and `config.cfg` files may appear or disappear as GLAuth sources are created, updated, or deleted.
-
-The runtime manager mounts the Docker socket so it can manage GLAuth containers. Treat this service as privileged infrastructure and restrict access accordingly.
-
-Relevant runtime settings include:
-
-- `GLAUTH_RUNTIME_ROOT`
-- `GLAUTH_RUNTIME_HOST_ROOT`
-- `GLAUTH_RUNTIME_NETWORK`
-- `GLAUTH_RUNTIME_IMAGE`
-- `GLAUTH_RUNTIME_POLL_MS`
-- `GLAUTH_RUNTIME_HOST_UID`
-- `GLAUTH_RUNTIME_HOST_GID`
-
-Better Auth remains the authoritative identity layer. GLAuth should not be treated as an independent user-management database.
-
-## Runtime and Sensitive Data
-
-The following must remain outside version control:
-
-- environment files;
-- PostgreSQL and Redis data;
-- generated GLAuth runtime directories and configuration;
-- uploaded 7shifts CSV files;
-- generated password and credential exports;
-- integration API tokens;
-- encryption keys;
-- local backups and migration data.
-
-If a credential is accidentally committed, removing the file in a later commit is insufficient. Rotate the credential and, when necessary, rewrite repository history.
-
-## Planned Integrations
-
-Planned or experimental integration areas include:
-
-- Toast
-- Paychex
-- MQTT
-- NiteOwl Counter
-- device provisioning
-- organization Wi-Fi configuration
-- additional UniFi services
-
-The integration architecture is designed so each service can share the central Better Auth identity and organization model while remaining independently configurable.
-
-## Development Status
-
-This project is under active development.
-
-APIs, database schemas, synchronization behavior, authorization rules, plugin interfaces, and administration screens may change as the architecture evolves.
+This project is under active development. Plugin schemas, authorization policy, integrations, administration screens, and external API behavior can change as application requirements evolve.

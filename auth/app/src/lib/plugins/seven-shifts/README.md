@@ -1,35 +1,51 @@
 # 7shifts core Better Auth plugin
 
-Defines the normalized 7shifts workforce model shared by the CSV and API ingestion plugins. It also maps 7shifts roles to NiteOwl application permissions.
+Defines the normalized 7shifts workforce model shared by the CSV importer, API synchronizer, schedule integration, and NiteOwl application-permission mapping.
 
 ## Registration
 
 ```ts
-import { sevenShifts } from "./src/lib/plugins/seven-shifts/index.js";
-
-const plugins = [sevenShifts({ pool })];
+sevenShifts({ pool })
 ```
 
-Register this plugin whenever either 7shifts ingestion plugin is enabled, because those plugins write to its normalized tables.
+Register this plugin whenever the 7shifts ingestion/schedule features are enabled because those features depend on its normalized workforce rows.
 
 ## Endpoints
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/seven-shifts/access` | Return the signed-in user's location-scoped NiteOwl permissions. |
-| `GET` | `/seven-shifts/member-status?organizationId=...` | Return member/employee status for an organization the caller belongs to. |
+| `GET` | `/seven-shifts/access` | Return signed-in user's location-scoped NiteOwl application permissions. |
+| `GET` | `/seven-shifts/member-status?organizationId=...` | Return member/employee status for an organization available to the caller. |
 
 ## Data model
 
-The plugin declares models for employees, locations, departments, roles, and employee/location/role assignments. Records retain upstream identifiers and source timestamps so API and CSV imports can converge on the same representation.
+- `sevenShiftsEmployee`
+- `sevenShiftsLocation`
+- `sevenShiftsDepartment`
+- `sevenShiftsRole`
+- `sevenShiftsAssignment`
 
-## Permission mapping
+Records retain upstream IDs and timestamps so CSV and API imports can converge on the same normalized representation.
 
-`permissions.ts` maps exact 7shifts role names to application capabilities. Current application IDs are `counter` and `unifi`. Unknown roles grant no application access.
+## Current role-to-app permission mapping
 
-`access.ts` exposes helpers to list a user's active location permissions and test a specific application/organization permission. When adding a role, update the mapping deliberately and test both allowed and denied cases.
+`permissions.ts` currently recognizes these NiteOwl app IDs:
 
-## Security
+```text
+counter
+unifi
+schedules
+```
 
-Location access is derived from active employees, locations, roles, and organization assignments. Do not treat an upstream role name alone as authorization without the organization and location checks performed by this plugin.
+Current role mapping:
 
+| 7shifts role | NiteOwl app permissions |
+| --- | --- |
+| `Manager` | Counter, UniFi, Schedules |
+| `Door` | Counter |
+| `Counter Viewer` | Counter |
+| `Cover Charge` | Counter |
+
+Unknown role names grant no application permissions.
+
+Application-specific Better Auth plugins may impose additional authorization requirements. A 7shifts role mapping should not be treated as a substitute for organization/application access checks unless the consuming path explicitly combines them.

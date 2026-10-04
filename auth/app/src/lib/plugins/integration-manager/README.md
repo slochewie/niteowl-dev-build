@@ -1,24 +1,50 @@
 # Integration Manager Better Auth plugin
 
-Stores organization-level enablement and synchronization policy for NiteOwl integrations. It is the control plane used by the admin plugin catalog; integration-specific plugins remain responsible for their own credentials and synchronization logic.
+Stores organization-level enablement and synchronization policy for integrations shown in the Auth administration catalog.
+
+Integration Manager is a control plane. Integration-specific plugins remain responsible for credentials, external API calls, persistence, and synchronization behavior.
 
 ## Registration
 
 ```ts
-import { integrationManager } from "./src/lib/plugins/integration-manager/index.js";
-
-const plugins = [integrationManager({ pool })];
+integrationManager({ pool })
 ```
 
-## Integration registry
+## Available catalog integrations
 
-`registry.ts` is the canonical catalog. Currently available IDs are `seven-shifts-csv`, `seven-shifts-api`, `unifi-api`, `glauth`, and `unifi-ldap`. Planned entries are visible in the catalog but are rejected by configuration endpoints until moved into `INTEGRATION_IDS`.
+`registry.ts` currently marks these IDs as available:
 
-Supported synchronization directions are:
+```text
+seven-shifts-csv
+seven-shifts-api
+unifi-api
+glauth
+unifi-ldap
+```
 
-- `to-better-auth`
-- `from-better-auth`
-- `bidirectional`
+Planned catalog entries currently include:
+
+```text
+toast-api
+paychex-api
+wifi
+mqtt
+counter
+```
+
+The planned `counter` catalog entry refers to future Integration Manager configuration for Counter infrastructure/settings. It is separate from the already-active `counter` Better Auth application-access plugin.
+
+## Synchronization directions
+
+Supported policy values are:
+
+```text
+to-better-auth
+from-better-auth
+bidirectional
+```
+
+An integration implementation must still enforce the selected direction; storing a direction in Integration Manager does not automatically constrain unrelated code.
 
 ## Endpoints
 
@@ -26,20 +52,24 @@ Supported synchronization directions are:
 | --- | --- | --- |
 | `GET` | `/integration-manager/organizations` | List organizations and their state for an integration. |
 | `GET` | `/integration-manager/organization` | Return all integration settings for an organization. |
-| `POST` | `/integration-manager/set-enabled` | Enable or disable an integration for an organization. |
-| `POST` | `/integration-manager/set-configuration-source` | Choose global or organization-specific configuration. |
-| `POST` | `/integration-manager/set-sync-direction` | Set the permitted synchronization direction. |
+| `POST` | `/integration-manager/set-enabled` | Enable/disable an integration for an organization. |
+| `POST` | `/integration-manager/set-configuration-source` | Choose global vs organization-specific configuration. |
+| `POST` | `/integration-manager/set-sync-direction` | Set allowed synchronization direction. |
 
-All routes require a session and apply global- or organization-admin authorization checks.
+All routes require a session and enforce global/organization management checks.
 
 ## Data model
 
-`organizationIntegration` links a Better Auth organization to a registered plugin ID and stores `enabled`, `useGlobalConfiguration`, and `syncDirection`.
+`organizationIntegration` links an organization to a registered integration ID and stores:
 
-## Adding an integration
+- `enabled`;
+- `useGlobalConfiguration`;
+- `syncDirection`.
 
-1. Add its stable ID and catalog metadata to `registry.ts`.
-2. Implement the integration-specific Better Auth plugin and schema.
-3. Add admin configuration UI for global and/or organization-scoped settings.
-4. Enforce the stored enablement and sync direction in every synchronization path.
+## Adding a new catalog integration
 
+1. Add a stable ID and catalog metadata in `registry.ts`.
+2. Move it into `INTEGRATION_IDS` only when the implementation is actually available.
+3. Implement the integration-specific Better Auth plugin/schema.
+4. Add admin configuration UI.
+5. Enforce enablement and sync direction in every synchronization path.
