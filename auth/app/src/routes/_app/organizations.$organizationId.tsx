@@ -58,7 +58,12 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAdminOrganizationIntegrations } from "@/lib/admin/plugins";
+import {
+	getAdminGlauthSources,
+	getAdminOrganizationIntegrations,
+	getAdminPlugin,
+} from "@/lib/admin/plugins";
+import { INTEGRATION_IDS } from "@/lib/plugins/integration-manager/registry";
 
 import {
 	addAdminOrganizationMember,
@@ -102,26 +107,41 @@ const PERSON_TYPE_LABELS = Object.fromEntries(
 
 export const Route = createFileRoute("/_app/organizations/$organizationId")({
 	loader: async ({ params }) => {
-		const [organization, users, integrations] = await Promise.all([
-			getAdminOrganization({
-				data: {
-					organizationId: params.organizationId,
-				},
-			}),
+		const [organization, users, integrations, pluginDetails, glauthSources] =
+			await Promise.all([
+				getAdminOrganization({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
 
-			getAdminOrganizationUserOptions(),
+				getAdminOrganizationUserOptions(),
 
-			getAdminOrganizationIntegrations({
-				data: {
-					organizationId: params.organizationId,
-				},
-			}),
-		]);
+				getAdminOrganizationIntegrations({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
+
+				Promise.all(
+					INTEGRATION_IDS.map((pluginId) =>
+						getAdminPlugin({
+							data: {
+								pluginId,
+							},
+						}),
+					),
+				),
+
+				getAdminGlauthSources(),
+			]);
 
 		return {
 			organization,
 			users,
 			integrations,
+			pluginDetails,
+			glauthSources,
 		};
 	},
 
@@ -129,11 +149,8 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 });
 
 function OrganizationPage() {
-	const { organization, users, integrations } = Route.useLoaderData();
-
-	const hasEnabledPlugins = integrations.some(
-		(integration) => integration.enabled,
-	);
+	const { organization, users, integrations, pluginDetails, glauthSources } =
+		Route.useLoaderData();
 
 	const router = useRouter();
 
@@ -174,7 +191,7 @@ function OrganizationPage() {
 									["invitations", "Invitations"],
 									["teams", "Teams"],
 
-									...(hasEnabledPlugins ? [["plugins", "Plugins"]] : []),
+									["plugins", "Plugins"],
 
 									["activity", "Activity"],
 								].map(([value, label]) => (
@@ -209,19 +226,19 @@ function OrganizationPage() {
 							</AdminWriteBoundary>
 						</TabsContent>
 
-						{hasEnabledPlugins && (
-							<TabsContent value="plugins" className="mt-6">
-								<AdminWriteBoundary>
-									<OrganizationPlugins
-										organization={{
-											id: organization.id,
-											name: organization.name,
-										}}
-										integrations={integrations}
-									/>
-								</AdminWriteBoundary>
-							</TabsContent>
-						)}
+						<TabsContent value="plugins" className="mt-6">
+							<AdminWriteBoundary>
+								<OrganizationPlugins
+									organization={{
+										id: organization.id,
+										name: organization.name,
+									}}
+									integrations={integrations}
+									pluginDetails={pluginDetails}
+									glauthSources={glauthSources}
+								/>
+							</AdminWriteBoundary>
+						</TabsContent>
 
 						<TabsContent value="activity" className="mt-6">
 							<Card>
