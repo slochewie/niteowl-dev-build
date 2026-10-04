@@ -94,7 +94,7 @@ export function OrganizationsTable({
 
 	const [search, setSearch] = useState("");
 
-	const [sortMode, setSortMode] = useState<SortMode>("created-desc");
+	const [sortMode, setSortMode] = useState<SortMode>("name-asc");
 
 	const [createdFilter, setCreatedFilter] = useState<CreatedFilter>("all");
 
@@ -200,10 +200,10 @@ export function OrganizationsTable({
 					);
 
 				case "name-desc":
-					return b.name.localeCompare(a.name);
+					return compareOrganizationNames(b, a);
 
 				case "name-asc":
-					return a.name.localeCompare(b.name);
+					return compareOrganizationNames(a, b);
 
 				case "members-desc":
 					return b.memberCount - a.memberCount;
@@ -633,11 +633,9 @@ export function OrganizationsTable({
 														{organization.name}
 													</div>
 
-													<Badge
-														variant={organization.enabled ? "outline" : "secondary"}
-													>
-														{organization.enabled ? "Active" : "Disabled"}
-													</Badge>
+													{organization.enabled ? null : (
+														<Badge variant="secondary">Disabled</Badge>
+													)}
 												</div>
 
 												<div className="truncate text-sm text-muted-foreground">
@@ -772,6 +770,27 @@ export function OrganizationsTable({
 			)}
 		</div>
 	);
+}
+
+function compareOrganizationNames(
+	a: AdminOrganizationListItem,
+	b: AdminOrganizationListItem,
+) {
+	const comparison = getOrganizationSortName(a.name).localeCompare(
+		getOrganizationSortName(b.name),
+		undefined,
+		{ sensitivity: "base" },
+	);
+
+	if (comparison !== 0) {
+		return comparison;
+	}
+
+	return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+}
+
+function getOrganizationSortName(name: string) {
+	return name.replace(/^the\s+/i, "").trim();
 }
 
 function formatDateRange(range: DateRange | undefined) {
