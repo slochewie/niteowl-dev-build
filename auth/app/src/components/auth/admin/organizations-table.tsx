@@ -12,9 +12,10 @@ import {
 } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { useMemo, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 
 import { useAdminAccess } from "@/components/auth/admin/admin-access-context";
+import { CreateOrganizationDialog } from "@/components/auth/organization/create-organization-dialog";
 import { NiteOwlUserAvatar } from "@/components/niteowl/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -75,7 +76,11 @@ export function OrganizationsTable({
 }) {
 	const navigate = useNavigate();
 
+	const router = useRouter();
+
 	const { readOnly } = useAdminAccess();
+
+	const [createOpen, setCreateOpen] = useState(false);
 
 	const [search, setSearch] = useState("");
 
@@ -508,10 +513,21 @@ export function OrganizationsTable({
 						</PopoverContent>
 					</Popover>
 
-					<Button disabled={readOnly}>
+					<Button
+						disabled={readOnly}
+						onClick={() => setCreateOpen(true)}
+					>
 						<UserPlus />
 						Add Organization
 					</Button>
+
+					{!readOnly && (
+						<CreateOrganizationDialog
+							open={createOpen}
+							onOpenChange={setCreateOpen}
+							onSuccess={() => router.invalidate({ sync: true })}
+						/>
+					)}
 				</div>
 			</div>
 

@@ -28,11 +28,13 @@ import { SlugField, sanitizeSlug } from "./slug-field"
 export type CreateOrganizationDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  onSuccess?: () => void | Promise<void>
 }
 
 export function CreateOrganizationDialog({
   open,
-  onOpenChange
+  onOpenChange,
+  onSuccess
 }: CreateOrganizationDialogProps) {
   const { authClient, localization } = useAuth()
   const { localization: organizationLocalization } =
@@ -45,7 +47,10 @@ export function CreateOrganizationDialog({
 
   const { mutate: createOrganization, isPending: isCreating } =
     useCreateOrganization(authClient as OrganizationAuthClient, {
-      onSuccess: () => onOpenChange(false)
+      onSuccess: async () => {
+        await onSuccess?.()
+        onOpenChange(false)
+      }
     })
 
   const handleSubmit = (e: SyntheticEvent<HTMLFormElement>) => {
