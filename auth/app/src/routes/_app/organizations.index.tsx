@@ -1,7 +1,5 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
-import { AdminWriteBoundary } from "@/components/auth/admin/admin-access-context";
-import { OrganizationStatusControls } from "@/components/auth/admin/organization-status-controls";
 import { OrganizationsTable } from "@/components/auth/admin/organizations-table";
 import { getAdminOrganizations } from "@/lib/admin/organizations";
 
@@ -34,15 +32,8 @@ function OrganizationsPage() {
 				<p className="mt-1 text-muted-foreground">Manage your organizations</p>
 			</div>
 
-			<div className="flex-1 space-y-6 p-4 md:p-6">
-				<AdminWriteBoundary>
-					<OrganizationStatusControls
-						organizations={organizations}
-						onChanged={refresh}
-					/>
-				</AdminWriteBoundary>
-
-				<OrganizationsTable organizations={organizations} />
+			<div className="flex-1 p-4 md:p-6">
+				<OrganizationsTable organizations={organizations} onChanged={refresh} />
 			</div>
 		</div>
 	);

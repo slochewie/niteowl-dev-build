@@ -13,6 +13,7 @@ import {
 import type { DateRange } from "react-day-picker";
 import { useMemo, useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
+import { toast } from "sonner";
 
 import { useAdminAccess } from "@/components/auth/admin/admin-access-context";
 import { CreateOrganizationDialog } from "@/components/auth/organization/create-organization-dialog";
@@ -47,7 +48,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import type { AdminOrganizationListItem } from "@/lib/admin/organizations";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+	setAdminOrganizationEnabled,
+	type AdminOrganizationListItem,
+} from "@/lib/admin/organizations";
 
 type SortMode =
 	| "created-desc"
@@ -71,8 +77,10 @@ type RowsPerPage = 20 | 50 | 100;
 
 export function OrganizationsTable({
 	organizations,
+	onChanged,
 }: {
 	organizations: AdminOrganizationListItem[];
+	onChanged: () => Promise<void>;
 }) {
 	const navigate = useNavigate();
 
@@ -81,6 +89,8 @@ export function OrganizationsTable({
 	const { readOnly } = useAdminAccess();
 
 	const [createOpen, setCreateOpen] = useState(false);
+
+	const [pendingStatusId, setPendingStatusId] = useState<string | null>(null);
 
 	const [search, setSearch] = useState("");
 
@@ -245,6 +255,38 @@ export function OrganizationsTable({
 	function updateDateRange(value: DateRange | undefined) {
 		setDateRange(value);
 		resetPage();
+	}
+
+	async function setEnabled(
+		organization: AdminOrganizationListItem,
+		enabled: boolean,
+	) {
+		setPendingStatusId(organization.id);
+
+		try {
+			await setAdminOrganizationEnabled({
+				data: {
+					organizationId: organization.id,
+					enabled,
+				},
+			});
+
+			toast.success(
+				enabled
+					? `${organization.name} enabled`
+					: `${organization.name} disabled`,
+			);
+
+			await onChanged();
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Unable to update organization status",
+			);
+		} finally {
+			setPendingStatusId(null);
+		}
 	}
 
 	return (
@@ -532,7 +574,7 @@ export function OrganizationsTable({
 			</div>
 
 			<div className="overflow-x-auto rounded-md border">
-				<Table className="min-w-[760px]">
+				<Table className="min-w-[860px]">
 					<TableHeader>
 						<TableRow>
 							<TableHead>Organization</TableHead>
@@ -540,6 +582,8 @@ export function OrganizationsTable({
 							<TableHead>Created</TableHead>
 
 							<TableHead>Members</TableHead>
+
+							<TableHead>Access</TableHead>
 
 							<TableHead className="w-12" />
 						</TableRow>
@@ -549,7 +593,7 @@ export function OrganizationsTable({
 						{visibleOrganizations.length === 0 ? (
 							<TableRow>
 								<TableCell
-									colSpan={4}
+									colSpan={5}
 									className="h-32 text-center text-muted-foreground"
 								>
 									No organizations found.
@@ -584,8 +628,16 @@ export function OrganizationsTable({
 											</div>
 
 											<div className="min-w-0">
-												<div className="truncate font-medium">
-													{organization.name}
+												<div className="flex flex-wrap items-center gap-2">
+													<div className="truncate font-medium">
+														{organization.name}
+													</div>
+
+													<Badge
+														variant={organization.enabled ? "outline" : "secondary"}
+													>
+														{organization.enabled ? "Active" : "Disabled"}
+													</Badge>
 												</div>
 
 												<div className="truncate text-sm text-muted-foreground">
@@ -596,11 +648,7 @@ export function OrganizationsTable({
 									</TableCell>
 
 									<TableCell className="whitespace-nowrap">
-										<div>{formatDate(organization.createdAt)}</div>
-
-										<div className="text-sm text-muted-foreground">
-											{timeAgo(organization.createdAt)}
-										</div>
+										{formatDate(organization.createdAt)}
 									</TableCell>
 
 									<TableCell>
@@ -633,6 +681,17 @@ export function OrganizationsTable({
 												)}
 											</div>
 										</div>
+									</TableCell>
+
+									<TableCell onClick={(event) => event.stopPropagation()}>
+										<Switch
+											checked={organization.enabled}
+											disabled={readOnly || pendingStatusId === organization.id}
+											aria-label={`Toggle ${organization.name} access`}
+											onCheckedChange={(enabled) =>
+												void setEnabled(organization, enabled)
+											}
+										/>
 									</TableCell>
 
 									<TableCell onClick={(event) => event.stopPropagation()}>
@@ -734,34 +793,8 @@ function formatDateRange(range: DateRange | undefined) {
 
 function formatDate(value: Date) {
 	return new Intl.DateTimeFormat(undefined, {
-		dateStyle: "medium",
-		timeStyle: "short",
+		month: "2-digit",
+		day: "2-digit",
+		year: "numeric",
 	}).format(new Date(value));
-}
-
-function timeAgo(value: Date) {
-	const then = new Date(value).getTime();
-
-	const seconds = Math.max(0, Math.floor((Date.now() - then) / 1000));
-
-	const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-		["year", 31536000],
-		["month", 2592000],
-		["week", 604800],
-		["day", 86400],
-		["hour", 3600],
-		["minute", 60],
-	];
-
-	const formatter = new Intl.RelativeTimeFormat(undefined, {
-		numeric: "auto",
-	});
-
-	for (const [unit, amount] of units) {
-		if (seconds >= amount) {
-			return formatter.format(-Math.floor(seconds / amount), unit);
-		}
-	}
-
-	return "just now";
 }
