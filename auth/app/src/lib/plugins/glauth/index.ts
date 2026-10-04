@@ -70,6 +70,14 @@ function splitDisplayName(name: string | null) {
 	};
 }
 
+function sourceBaseDn(slug: string) {
+	return `ou=${slug},dc=niteowl,dc=dev`;
+}
+
+function sourceRuntimeSchema(slug: string) {
+	return `glauth_${slug.replace(/-/g, "_")}`;
+}
+
 async function isGlobalAdmin(
 	pool: Pool,
 	userId: string,

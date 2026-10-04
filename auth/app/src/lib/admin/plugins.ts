@@ -341,7 +341,7 @@ export const getAdminOrganizationIntegrations = createServerFn({
 			headers: request.headers,
 		});
 
-		return result.integrations
+		const integrations = result.integrations
 			.filter((integration) => isAvailableIntegrationId(integration.pluginId))
 			.map((integration) => ({
 				pluginId: integration.pluginId as IntegrationId,
@@ -357,6 +357,40 @@ export const getAdminOrganizationIntegrations = createServerFn({
 
 				csvSourceName: integration.csvSourceName ?? null,
 			}));
+
+		const glauthSources = await auth.api.listGlauthSources({
+			headers: request.headers,
+		});
+
+		const glauthSourceForOrganization = glauthSources.sources.find((source) =>
+			source.organizationIds.includes(data.organizationId),
+		);
+
+		if (glauthSourceForOrganization) {
+			const glauthIntegration = integrations.find(
+				(integration) => integration.pluginId === "glauth",
+			);
+
+			if (glauthIntegration) {
+				glauthIntegration.enabled = true;
+			} else {
+				integrations.push({
+					pluginId: "glauth",
+
+					enabled: true,
+
+					useGlobalConfiguration: true,
+
+					syncDirection: "to-better-auth",
+
+					csvSourceId: null,
+
+					csvSourceName: null,
+				});
+			}
+		}
+
+		return integrations;
 	});
 
 export const createAdminSevenShiftsCsvSource = createServerFn({
