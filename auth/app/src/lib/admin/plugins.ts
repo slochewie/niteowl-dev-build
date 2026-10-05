@@ -205,6 +205,25 @@ export const getAdminPluginCatalog = createServerFn({
 				};
 			}
 
+
+			if (plugin.id === "wifi") {
+				const result = await auth.api.listWifiNetworks({
+					headers: request.headers,
+				});
+
+				const organizationIds = new Set(
+					result.networks
+						.filter((network) => network.enabled)
+						.map((network) => network.organizationId),
+				);
+
+				return {
+					...plugin,
+
+					enabledOrganizationCount: organizationIds.size,
+				};
+			}
+
 			const organizations = await getOrganizationsForPlugin(plugin.id);
 
 			return {
