@@ -205,6 +205,7 @@ export const auth = betterAuth({
 		counterAccess({
 			pool,
 			internalSecret: process.env.COUNTER_AUTH_INTERNAL_SECRET,
+			encryptionKey: env.integrationEncryptionKey,
 		}),
 
 		networkStatus({

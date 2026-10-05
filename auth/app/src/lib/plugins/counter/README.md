@@ -10,6 +10,7 @@ The plugin stores Counter definitions, per-counter user assignments, delegated C
 counterAccess({
   pool,
   internalSecret: process.env.COUNTER_AUTH_INTERNAL_SECRET,
+  encryptionKey: env.integrationEncryptionKey,
 })
 ```
 
@@ -38,6 +39,7 @@ Application checks also respect organization enabled state, banned users, and ac
 | `GET` | `/counter/access/internal` | Internal-secret access check for a specified user and Counter. |
 | `GET` | `/counter/available` | List signed-in user's available organizations/Counters. |
 | `GET` | `/counter/available/internal` | Internal-secret organization/Counter availability for a user. |
+| `GET` | `/counter/provisioning/internal` | Return trusted Counter, MQTT, and WiFi provisioning configuration. |
 
 ## Authorization
 
@@ -56,3 +58,5 @@ Organization owners/admins can manage Counter definitions and Counter Managers. 
 ## Internal access
 
 Internal routes require `COUNTER_AUTH_INTERNAL_SECRET` and are designed for trusted Counter backend calls. Never expose the shared secret to browser clients.
+
+`/counter/provisioning/internal` requires `organizationId` and `counterId`. It returns the enabled Counter definition, the organization's enabled MQTT assignment, and enabled WiFi networks. MQTT and WiFi passwords are decrypted only for this trusted internal response and must never be forwarded to an untrusted browser client.

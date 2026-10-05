@@ -3,9 +3,14 @@ import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import type { Pool } from "pg";
 import * as z from "zod";
 
+import {
+	decryptApiSecret,
+} from "../api-source/secret.js";
+
 type CounterOptions = {
 	pool: Pool;
 	internalSecret?: string;
+	encryptionKey: string;
 };
 
 type UserRoleRow = {
@@ -41,6 +46,11 @@ const internalAccessQuerySchema = accessQuerySchema.extend({
 
 const internalAvailableQuerySchema = z.object({
 	userId: z.string().min(1),
+});
+
+const internalProvisioningQuerySchema = z.object({
+	organizationId: z.string().min(1),
+	counterId: z.string().min(1),
 });
 
 const updateAssignmentBodySchema = z.object({
@@ -352,6 +362,7 @@ async function userHasCounterAccess(
 export const counterAccess = ({
 	pool,
 	internalSecret,
+	encryptionKey,
 }: CounterOptions): BetterAuthPlugin => ({
 	id: "counter",
 
@@ -1461,6 +1472,232 @@ export const counterAccess = ({
 			},
 		),
 
+
+		getCounterProvisioningInternal: createAuthEndpoint(
+			"/counter/provisioning/internal",
+			{
+				method: "GET",
+				query: internalProvisioningQuerySchema,
+			},
+			async (ctx) => {
+				if (
+					!internalSecret ||
+					ctx.headers.get(
+						"x-counter-internal-secret",
+					) !== internalSecret
+				) {
+					return ctx.json(
+						{ error: "Unauthorized" },
+						{ status: 401 },
+					);
+				}
+
+				const {
+					organizationId,
+					counterId,
+				} = ctx.query;
+
+				const counterResult =
+					await pool.query<{
+						id: string;
+						name: string;
+						maxCapacity: number | null;
+						allowNegative: boolean;
+						organizationId: string;
+						organizationName: string;
+					}>(
+						`
+							SELECT
+								c.id,
+								c.name,
+								c."maxCapacity",
+								c."allowNegative",
+								c."organizationId",
+								o.name AS "organizationName"
+							FROM counter c
+							INNER JOIN organization o
+								ON o.id =
+									c."organizationId"
+							LEFT JOIN
+								"organizationStatus" os
+								ON os."organizationId" =
+									o.id
+							WHERE
+								c.id = $1
+								AND c."organizationId" = $2
+								AND c.enabled = true
+								AND COALESCE(
+									os.enabled,
+									true
+								) = true
+							LIMIT 1
+						`,
+						[
+							counterId,
+							organizationId,
+						],
+					);
+
+				if (
+					counterResult.rowCount !== 1
+				) {
+					return ctx.json(
+						{
+							error:
+								"Counter not found, disabled, or organization disabled",
+						},
+						{ status: 404 },
+					);
+				}
+
+				const mqttResult =
+					await pool.query<{
+						sourceId: string;
+						name: string;
+						host: string;
+						port: number;
+						protocol:
+							| "mqtt"
+							| "mqtts";
+						username: string | null;
+						password: string | null;
+						topicPrefix: string;
+					}>(
+						`
+							SELECT
+								s.id AS "sourceId",
+								s.name,
+								s.host,
+								s.port,
+								s.protocol,
+								s.username,
+								s.password,
+								a."topicPrefix"
+							FROM
+								"mqttOrganizationSource" a
+							INNER JOIN
+								"mqttBrokerSource" s
+								ON s.id =
+									a."sourceId"
+							WHERE
+								a."organizationId" = $1
+								AND a.enabled = true
+								AND s.enabled = true
+							LIMIT 1
+						`,
+						[organizationId],
+					);
+
+				if (
+					mqttResult.rowCount !== 1
+				) {
+					return ctx.json(
+						{
+							error:
+								"Enabled MQTT configuration not found for organization",
+						},
+						{ status: 409 },
+					);
+				}
+
+				const wifiResult =
+					await pool.query<{
+						id: string;
+						name: string;
+						ssid: string;
+						password: string | null;
+						hidden: boolean;
+					}>(
+						`
+							SELECT
+								id,
+								name,
+								ssid,
+								password,
+								hidden
+							FROM "wifiNetwork"
+							WHERE
+								"organizationId" = $1
+								AND enabled = true
+							ORDER BY
+								name,
+								id
+						`,
+						[organizationId],
+					);
+
+				if (
+					wifiResult.rowCount === 0
+				) {
+					return ctx.json(
+						{
+							error:
+								"Enabled WiFi configuration not found for organization",
+						},
+						{ status: 409 },
+					);
+				}
+
+				const counter =
+					counterResult.rows[0];
+				const mqtt =
+					mqttResult.rows[0];
+
+				return ctx.json({
+					organization: {
+						id:
+							counter.organizationId,
+						name:
+							counter.organizationName,
+					},
+					counter: {
+						id: counter.id,
+						name: counter.name,
+						maxCapacity:
+							counter.maxCapacity,
+						allowNegative:
+							counter.allowNegative,
+					},
+					mqtt: {
+						sourceId:
+							mqtt.sourceId,
+						name: mqtt.name,
+						host: mqtt.host,
+						port: mqtt.port,
+						protocol:
+							mqtt.protocol,
+						username:
+							mqtt.username,
+						password:
+							mqtt.password
+								? decryptApiSecret(
+										mqtt.password,
+										encryptionKey,
+									)
+								: null,
+						topicPrefix:
+							mqtt.topicPrefix,
+					},
+					wifiNetworks:
+						wifiResult.rows.map(
+							(network) => ({
+								id: network.id,
+								name: network.name,
+								ssid: network.ssid,
+								password:
+									network.password
+										? decryptApiSecret(
+												network.password,
+												encryptionKey,
+											)
+										: null,
+								hidden:
+									network.hidden,
+							}),
+						),
+				});
+			},
+		),
 
 		getAvailableCountersInternal: createAuthEndpoint(
 			"/counter/available/internal",
