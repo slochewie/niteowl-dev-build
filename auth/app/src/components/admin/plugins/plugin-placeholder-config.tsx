@@ -4,7 +4,6 @@ import {
   AlertCircle,
   KeyRound,
   LockKeyhole,
-  Settings2,
   Upload
 } from "lucide-react"
 
@@ -19,7 +18,6 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 
 import type {
   PlannedIntegrationId
@@ -57,9 +55,6 @@ export function PluginPlaceholderConfig({
         <PaychexPreview />
       )}
 
-      {pluginId === "counter" && (
-        <CounterPreview />
-      )}
     </div>
   )
 }
@@ -157,90 +152,6 @@ function PaychexPreview() {
             Test Connection
           </Button>
         </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function CounterPreview() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          Counter
-        </CardTitle>
-
-        <CardDescription>
-          Placeholder organization defaults for NiteOwl capacity counters.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="grid gap-5">
-        <PreviewField
-          label="Default Counter Name"
-          placeholder="Front Door"
-        />
-
-        <PreviewField
-          label="Maximum Capacity"
-          placeholder="250"
-        />
-
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <div>
-            <div className="text-sm font-medium">
-              Allow negative counts
-            </div>
-
-            <div className="text-xs text-muted-foreground">
-              Permit a counter value below zero
-            </div>
-          </div>
-
-          <Switch disabled />
-        </div>
-
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <div>
-            <div className="text-sm font-medium">
-              MQTT integration
-            </div>
-
-            <div className="text-xs text-muted-foreground">
-              Use the organization's saved MQTT connection
-            </div>
-          </div>
-
-          <Switch
-            checked
-            disabled
-          />
-        </div>
-
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <div>
-            <div className="text-sm font-medium">
-              WiFi provisioning
-            </div>
-
-            <div className="text-xs text-muted-foreground">
-              Allow saved WiFi credentials during device setup
-            </div>
-          </div>
-
-          <Switch
-            checked
-            disabled
-          />
-        </div>
-
-        <Button
-          variant="outline"
-          disabled
-        >
-          <Settings2 />
-          Add Counter
-        </Button>
       </CardContent>
     </Card>
   )

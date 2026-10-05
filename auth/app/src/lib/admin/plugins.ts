@@ -95,6 +95,18 @@ export type AdminMqttSource = {
 	assignments: AdminMqttAssignment[];
 };
 
+export type AdminCounterDefinition = {
+	id: string;
+	organizationId: string;
+	organizationName?: string;
+	name: string;
+	enabled: boolean;
+	maxCapacity: number | null;
+	allowNegative: boolean;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
 export type AdminWifiNetwork = {
 	id: string;
 	organizationId: string;
@@ -138,6 +150,7 @@ export type AdminPluginDetail = {
 	unifiAccessSources: AdminUnifiAccessSource[];
 	mqttSources: AdminMqttSource[];
 	wifiNetworks: AdminWifiNetwork[];
+	counterDefinitions: AdminCounterDefinition[];
 };
 
 async function getOrganizationsForPlugin(pluginId: IntegrationId) {
@@ -224,6 +237,7 @@ export const getAdminPlugin = createServerFn({
 				unifiAccessSources: [],
 				mqttSources: [],
 				wifiNetworks: [],
+				counterDefinitions: [],
 			};
 		}
 
@@ -238,6 +252,8 @@ export const getAdminPlugin = createServerFn({
 		let mqttSources: AdminMqttSource[] = [];
 
 		let wifiNetworks: AdminWifiNetwork[] = [];
+
+		let counterDefinitions: AdminCounterDefinition[] = [];
 
 		if (plugin.id === "seven-shifts-csv") {
 			const { request } = await requireAdminRead();
@@ -289,6 +305,29 @@ export const getAdminPlugin = createServerFn({
 			wifiNetworks = result.networks;
 		}
 
+		if (plugin.id === "counter") {
+			const { request } = await requireAdminRead();
+
+			counterDefinitions = (
+				await Promise.all(
+					organizations.map(async (organization) => {
+						const result = await auth.api.listCounters({
+							query: {
+								organizationId: organization.id,
+							},
+							headers: request.headers,
+						});
+
+						return result.counters.map((counter) => ({
+							...counter,
+							organizationId: organization.id,
+							organizationName: organization.name,
+						}));
+					}),
+				)
+			).flat();
+		}
+
 		return {
 			plugin,
 			organizations,
@@ -297,6 +336,7 @@ export const getAdminPlugin = createServerFn({
 			unifiAccessSources,
 			mqttSources,
 			wifiNetworks,
+			counterDefinitions,
 		};
 	});
 
@@ -693,6 +733,86 @@ export const unassignAdminSevenShiftsApiLocation = createServerFn({
 				sourceId: data.sourceId,
 				sevenShiftsLocationId: data.sevenShiftsLocationId,
 			},
+			headers: request.headers,
+		});
+	});
+
+export const getAdminOrganizationCounterDefinitions = createServerFn({
+	method: "GET",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }): Promise<AdminCounterDefinition[]> => {
+		const { request } = await requireAdminRead();
+
+		const result = await auth.api.listCounters({
+			query: {
+				organizationId: data.organizationId,
+			},
+			headers: request.headers,
+		});
+
+		return result.counters.map((counter) => ({
+			...counter,
+			organizationId: data.organizationId,
+		}));
+	});
+
+export const createAdminCounterDefinition = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			organizationId: string;
+			name: string;
+			maxCapacity: number | null;
+			allowNegative: boolean;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.createCounter({
+			body: data,
+			headers: request.headers,
+		});
+	});
+
+export const updateAdminCounterDefinition = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			organizationId: string;
+			counterId: string;
+			name: string;
+			enabled: boolean;
+			maxCapacity: number | null;
+			allowNegative: boolean;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.updateCounter({
+			body: data,
+			headers: request.headers,
+		});
+	});
+
+export const deleteAdminCounterDefinition = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			organizationId: string;
+			counterId: string;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.deleteCounter({
+			body: data,
 			headers: request.headers,
 		});
 	});

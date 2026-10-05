@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 
+import { CounterDefinitions } from "@/components/admin/plugins/counter-definitions";
 import { GlauthSources } from "@/components/admin/plugins/glauth-sources";
 import { IntegrationLogo } from "@/components/admin/plugins/integration-logo";
 import { MqttSources } from "@/components/admin/plugins/mqtt-sources";
@@ -32,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	setAdminOrganizationPluginEnabled,
 	setAdminOrganizationPluginSyncDirection,
+	type AdminCounterDefinition,
 	type AdminGlauthSource,
 	type AdminMqttSource,
 	type AdminOrganizationIntegration,
@@ -72,6 +74,7 @@ type OrganizationPluginsProps = {
 	unifiAccessSources: AdminUnifiAccessSource[];
 	mqttSources: AdminMqttSource[];
 	wifiNetworks: AdminWifiNetwork[];
+	counterDefinitions: AdminCounterDefinition[];
 };
 
 export function OrganizationPlugins({
@@ -83,6 +86,7 @@ export function OrganizationPlugins({
 	unifiAccessSources,
 	mqttSources,
 	wifiNetworks,
+	counterDefinitions,
 }: OrganizationPluginsProps) {
 	const router = useRouter();
 
@@ -266,6 +270,7 @@ export function OrganizationPlugins({
 								unifiAccessSources={unifiAccessSources}
 								mqttSources={mqttSources}
 								wifiNetworks={wifiNetworks}
+								counterDefinitions={counterDefinitions}
 								apiIntegrationEnabled={
 									integrationById.get("seven-shifts-api")?.enabled ?? false
 								}
@@ -289,6 +294,7 @@ function PluginTabPanel({
 	unifiAccessSources,
 	mqttSources,
 	wifiNetworks,
+	counterDefinitions,
 	apiIntegrationEnabled,
 	pendingPluginId,
 	onSetSyncDirection,
@@ -304,6 +310,7 @@ function PluginTabPanel({
 	unifiAccessSources: AdminUnifiAccessSource[];
 	mqttSources: AdminMqttSource[];
 	wifiNetworks: AdminWifiNetwork[];
+	counterDefinitions: AdminCounterDefinition[];
 	apiIntegrationEnabled: boolean;
 	pendingPluginId: string | null;
 	onSetSyncDirection: (
@@ -374,6 +381,16 @@ function PluginTabPanel({
 			<UnifiApi
 				mode="organization"
 				accessSources={unifiAccessSources}
+				organization={organization}
+			/>
+		);
+	}
+
+	if (integration.pluginId === "counter") {
+		return (
+			<CounterDefinitions
+				mode="organization"
+				counters={counterDefinitions}
 				organization={organization}
 			/>
 		);

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
+import { CounterDefinitions } from "@/components/admin/plugins/counter-definitions";
 import { GlauthSources } from "@/components/admin/plugins/glauth-sources";
 import { AdminWriteBoundary } from "@/components/auth/admin/admin-access-context";
 import { IntegrationLogo } from "@/components/admin/plugins/integration-logo";
@@ -127,6 +128,16 @@ function PluginPage() {
 							</AdminWriteBoundary>
 						)}
 
+						{detail.plugin.id === "counter" && (
+							<AdminWriteBoundary>
+								<CounterDefinitions
+									mode="admin"
+									counters={detail.counterDefinitions}
+									organizations={detail.organizations}
+								/>
+							</AdminWriteBoundary>
+						)}
+
 						{detail.plugin.id === "wifi" && (
 							<AdminWriteBoundary>
 								<WifiNetworks
@@ -166,7 +177,8 @@ function PluginPage() {
 						) : detail.plugin.id !== "seven-shifts-csv" &&
 							detail.plugin.id !== "seven-shifts-api" &&
 							detail.plugin.id !== "mqtt" &&
-							detail.plugin.id !== "wifi" ? (
+							detail.plugin.id !== "wifi" &&
+							detail.plugin.id !== "counter" ? (
 							<AdminWriteBoundary>
 								<PluginOrganizations detail={detail} />
 							</AdminWriteBoundary>

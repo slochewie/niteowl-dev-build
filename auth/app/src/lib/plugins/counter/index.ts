@@ -95,6 +95,26 @@ async function isGlobalAdmin(pool: Pool, userId: string) {
 	return result.rows[0]?.role === "admin";
 }
 
+async function isGlobalCounterReader(
+	pool: Pool,
+	userId: string,
+) {
+	const result = await pool.query<UserRoleRow>(
+		`
+			SELECT role
+			FROM "user"
+			WHERE id = $1
+			LIMIT 1
+		`,
+		[userId],
+	);
+
+	return (
+		result.rows[0]?.role === "admin" ||
+		result.rows[0]?.role === "admin-viewer"
+	);
+}
+
 async function organizationIsEnabled(pool: Pool, organizationId: string) {
 	const organization = await pool.query<{
 		id: string;
@@ -461,6 +481,10 @@ export const counterAccess = ({
 				const organizationId = ctx.query.organizationId;
 
 				if (
+					!(await isGlobalCounterReader(
+						pool,
+						ctx.context.session.user.id,
+					)) &&
 					!(await canManageAssignments(
 						pool,
 						ctx.context.session.user.id,

@@ -5,7 +5,8 @@ export const INTEGRATION_IDS = [
   "glauth",
   "unifi-ldap",
   "mqtt",
-  "wifi"
+  "wifi",
+  "counter"
 ] as const
 
 export type IntegrationId =
@@ -13,8 +14,7 @@ export type IntegrationId =
 
 export const PLANNED_INTEGRATION_IDS = [
   "toast-api",
-  "paychex-api",
-  "counter"
+  "paychex-api"
 ] as const
 
 export type PlannedIntegrationId =
@@ -123,7 +123,7 @@ export const INTEGRATIONS =
         "Manage NiteOwl capacity counters and their organization settings.",
       category: "Application",
       configurationLabel: "Counter Settings",
-      status: "planned"
+      status: "available"
     }
   ] as const satisfies readonly IntegrationDefinition[]
 

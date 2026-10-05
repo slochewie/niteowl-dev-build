@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+	getAdminOrganizationCounterDefinitions,
 	getAdminOrganizationGlauthSources,
 	getAdminOrganizationIntegrations,
 	getAdminOrganizationMqttSources,
@@ -120,6 +121,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			unifiAccessSources,
 			mqttSources,
 			wifiNetworks,
+			counterDefinitions,
 		] = await Promise.all([
 				getAdminOrganization({
 					data: {
@@ -170,6 +172,12 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 						organizationId: params.organizationId,
 					},
 				}),
+
+				getAdminOrganizationCounterDefinitions({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
 			]);
 
 		return {
@@ -182,6 +190,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			unifiAccessSources,
 			mqttSources,
 			wifiNetworks,
+			counterDefinitions,
 		};
 	},
 
@@ -199,6 +208,7 @@ function OrganizationPage() {
 		unifiAccessSources,
 		mqttSources,
 		wifiNetworks,
+		counterDefinitions,
 	} = Route.useLoaderData();
 
 	const router = useRouter();
@@ -289,6 +299,7 @@ function OrganizationPage() {
 									unifiAccessSources={unifiAccessSources}
 									mqttSources={mqttSources}
 									wifiNetworks={wifiNetworks}
+									counterDefinitions={counterDefinitions}
 								/>
 							</AdminWriteBoundary>
 						</TabsContent>
