@@ -62,6 +62,7 @@ import {
 	getAdminOrganizationGlauthSources,
 	getAdminOrganizationIntegrations,
 	getAdminOrganizationSevenShiftsApiSources,
+	getAdminOrganizationSevenShiftsCsvSources,
 	getAdminPlugin,
 } from "@/lib/admin/plugins";
 import { INTEGRATION_IDS } from "@/lib/plugins/integration-manager/registry";
@@ -115,6 +116,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			pluginDetails,
 			glauthSources,
 			sevenShiftsApiSources,
+			sevenShiftsCsvSources,
 		] = await Promise.all([
 				getAdminOrganization({
 					data: {
@@ -151,6 +153,12 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 						organizationId: params.organizationId,
 					},
 				}),
+
+				getAdminOrganizationSevenShiftsCsvSources({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
 			]);
 
 		return {
@@ -160,6 +168,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			pluginDetails,
 			glauthSources,
 			sevenShiftsApiSources,
+			sevenShiftsCsvSources,
 		};
 	},
 
@@ -174,6 +183,7 @@ function OrganizationPage() {
 		pluginDetails,
 		glauthSources,
 		sevenShiftsApiSources,
+		sevenShiftsCsvSources,
 	} = Route.useLoaderData();
 
 	const router = useRouter();
@@ -261,6 +271,7 @@ function OrganizationPage() {
 									pluginDetails={pluginDetails}
 									glauthSources={glauthSources}
 									sevenShiftsApiSources={sevenShiftsApiSources}
+									sevenShiftsCsvSources={sevenShiftsCsvSources}
 								/>
 							</AdminWriteBoundary>
 						</TabsContent>

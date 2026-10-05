@@ -15,6 +15,9 @@ import {
 } from "@tanstack/react-router"
 import { toast } from "sonner"
 
+import type {
+  PluginComponentMode
+} from "@/components/admin/plugins/plugin-component-mode"
 import {
   SevenShiftsCsvImportCard
 } from "@/components/admin/plugins/seven-shifts-csv-import-card"
@@ -61,13 +64,23 @@ import {
 } from "@/lib/admin/plugins"
 
 export function SevenShiftsCsvSources({
-  sources
+  mode,
+  sources,
+  organization
 }: {
+  mode: PluginComponentMode
   sources:
     AdminSevenShiftsCsvSource[]
+  organization?: {
+    id: string
+    name: string
+  }
 }) {
   const router =
     useRouter()
+
+  const adminMode =
+    mode === "admin"
 
   const [
     selectedSourceId,
@@ -325,16 +338,23 @@ export function SevenShiftsCsvSources({
       <Card>
         <CardHeader>
           <CardTitle>
-            CSV Sources
+            {adminMode
+              ? "CSV Sources"
+              : "7shifts CSV Source"}
           </CardTitle>
 
           <CardDescription>
-            Each CSV Source has its own uploaded-file history and selected CSV, and can feed one or more organizations.
+            {adminMode
+              ? "Each CSV Source has its own uploaded-file history and selected CSV, and can feed one or more organizations."
+              : organization
+                ? `CSV source assigned to ${organization.name}.`
+                : "CSV source assigned to this organization."}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="grid gap-2">
+          {adminMode && (
+            <div className="grid gap-2">
             <Label>
               CSV Source
             </Label>
@@ -379,9 +399,28 @@ export function SevenShiftsCsvSources({
                 )}
               </SelectContent>
             </Select>
-          </div>
+            </div>
+          )}
 
-          {selectedSource && (
+          {!adminMode && sources.length === 0 && (
+            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No 7shifts CSV source is assigned to this organization.
+            </div>
+          )}
+
+          {!adminMode && selectedSource && (
+            <div className="rounded-lg border p-4">
+              <div className="font-medium">
+                {selectedSource.name}
+              </div>
+
+              <div className="mt-1 text-sm text-muted-foreground">
+                Assigned CSV source
+              </div>
+            </div>
+          )}
+
+          {adminMode && selectedSource && (
             <div className="grid gap-2">
               <Label
                 htmlFor="seven-shifts-csv-source-name"
@@ -432,7 +471,8 @@ export function SevenShiftsCsvSources({
             </div>
           )}
 
-          <div className="grid gap-2">
+          {adminMode && (
+            <div className="grid gap-2">
             <Label
               htmlFor="seven-shifts-new-csv-source"
             >
@@ -489,9 +529,10 @@ export function SevenShiftsCsvSources({
                   : "Add CSV Source"}
               </Button>
             </div>
-          </div>
+            </div>
+          )}
 
-          {selectedSource && (
+          {adminMode && selectedSource && (
             <div className="border-t pt-6">
               <div className="space-y-3">
                 <div>
@@ -570,7 +611,7 @@ export function SevenShiftsCsvSources({
         </CardContent>
       </Card>
 
-      {selectedSource && (
+      {adminMode && selectedSource && (
         <SevenShiftsCsvImportCard
           sourceId={
             selectedSource.id

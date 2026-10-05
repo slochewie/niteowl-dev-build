@@ -108,7 +108,10 @@ function PluginPage() {
 					<>
 						{detail.plugin.id === "seven-shifts-csv" && (
 							<AdminWriteBoundary>
-								<SevenShiftsCsvSources sources={detail.csvSources} />
+								<SevenShiftsCsvSources
+									mode="admin"
+									sources={detail.csvSources}
+								/>
 							</AdminWriteBoundary>
 						)}
 

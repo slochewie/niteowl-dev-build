@@ -393,6 +393,23 @@ export const getAdminOrganizationIntegrations = createServerFn({
 		return integrations;
 	});
 
+export const getAdminOrganizationSevenShiftsCsvSources = createServerFn({
+	method: "GET",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }): Promise<AdminSevenShiftsCsvSource[]> => {
+		const { request } = await requireAdminRead();
+
+		const result = await auth.api.listSevenShiftsCsvOrganizationSources({
+			query: {
+				organizationId: data.organizationId,
+			},
+			headers: request.headers,
+		});
+
+		return result.sources;
+	});
+
 export const createAdminSevenShiftsCsvSource = createServerFn({
 	method: "POST",
 })

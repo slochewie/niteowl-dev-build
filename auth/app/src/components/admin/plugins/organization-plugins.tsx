@@ -34,6 +34,7 @@ import {
 	type AdminOrganizationIntegration,
 	type AdminPluginDetail,
 	type AdminSevenShiftsApiSource,
+	type AdminSevenShiftsCsvSource,
 } from "@/lib/admin/plugins";
 import {
 	getIntegration,
@@ -64,6 +65,7 @@ type OrganizationPluginsProps = {
 	pluginDetails: AdminPluginDetail[];
 	glauthSources: AdminGlauthSource[];
 	sevenShiftsApiSources: AdminSevenShiftsApiSource[];
+	sevenShiftsCsvSources: AdminSevenShiftsCsvSource[];
 };
 
 export function OrganizationPlugins({
@@ -72,6 +74,7 @@ export function OrganizationPlugins({
 	pluginDetails,
 	glauthSources,
 	sevenShiftsApiSources,
+	sevenShiftsCsvSources,
 }: OrganizationPluginsProps) {
 	const router = useRouter();
 
@@ -263,6 +266,7 @@ export function OrganizationPlugins({
 								detailById={detailById}
 								glauthSources={glauthSources}
 								sevenShiftsApiSources={sevenShiftsApiSources}
+								sevenShiftsCsvSources={sevenShiftsCsvSources}
 								apiIntegrationEnabled={
 									integrationById.get("seven-shifts-api")?.enabled ?? false
 								}
@@ -283,6 +287,7 @@ function PluginTabPanel({
 	detailById,
 	glauthSources,
 	sevenShiftsApiSources,
+	sevenShiftsCsvSources,
 	apiIntegrationEnabled,
 	pendingPluginId,
 	onSetSyncDirection,
@@ -295,6 +300,7 @@ function PluginTabPanel({
 	detailById: Map<string, AdminPluginDetail>;
 	glauthSources: AdminGlauthSource[];
 	sevenShiftsApiSources: AdminSevenShiftsApiSource[];
+	sevenShiftsCsvSources: AdminSevenShiftsCsvSource[];
 	apiIntegrationEnabled: boolean;
 	pendingPluginId: string | null;
 	onSetSyncDirection: (
@@ -315,7 +321,11 @@ function PluginTabPanel({
 
 		return (
 			<div className="space-y-6">
-				<SevenShiftsCsvSources sources={csvDetail?.csvSources ?? []} />
+				<SevenShiftsCsvSources
+					mode="organization"
+					sources={sevenShiftsCsvSources}
+					organization={organization}
+				/>
 
 				{!apiIntegrationEnabled && (
 					<div className="space-y-3">

@@ -78,6 +78,10 @@ const filesQuerySchema = z.object({
 	sourceId: z.string().min(1),
 });
 
+const organizationSourcesQuerySchema = z.object({
+	organizationId: z.string().min(1),
+});
+
 const uploadBodySchema = z.object({
 	sourceId: z.string().min(1),
 	fileName: z.string().min(1),
@@ -712,6 +716,64 @@ export const sevenShiftsCsv = ({ pool, storageRoot }: SevenShiftsCsvOptions) =>
                   ORDER BY
                     s.name ASC
                 `,
+					);
+
+					return ctx.json({
+						sources: result.rows,
+					});
+				},
+			),
+
+			listSevenShiftsCsvOrganizationSources: createAuthEndpoint(
+				"/seven-shifts-csv/organization-sources",
+				{
+					method: "GET",
+					use: [sessionMiddleware],
+					query: organizationSourcesQuerySchema,
+				},
+				async (ctx) => {
+					const allowed = await isGlobalAdmin(
+						pool,
+						ctx.context.session.user.id,
+						true,
+					);
+
+					if (!allowed) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
+
+					const result = await pool.query<{
+						id: string;
+						name: string;
+						organizationCount: number;
+						createdAt: Date;
+						updatedAt: Date;
+					}>(
+						`
+							SELECT
+								s.id,
+								s.name,
+								1::int AS "organizationCount",
+								s."createdAt",
+								s."updatedAt"
+							FROM
+								"sevenShiftsCsvSource" s
+							INNER JOIN
+								"sevenShiftsCsvOrganizationSource" os
+								ON os."sourceId" = s.id
+							WHERE
+								os."organizationId" = $1
+							ORDER BY
+								s.name ASC
+						`,
+						[ctx.query.organizationId],
 					);
 
 					return ctx.json({
