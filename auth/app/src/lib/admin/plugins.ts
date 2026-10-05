@@ -224,6 +224,59 @@ export const getAdminPluginCatalog = createServerFn({
 				};
 			}
 
+
+			if (plugin.id === "mqtt") {
+				const result = await auth.api.listMqttBrokerSources({
+					headers: request.headers,
+				});
+
+				const organizationIds = new Set(
+					result.sources
+						.filter((source) => source.enabled)
+						.flatMap((source) =>
+							source.assignments
+								.filter((assignment) => assignment.enabled)
+								.map((assignment) => assignment.organizationId),
+						),
+				);
+
+				return {
+					...plugin,
+
+					enabledOrganizationCount: organizationIds.size,
+				};
+			}
+
+			if (plugin.id === "counter") {
+				const organizations =
+					await getOrganizationsForPlugin(plugin.id);
+
+				const configuredOrganizations =
+					await Promise.all(
+						organizations.map(async (organization) => {
+							const result = await auth.api.listCounters({
+								query: {
+									organizationId: organization.id,
+								},
+								headers: request.headers,
+							});
+
+							return result.counters.some(
+								(counter) => counter.enabled,
+							)
+								? organization.id
+								: null;
+						}),
+					);
+
+				return {
+					...plugin,
+
+					enabledOrganizationCount:
+						configuredOrganizations.filter(Boolean).length,
+				};
+			}
+
 			const organizations = await getOrganizationsForPlugin(plugin.id);
 
 			return {
