@@ -86,6 +86,9 @@ export type AdminMqttSource = {
 	host: string;
 	port: number;
 	protocol: "mqtt" | "mqtts";
+	websocketHost?: string | null;
+	websocketPort?: number | null;
+	websocketProtocol?: "ws" | "wss" | null;
 	username?: string | null;
 	enabled: boolean;
 	hasPassword?: boolean;
@@ -918,6 +921,9 @@ export const getAdminOrganizationMqttSources = createServerFn({
 			host: source.host,
 			port: source.port,
 			protocol: source.protocol,
+			websocketHost: source.websocketHost,
+			websocketPort: source.websocketPort,
+			websocketProtocol: source.websocketProtocol,
 			enabled: source.enabled,
 			organizationCount: source.organizationCount,
 			createdAt: source.createdAt,
@@ -935,6 +941,9 @@ export const createAdminMqttBrokerSource = createServerFn({
 			host: string;
 			port: number;
 			protocol: "mqtt" | "mqtts";
+			websocketHost?: string;
+			websocketPort?: number | null;
+			websocketProtocol?: "ws" | "wss" | null;
 			username?: string;
 			password?: string;
 			enabled: boolean;
@@ -959,6 +968,9 @@ export const updateAdminMqttBrokerSource = createServerFn({
 			host: string;
 			port: number;
 			protocol: "mqtt" | "mqtts";
+			websocketHost?: string;
+			websocketPort?: number | null;
+			websocketProtocol?: "ws" | "wss" | null;
 			username?: string;
 			password?: string;
 			enabled: boolean;

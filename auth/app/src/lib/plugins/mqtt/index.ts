@@ -25,6 +25,9 @@ const createSourceBodySchema = z.object({
 	host: z.string().trim().min(1).max(255),
 	port: z.number().int().min(1).max(65535),
 	protocol: protocolSchema,
+	websocketHost: z.string().trim().max(255).optional(),
+	websocketPort: z.number().int().min(1).max(65535).nullable().optional(),
+	websocketProtocol: z.enum(["ws", "wss"]).nullable().optional(),
 	username: z.string().trim().max(255).optional(),
 	password: z.string().max(4096).optional(),
 	enabled: z.boolean().default(true),
@@ -36,6 +39,9 @@ const updateSourceBodySchema = z.object({
 	host: z.string().trim().min(1).max(255),
 	port: z.number().int().min(1).max(65535),
 	protocol: protocolSchema,
+	websocketHost: z.string().trim().max(255).optional(),
+	websocketPort: z.number().int().min(1).max(65535).nullable().optional(),
+	websocketProtocol: z.enum(["ws", "wss"]).nullable().optional(),
 	username: z.string().trim().max(255).optional(),
 	password: z.string().max(4096).optional(),
 	enabled: z.boolean(),
@@ -129,6 +135,9 @@ export const mqttIntegration = ({
 						host: string;
 						port: number;
 						protocol: "mqtt" | "mqtts";
+						websocketHost: string | null;
+						websocketPort: number | null;
+						websocketProtocol: "ws" | "wss" | null;
 						username: string | null;
 						enabled: boolean;
 						hasPassword: boolean;
@@ -143,6 +152,9 @@ export const mqttIntegration = ({
 								s.host,
 								s.port,
 								s.protocol,
+								s."websocketHost",
+								s."websocketPort",
+								s."websocketProtocol",
 								s.username,
 								s.enabled,
 								(s.password IS NOT NULL) AS "hasPassword",
@@ -160,6 +172,9 @@ export const mqttIntegration = ({
 								s.host,
 								s.port,
 								s.protocol,
+								s."websocketHost",
+								s."websocketPort",
+								s."websocketProtocol",
 								s.username,
 								s.enabled,
 								s.password,
@@ -243,6 +258,9 @@ export const mqttIntegration = ({
 						host: string;
 						port: number;
 						protocol: "mqtt" | "mqtts";
+						websocketHost: string | null;
+						websocketPort: number | null;
+						websocketProtocol: "ws" | "wss" | null;
 						username: string | null;
 						enabled: boolean;
 						hasPassword: boolean;
@@ -262,6 +280,9 @@ export const mqttIntegration = ({
 								s.host,
 								s.port,
 								s.protocol,
+								s."websocketHost",
+								s."websocketPort",
+								s."websocketProtocol",
 								s.username,
 								s.enabled,
 								(s.password IS NOT NULL) AS "hasPassword",
@@ -296,6 +317,9 @@ export const mqttIntegration = ({
 							host: source.host,
 							port: source.port,
 							protocol: source.protocol,
+							websocketHost: source.websocketHost,
+							websocketPort: source.websocketPort,
+							websocketProtocol: source.websocketProtocol,
 							username: source.username,
 							enabled: source.enabled,
 							hasPassword: source.hasPassword,
@@ -359,6 +383,9 @@ export const mqttIntegration = ({
 									host,
 									port,
 									protocol,
+									"websocketHost",
+									"websocketPort",
+									"websocketProtocol",
 									username,
 									password,
 									enabled,
@@ -374,6 +401,9 @@ export const mqttIntegration = ({
 								$6,
 								$7,
 								$8,
+								$9,
+								$10,
+								$11,
 								CURRENT_TIMESTAMP,
 								CURRENT_TIMESTAMP
 							)
@@ -383,6 +413,9 @@ export const mqttIntegration = ({
 								host,
 								port,
 								protocol,
+								"websocketHost",
+								"websocketPort",
+								"websocketProtocol",
 								username,
 								enabled,
 								"createdAt",
@@ -394,6 +427,9 @@ export const mqttIntegration = ({
 							ctx.body.host.trim(),
 							ctx.body.port,
 							ctx.body.protocol,
+							ctx.body.websocketHost?.trim() || null,
+							ctx.body.websocketPort ?? null,
+							ctx.body.websocketProtocol ?? null,
 							ctx.body.username?.trim() || null,
 							password,
 							ctx.body.enabled,
@@ -474,18 +510,24 @@ export const mqttIntegration = ({
 								host = $2,
 								port = $3,
 								protocol = $4,
-								username = $5,
-								password = $6,
-								enabled = $7,
+								"websocketHost" = $5,
+								"websocketPort" = $6,
+								"websocketProtocol" = $7,
+								username = $8,
+								password = $9,
+								enabled = $10,
 								"updatedAt" = CURRENT_TIMESTAMP
 							WHERE
-								id = $8
+								id = $11
 							RETURNING
 								id,
 								name,
 								host,
 								port,
 								protocol,
+								"websocketHost",
+								"websocketPort",
+								"websocketProtocol",
 								username,
 								enabled,
 								"createdAt",
@@ -496,6 +538,9 @@ export const mqttIntegration = ({
 							ctx.body.host.trim(),
 							ctx.body.port,
 							ctx.body.protocol,
+							ctx.body.websocketHost?.trim() || null,
+							ctx.body.websocketPort ?? null,
+							ctx.body.websocketProtocol ?? null,
 							ctx.body.username?.trim() || null,
 							password,
 							ctx.body.enabled,
@@ -770,6 +815,21 @@ export const mqttIntegration = ({
 						type: "string",
 						required: true,
 						defaultValue: "mqtt",
+					},
+
+					websocketHost: {
+						type: "string",
+						required: false,
+					},
+
+					websocketPort: {
+						type: "number",
+						required: false,
+					},
+
+					websocketProtocol: {
+						type: "string",
+						required: false,
 					},
 
 					username: {

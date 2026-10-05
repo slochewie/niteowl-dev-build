@@ -1559,6 +1559,12 @@ export const counterAccess = ({
 						protocol:
 							| "mqtt"
 							| "mqtts";
+						websocketHost: string | null;
+						websocketPort: number | null;
+						websocketProtocol:
+							| "ws"
+							| "wss"
+							| null;
 						username: string | null;
 						password: string | null;
 						topicPrefix: string;
@@ -1570,6 +1576,9 @@ export const counterAccess = ({
 								s.host,
 								s.port,
 								s.protocol,
+								s."websocketHost",
+								s."websocketPort",
+								s."websocketProtocol",
 								s.username,
 								s.password,
 								a."topicPrefix"
@@ -1626,18 +1635,6 @@ export const counterAccess = ({
 						[organizationId],
 					);
 
-				if (
-					wifiResult.rowCount === 0
-				) {
-					return ctx.json(
-						{
-							error:
-								"Enabled WiFi configuration not found for organization",
-						},
-						{ status: 409 },
-					);
-				}
-
 				const counter =
 					counterResult.rows[0];
 				const mqtt =
@@ -1666,6 +1663,12 @@ export const counterAccess = ({
 						port: mqtt.port,
 						protocol:
 							mqtt.protocol,
+						websocketHost:
+							mqtt.websocketHost,
+						websocketPort:
+							mqtt.websocketPort,
+						websocketProtocol:
+							mqtt.websocketProtocol,
 						username:
 							mqtt.username,
 						password:

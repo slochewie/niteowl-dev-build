@@ -97,6 +97,11 @@ export function MqttSources({
 	const [sourceProtocol, setSourceProtocol] = useState<"mqtt" | "mqtts">(
 		"mqtt",
 	);
+	const [sourceWebsocketHost, setSourceWebsocketHost] = useState("");
+	const [sourceWebsocketPort, setSourceWebsocketPort] = useState("443");
+	const [sourceWebsocketProtocol, setSourceWebsocketProtocol] = useState<
+		"ws" | "wss"
+	>("wss");
 	const [sourceUsername, setSourceUsername] = useState("");
 	const [sourcePassword, setSourcePassword] = useState("");
 	const [sourceEnabled, setSourceEnabled] = useState(true);
@@ -109,6 +114,11 @@ export function MqttSources({
 	const [newSourceProtocol, setNewSourceProtocol] = useState<
 		"mqtt" | "mqtts"
 	>("mqtt");
+	const [newSourceWebsocketHost, setNewSourceWebsocketHost] = useState("");
+	const [newSourceWebsocketPort, setNewSourceWebsocketPort] = useState("443");
+	const [newSourceWebsocketProtocol, setNewSourceWebsocketProtocol] = useState<
+		"ws" | "wss"
+	>("wss");
 	const [newSourceUsername, setNewSourceUsername] = useState("");
 	const [newSourcePassword, setNewSourcePassword] = useState("");
 	const [newSourceEnabled, setNewSourceEnabled] = useState(true);
@@ -139,6 +149,9 @@ export function MqttSources({
 			setSourceHost("");
 			setSourcePort(String(DEFAULT_MQTT_PORT));
 			setSourceProtocol("mqtt");
+			setSourceWebsocketHost("");
+			setSourceWebsocketPort("443");
+			setSourceWebsocketProtocol("wss");
 			setSourceUsername("");
 			setSourcePassword("");
 			setSourceEnabled(true);
@@ -149,6 +162,15 @@ export function MqttSources({
 		setSourceHost(selectedSource.host);
 		setSourcePort(String(selectedSource.port));
 		setSourceProtocol(selectedSource.protocol);
+		setSourceWebsocketHost(selectedSource.websocketHost ?? "");
+		setSourceWebsocketPort(
+			selectedSource.websocketPort
+				? String(selectedSource.websocketPort)
+				: "443",
+		);
+		setSourceWebsocketProtocol(
+			selectedSource.websocketProtocol ?? "wss",
+		);
 		setSourceUsername(selectedSource.username ?? "");
 		setSourcePassword("");
 		setSourceEnabled(selectedSource.enabled);
@@ -191,6 +213,14 @@ export function MqttSources({
 					host,
 					port: parsePort(newSourcePort),
 					protocol: newSourceProtocol,
+					websocketHost:
+						newSourceWebsocketHost.trim() || undefined,
+					websocketPort: newSourceWebsocketHost.trim()
+						? parsePort(newSourceWebsocketPort)
+						: null,
+					websocketProtocol: newSourceWebsocketHost.trim()
+						? newSourceWebsocketProtocol
+						: null,
 					username: newSourceUsername.trim() || undefined,
 					password: newSourcePassword || undefined,
 					enabled: newSourceEnabled,
@@ -203,6 +233,9 @@ export function MqttSources({
 			setNewSourceHost("");
 			setNewSourcePort(String(DEFAULT_MQTT_PORT));
 			setNewSourceProtocol("mqtt");
+			setNewSourceWebsocketHost("");
+			setNewSourceWebsocketPort("443");
+			setNewSourceWebsocketProtocol("wss");
 			setNewSourceUsername("");
 			setNewSourcePassword("");
 			setNewSourceEnabled(true);
@@ -242,6 +275,14 @@ export function MqttSources({
 					host,
 					port: parsePort(sourcePort),
 					protocol: sourceProtocol,
+					websocketHost:
+						sourceWebsocketHost.trim() || undefined,
+					websocketPort: sourceWebsocketHost.trim()
+						? parsePort(sourceWebsocketPort)
+						: null,
+					websocketProtocol: sourceWebsocketHost.trim()
+						? sourceWebsocketProtocol
+						: null,
 					username: sourceUsername.trim() || undefined,
 					password: sourcePassword || undefined,
 					enabled: sourceEnabled,
@@ -375,6 +416,12 @@ export function MqttSources({
 						setPort={setNewSourcePort}
 						protocol={newSourceProtocol}
 						setProtocol={setNewSourceProtocol}
+						websocketHost={newSourceWebsocketHost}
+						setWebsocketHost={setNewSourceWebsocketHost}
+						websocketPort={newSourceWebsocketPort}
+						setWebsocketPort={setNewSourceWebsocketPort}
+						websocketProtocol={newSourceWebsocketProtocol}
+						setWebsocketProtocol={setNewSourceWebsocketProtocol}
 						username={newSourceUsername}
 						setUsername={setNewSourceUsername}
 						password={newSourcePassword}
@@ -500,6 +547,46 @@ export function MqttSources({
 									<SelectContent>
 										<SelectItem value="mqtt">MQTT</SelectItem>
 										<SelectItem value="mqtts">MQTTS</SelectItem>
+									</SelectContent>
+								</Select>
+							</Field>
+
+							<Field label="WebSocket Host">
+								<Input
+									value={sourceWebsocketHost}
+									onChange={(event) =>
+										setSourceWebsocketHost(event.target.value)
+									}
+									placeholder="mqtt.niteowl.dev"
+								/>
+							</Field>
+
+							<Field label="WebSocket Port">
+								<Input
+									inputMode="numeric"
+									value={sourceWebsocketPort}
+									onChange={(event) =>
+										setSourceWebsocketPort(event.target.value)
+									}
+								/>
+							</Field>
+
+							<Field label="WebSocket Protocol">
+								<Select
+									value={sourceWebsocketProtocol}
+									onValueChange={(value) =>
+										setSourceWebsocketProtocol(
+											value as "ws" | "wss",
+										)
+									}
+								>
+									<SelectTrigger>
+										<SelectValue />
+									</SelectTrigger>
+
+									<SelectContent>
+										<SelectItem value="ws">WS</SelectItem>
+										<SelectItem value="wss">WSS</SelectItem>
 									</SelectContent>
 								</Select>
 							</Field>
@@ -750,6 +837,12 @@ export function MqttSources({
 					setPort={setNewSourcePort}
 					protocol={newSourceProtocol}
 					setProtocol={setNewSourceProtocol}
+					websocketHost={newSourceWebsocketHost}
+					setWebsocketHost={setNewSourceWebsocketHost}
+					websocketPort={newSourceWebsocketPort}
+					setWebsocketPort={setNewSourceWebsocketPort}
+					websocketProtocol={newSourceWebsocketProtocol}
+					setWebsocketProtocol={setNewSourceWebsocketProtocol}
 					username={newSourceUsername}
 					setUsername={setNewSourceUsername}
 					password={newSourcePassword}
@@ -773,6 +866,12 @@ function CreateSourceCard({
 	setPort,
 	protocol,
 	setProtocol,
+	websocketHost,
+	setWebsocketHost,
+	websocketPort,
+	setWebsocketPort,
+	websocketProtocol,
+	setWebsocketProtocol,
 	username,
 	setUsername,
 	password,
@@ -790,6 +889,12 @@ function CreateSourceCard({
 	setPort: (value: string) => void;
 	protocol: "mqtt" | "mqtts";
 	setProtocol: (value: "mqtt" | "mqtts") => void;
+	websocketHost: string;
+	setWebsocketHost: (value: string) => void;
+	websocketPort: string;
+	setWebsocketPort: (value: string) => void;
+	websocketProtocol: "ws" | "wss";
+	setWebsocketProtocol: (value: "ws" | "wss") => void;
 	username: string;
 	setUsername: (value: string) => void;
 	password: string;
@@ -852,6 +957,44 @@ function CreateSourceCard({
 							<SelectContent>
 								<SelectItem value="mqtt">MQTT</SelectItem>
 								<SelectItem value="mqtts">MQTTS</SelectItem>
+							</SelectContent>
+						</Select>
+					</Field>
+
+					<Field label="WebSocket Host">
+						<Input
+							value={websocketHost}
+							onChange={(event) =>
+								setWebsocketHost(event.target.value)
+							}
+							placeholder="mqtt.niteowl.dev"
+						/>
+					</Field>
+
+					<Field label="WebSocket Port">
+						<Input
+							inputMode="numeric"
+							value={websocketPort}
+							onChange={(event) =>
+								setWebsocketPort(event.target.value)
+							}
+						/>
+					</Field>
+
+					<Field label="WebSocket Protocol">
+						<Select
+							value={websocketProtocol}
+							onValueChange={(value) =>
+								setWebsocketProtocol(value as "ws" | "wss")
+							}
+						>
+							<SelectTrigger>
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="ws">WS</SelectItem>
+								<SelectItem value="wss">WSS</SelectItem>
 							</SelectContent>
 						</Select>
 					</Field>
