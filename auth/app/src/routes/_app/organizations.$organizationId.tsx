@@ -61,6 +61,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	getAdminOrganizationGlauthSources,
 	getAdminOrganizationIntegrations,
+	getAdminOrganizationSevenShiftsApiSources,
 	getAdminPlugin,
 } from "@/lib/admin/plugins";
 import { INTEGRATION_IDS } from "@/lib/plugins/integration-manager/registry";
@@ -107,8 +108,14 @@ const PERSON_TYPE_LABELS = Object.fromEntries(
 
 export const Route = createFileRoute("/_app/organizations/$organizationId")({
 	loader: async ({ params }) => {
-		const [organization, users, integrations, pluginDetails, glauthSources] =
-			await Promise.all([
+		const [
+			organization,
+			users,
+			integrations,
+			pluginDetails,
+			glauthSources,
+			sevenShiftsApiSources,
+		] = await Promise.all([
 				getAdminOrganization({
 					data: {
 						organizationId: params.organizationId,
@@ -138,6 +145,12 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 						organizationId: params.organizationId,
 					},
 				}),
+
+				getAdminOrganizationSevenShiftsApiSources({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
 			]);
 
 		return {
@@ -146,6 +159,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			integrations,
 			pluginDetails,
 			glauthSources,
+			sevenShiftsApiSources,
 		};
 	},
 
@@ -153,8 +167,14 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 });
 
 function OrganizationPage() {
-	const { organization, users, integrations, pluginDetails, glauthSources } =
-		Route.useLoaderData();
+	const {
+		organization,
+		users,
+		integrations,
+		pluginDetails,
+		glauthSources,
+		sevenShiftsApiSources,
+	} = Route.useLoaderData();
 
 	const router = useRouter();
 
@@ -240,6 +260,7 @@ function OrganizationPage() {
 									integrations={integrations}
 									pluginDetails={pluginDetails}
 									glauthSources={glauthSources}
+									sevenShiftsApiSources={sevenShiftsApiSources}
 								/>
 							</AdminWriteBoundary>
 						</TabsContent>

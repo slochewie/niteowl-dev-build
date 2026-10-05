@@ -33,6 +33,7 @@ import {
 	type AdminGlauthSource,
 	type AdminOrganizationIntegration,
 	type AdminPluginDetail,
+	type AdminSevenShiftsApiSource,
 } from "@/lib/admin/plugins";
 import {
 	getIntegration,
@@ -62,6 +63,7 @@ type OrganizationPluginsProps = {
 	integrations: AdminOrganizationIntegration[];
 	pluginDetails: AdminPluginDetail[];
 	glauthSources: AdminGlauthSource[];
+	sevenShiftsApiSources: AdminSevenShiftsApiSource[];
 };
 
 export function OrganizationPlugins({
@@ -69,6 +71,7 @@ export function OrganizationPlugins({
 	integrations,
 	pluginDetails,
 	glauthSources,
+	sevenShiftsApiSources,
 }: OrganizationPluginsProps) {
 	const router = useRouter();
 
@@ -259,6 +262,7 @@ export function OrganizationPlugins({
 								organization={organization}
 								detailById={detailById}
 								glauthSources={glauthSources}
+								sevenShiftsApiSources={sevenShiftsApiSources}
 								apiIntegrationEnabled={
 									integrationById.get("seven-shifts-api")?.enabled ?? false
 								}
@@ -278,6 +282,7 @@ function PluginTabPanel({
 	organization,
 	detailById,
 	glauthSources,
+	sevenShiftsApiSources,
 	apiIntegrationEnabled,
 	pendingPluginId,
 	onSetSyncDirection,
@@ -289,6 +294,7 @@ function PluginTabPanel({
 	};
 	detailById: Map<string, AdminPluginDetail>;
 	glauthSources: AdminGlauthSource[];
+	sevenShiftsApiSources: AdminSevenShiftsApiSource[];
 	apiIntegrationEnabled: boolean;
 	pendingPluginId: string | null;
 	onSetSyncDirection: (
@@ -326,8 +332,9 @@ function PluginTabPanel({
 						</div>
 
 						<SevenShiftsApiSources
-							sources={apiDetail?.apiSources ?? []}
-							organizations={apiDetail?.organizations ?? []}
+							mode="organization"
+							sources={sevenShiftsApiSources}
+							organization={organization}
 						/>
 					</div>
 				)}
@@ -341,8 +348,9 @@ function PluginTabPanel({
 		return (
 			<div className="space-y-6">
 				<SevenShiftsApiSources
-					sources={detail?.apiSources ?? []}
-					organizations={detail?.organizations ?? []}
+					mode="organization"
+					sources={sevenShiftsApiSources}
+					organization={organization}
 				/>
 
 				<SyncDirectionCard

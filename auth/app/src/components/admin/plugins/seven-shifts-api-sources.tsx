@@ -20,6 +20,10 @@ import {
   toast
 } from "sonner"
 
+import type {
+  PluginComponentMode
+} from "@/components/admin/plugins/plugin-component-mode"
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -140,16 +144,26 @@ const DEFAULT_API_VERSION =
   "2026-01-01"
 
 export function SevenShiftsApiSources({
+  mode,
   sources,
-  organizations
+  organizations = [],
+  organization
 }: {
+  mode: PluginComponentMode
   sources:
     AdminSevenShiftsApiSource[]
-  organizations:
+  organizations?:
     AdminPluginOrganization[]
+  organization?: {
+    id: string
+    name: string
+  }
 }) {
   const router =
     useRouter()
+
+  const adminMode =
+    mode === "admin"
 
   const [
     selectedSourceId,
@@ -795,16 +809,23 @@ export function SevenShiftsApiSources({
       <Card>
         <CardHeader>
           <CardTitle>
-            API Sources
+            {adminMode
+              ? "API Sources"
+              : "7shifts API Connection"}
           </CardTitle>
 
           <CardDescription>
-            Each API Source stores one 7shifts company connection and can provide workforce data to one or more organizations.
+            {adminMode
+              ? "Each API Source stores one 7shifts company connection and can provide workforce data to one or more organizations."
+              : organization
+                ? `7shifts API connection assigned to ${organization.name}.`
+                : "7shifts API connection assigned to this organization."}
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="grid gap-2">
+          {adminMode && (
+            <div className="grid gap-2">
             <Label>
               API Source
             </Label>
@@ -849,10 +870,19 @@ export function SevenShiftsApiSources({
                 )}
               </SelectContent>
             </Select>
-          </div>
+            </div>
+          )}
+
+          {!adminMode && sources.length === 0 && (
+            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              No 7shifts API source is assigned to this organization.
+            </div>
+          )}
 
           {selectedSource && (
             <>
+              {adminMode && (
+                <>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label
@@ -984,6 +1014,9 @@ export function SevenShiftsApiSources({
                 )}
               </div>
 
+                </>
+              )}
+
               <div className="grid gap-3 rounded-lg border p-4">
                 <div className="grid gap-1">
                   <div className="text-sm font-medium">
@@ -1016,7 +1049,8 @@ export function SevenShiftsApiSources({
                   : "Never"}
               </div>
 
-            {selectedSource.companyId !==
+            {adminMode &&
+              selectedSource.companyId !==
               null && (
               <div className="space-y-4 rounded-lg border p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1341,7 +1375,8 @@ export function SevenShiftsApiSources({
               </div>
             )}
 
-              {selectedSource.companyId !==
+              {adminMode &&
+                selectedSource.companyId !==
                 null && (
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1492,7 +1527,7 @@ export function SevenShiftsApiSources({
             </>
           )}
 
-          {selectedSource && (
+          {adminMode && selectedSource && (
             <div className="border-t pt-6">
               <div className="rounded-lg border border-destructive/30 p-4">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1571,7 +1606,8 @@ export function SevenShiftsApiSources({
             </div>
           )}
 
-          <div className="border-t pt-6">
+          {adminMode && (
+            <div className="border-t pt-6">
             <div className="mb-4">
               <div className="font-medium">
                 Add API Source
@@ -1656,7 +1692,8 @@ export function SevenShiftsApiSources({
                 </Button>
               </div>
             </div>
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

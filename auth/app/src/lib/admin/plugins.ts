@@ -439,6 +439,23 @@ export const deleteAdminSevenShiftsCsvSource = createServerFn({
 		});
 	});
 
+export const getAdminOrganizationSevenShiftsApiSources = createServerFn({
+	method: "GET",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }): Promise<AdminSevenShiftsApiSource[]> => {
+		const { request } = await requireAdminRead();
+
+		const result = await auth.api.listSevenShiftsApiOrganizationSources({
+			query: {
+				organizationId: data.organizationId,
+			},
+			headers: request.headers,
+		});
+
+		return result.sources;
+	});
+
 export const createAdminSevenShiftsApiSource = createServerFn({
 	method: "POST",
 })

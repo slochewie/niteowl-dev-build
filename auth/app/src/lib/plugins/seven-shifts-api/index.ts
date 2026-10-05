@@ -57,6 +57,10 @@ const sourceBodySchema = z.object({
 	sourceId: z.string().min(1),
 });
 
+const organizationSourcesQuerySchema = z.object({
+	organizationId: z.string().min(1),
+});
+
 const assignLocationBodySchema = z.object({
 	sourceId: z.string().min(1),
 
@@ -470,6 +474,77 @@ export const sevenShiftsApi = ({
                   ORDER BY
                     s.name ASC
                 `,
+					);
+
+					return ctx.json({
+						sources: result.rows.map((source) => ({
+							...source,
+							hasAccessToken: true,
+						})),
+					});
+				},
+			),
+
+			listSevenShiftsApiOrganizationSources: createAuthEndpoint(
+				"/seven-shifts-api/organization-sources",
+				{
+					method: "GET",
+					use: [sessionMiddleware],
+					query: organizationSourcesQuerySchema,
+				},
+				async (ctx) => {
+					const allowed = await isGlobalAdmin(
+						pool,
+						ctx.context.session.user.id,
+						true,
+					);
+
+					if (!allowed) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
+
+					const result = await pool.query<{
+						id: string;
+						name: string;
+						companyId: number | null;
+						companyName: string | null;
+						apiVersion: string;
+						organizationCount: number;
+						lastTestedAt: Date | null;
+						lastSyncAt: Date | null;
+						createdAt: Date;
+						updatedAt: Date;
+					}>(
+						`
+							SELECT
+								s.id,
+								s.name,
+								s."companyId",
+								s."companyName",
+								s."apiVersion",
+								1::int AS "organizationCount",
+								s."lastTestedAt",
+								s."lastSyncAt",
+								s."createdAt",
+								s."updatedAt"
+							FROM
+								"sevenShiftsApiSource" s
+							INNER JOIN
+								"sevenShiftsApiOrganizationSource" os
+								ON os."sourceId" = s.id
+							WHERE
+								os."organizationId" = $1
+							ORDER BY
+								s.name ASC
+						`,
+						[ctx.query.organizationId],
 					);
 
 					return ctx.json({

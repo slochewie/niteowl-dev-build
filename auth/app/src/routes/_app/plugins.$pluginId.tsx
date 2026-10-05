@@ -115,6 +115,7 @@ function PluginPage() {
 						{detail.plugin.id === "seven-shifts-api" && (
 							<AdminWriteBoundary>
 								<SevenShiftsApiSources
+									mode="admin"
 									sources={detail.apiSources}
 									organizations={detail.organizations}
 								/>
