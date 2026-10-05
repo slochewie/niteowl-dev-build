@@ -57,6 +57,8 @@ const listCountersQuerySchema = z.object({
 const createCounterBodySchema = z.object({
 	organizationId: z.string().min(1),
 	name: z.string().trim().min(1).max(100),
+	maxCapacity: z.number().int().min(0).nullable().optional(),
+	allowNegative: z.boolean().default(false),
 });
 
 const updateCounterBodySchema = z.object({
@@ -64,6 +66,8 @@ const updateCounterBodySchema = z.object({
 	counterId: z.string().min(1),
 	name: z.string().trim().min(1).max(100).optional(),
 	enabled: z.boolean().optional(),
+	maxCapacity: z.number().int().min(0).nullable().optional(),
+	allowNegative: z.boolean().optional(),
 });
 
 const deleteCounterBodySchema = z.object({
@@ -347,6 +351,15 @@ export const counterAccess = ({
 					required: true,
 					defaultValue: true,
 				},
+				maxCapacity: {
+					type: "number",
+					required: false,
+				},
+				allowNegative: {
+					type: "boolean",
+					required: true,
+					defaultValue: false,
+				},
 				createdAt: {
 					type: "date",
 					required: true,
@@ -464,6 +477,8 @@ export const counterAccess = ({
 					id: string;
 					name: string;
 					enabled: boolean;
+					maxCapacity: number | null;
+					allowNegative: boolean;
 					createdAt: Date;
 					updatedAt: Date;
 				}>(
@@ -472,6 +487,8 @@ export const counterAccess = ({
 							id,
 							name,
 							enabled,
+							"maxCapacity",
+							"allowNegative",
 							"createdAt",
 							"updatedAt"
 						FROM counter
@@ -498,7 +515,12 @@ export const counterAccess = ({
 				body: createCounterBodySchema,
 			},
 			async (ctx) => {
-				const { organizationId, name } = ctx.body;
+				const {
+					organizationId,
+					name,
+					maxCapacity,
+					allowNegative,
+				} = ctx.body;
 
 				if (
 					!(await canManageCounterDefinitions(
@@ -544,6 +566,8 @@ export const counterAccess = ({
 					organizationId: string;
 					name: string;
 					enabled: boolean;
+					maxCapacity: number | null;
+					allowNegative: boolean;
 					createdAt: Date;
 					updatedAt: Date;
 				}>(
@@ -553,6 +577,8 @@ export const counterAccess = ({
 							"organizationId",
 							name,
 							enabled,
+							"maxCapacity",
+							"allowNegative",
 							"createdAt",
 							"updatedAt"
 						)
@@ -561,6 +587,8 @@ export const counterAccess = ({
 							$1,
 							$2,
 							true,
+							$3,
+							$4,
 							CURRENT_TIMESTAMP,
 							CURRENT_TIMESTAMP
 						)
@@ -569,10 +597,17 @@ export const counterAccess = ({
 							"organizationId",
 							name,
 							enabled,
+							"maxCapacity",
+							"allowNegative",
 							"createdAt",
 							"updatedAt"
 					`,
-					[organizationId, name],
+					[
+						organizationId,
+						name,
+						maxCapacity ?? null,
+						allowNegative,
+					],
 				);
 
 				return ctx.json(
@@ -595,6 +630,8 @@ export const counterAccess = ({
 					counterId,
 					name,
 					enabled,
+					maxCapacity,
+					allowNegative,
 				} = ctx.body;
 
 				if (
@@ -610,7 +647,12 @@ export const counterAccess = ({
 					);
 				}
 
-				if (name === undefined && enabled === undefined) {
+				if (
+					name === undefined &&
+					enabled === undefined &&
+					maxCapacity === undefined &&
+					allowNegative === undefined
+				) {
 					return ctx.json(
 						{ error: "No counter changes supplied" },
 						{ status: 400 },
@@ -666,6 +708,8 @@ export const counterAccess = ({
 					organizationId: string;
 					name: string;
 					enabled: boolean;
+					maxCapacity: number | null;
+					allowNegative: boolean;
 					createdAt: Date;
 					updatedAt: Date;
 				}>(
@@ -674,7 +718,19 @@ export const counterAccess = ({
 						SET
 							name = COALESCE($3, name),
 							enabled = COALESCE($4, enabled),
-							"updatedAt" = CURRENT_TIMESTAMP
+							"maxCapacity" =
+								CASE
+									WHEN $5
+										THEN $6
+									ELSE "maxCapacity"
+								END,
+							"allowNegative" =
+								COALESCE(
+									$7,
+									"allowNegative"
+								),
+							"updatedAt" =
+								CURRENT_TIMESTAMP
 						WHERE
 							id = $1
 							AND "organizationId" = $2
@@ -683,6 +739,8 @@ export const counterAccess = ({
 							"organizationId",
 							name,
 							enabled,
+							"maxCapacity",
+							"allowNegative",
 							"createdAt",
 							"updatedAt"
 					`,
@@ -691,6 +749,9 @@ export const counterAccess = ({
 						organizationId,
 						name ?? null,
 						enabled ?? null,
+						maxCapacity !== undefined,
+						maxCapacity ?? null,
+						allowNegative ?? null,
 					],
 				);
 
