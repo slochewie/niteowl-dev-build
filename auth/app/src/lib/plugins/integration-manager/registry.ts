@@ -3,7 +3,8 @@ export const INTEGRATION_IDS = [
   "seven-shifts-api",
   "unifi-api",
   "glauth",
-  "unifi-ldap"
+  "unifi-ldap",
+  "mqtt"
 ] as const
 
 export type IntegrationId =
@@ -13,7 +14,6 @@ export const PLANNED_INTEGRATION_IDS = [
   "toast-api",
   "paychex-api",
   "wifi",
-  "mqtt",
   "counter"
 ] as const
 
@@ -114,7 +114,7 @@ export const INTEGRATIONS =
         "Configure reusable MQTT broker connections and organization topics.",
       category: "Infrastructure",
       configurationLabel: "Broker & Topics",
-      status: "planned"
+      status: "available"
     },
     {
       id: "counter",

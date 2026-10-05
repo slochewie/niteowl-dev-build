@@ -69,6 +69,32 @@ export type AdminUnifiAccessSource = {
 	assignments: AdminUnifiAccessAssignment[];
 };
 
+export type AdminMqttAssignment = {
+	id: string;
+	sourceId: string;
+	organizationId: string;
+	organizationName: string;
+	topicPrefix: string;
+	enabled: boolean;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
+export type AdminMqttSource = {
+	id: string;
+	name: string;
+	host: string;
+	port: number;
+	protocol: "mqtt" | "mqtts";
+	username?: string | null;
+	enabled: boolean;
+	hasPassword?: boolean;
+	organizationCount: number;
+	createdAt: Date;
+	updatedAt: Date;
+	assignments: AdminMqttAssignment[];
+};
+
 export type AdminSevenShiftsApiLocation = {
 	id: number;
 	company_id: number;
@@ -97,6 +123,7 @@ export type AdminPluginDetail = {
 	csvSources: AdminSevenShiftsCsvSource[];
 	apiSources: AdminSevenShiftsApiSource[];
 	unifiAccessSources: AdminUnifiAccessSource[];
+	mqttSources: AdminMqttSource[];
 };
 
 async function getOrganizationsForPlugin(pluginId: IntegrationId) {
@@ -181,6 +208,7 @@ export const getAdminPlugin = createServerFn({
 				csvSources: [],
 				apiSources: [],
 				unifiAccessSources: [],
+				mqttSources: [],
 			};
 		}
 
@@ -191,6 +219,8 @@ export const getAdminPlugin = createServerFn({
 		let apiSources: AdminSevenShiftsApiSource[] = [];
 
 		let unifiAccessSources: AdminUnifiAccessSource[] = [];
+
+		let mqttSources: AdminMqttSource[] = [];
 
 		if (plugin.id === "seven-shifts-csv") {
 			const { request } = await requireAdminRead();
@@ -222,12 +252,23 @@ export const getAdminPlugin = createServerFn({
 			unifiAccessSources = result.sources;
 		}
 
+		if (plugin.id === "mqtt") {
+			const { request } = await requireAdminRead();
+
+			const result = await auth.api.listMqttBrokerSources({
+				headers: request.headers,
+			});
+
+			mqttSources = result.sources;
+		}
+
 		return {
 			plugin,
 			organizations,
 			csvSources,
 			apiSources,
 			unifiAccessSources,
+			mqttSources,
 		};
 	});
 
@@ -624,6 +665,132 @@ export const unassignAdminSevenShiftsApiLocation = createServerFn({
 				sourceId: data.sourceId,
 				sevenShiftsLocationId: data.sevenShiftsLocationId,
 			},
+			headers: request.headers,
+		});
+	});
+
+export const getAdminOrganizationMqttSources = createServerFn({
+	method: "GET",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }): Promise<AdminMqttSource[]> => {
+		const { request } = await requireAdminRead();
+
+		const result = await auth.api.listMqttOrganizationSources({
+			query: {
+				organizationId: data.organizationId,
+			},
+			headers: request.headers,
+		});
+
+		return result.sources.map((source) => ({
+			id: source.id,
+			name: source.name,
+			host: source.host,
+			port: source.port,
+			protocol: source.protocol,
+			enabled: source.enabled,
+			organizationCount: source.organizationCount,
+			createdAt: source.createdAt,
+			updatedAt: source.updatedAt,
+			assignments: source.assignments,
+		}));
+	});
+
+export const createAdminMqttBrokerSource = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			name: string;
+			host: string;
+			port: number;
+			protocol: "mqtt" | "mqtts";
+			username?: string;
+			password?: string;
+			enabled: boolean;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.createMqttBrokerSource({
+			body: data,
+			headers: request.headers,
+		});
+	});
+
+export const updateAdminMqttBrokerSource = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			sourceId: string;
+			name: string;
+			host: string;
+			port: number;
+			protocol: "mqtt" | "mqtts";
+			username?: string;
+			password?: string;
+			enabled: boolean;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.updateMqttBrokerSource({
+			body: data,
+			headers: request.headers,
+		});
+	});
+
+export const assignAdminMqttBrokerSource = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			sourceId: string;
+			organizationId: string;
+			topicPrefix?: string;
+			enabled: boolean;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.assignMqttBrokerSource({
+			body: data,
+			headers: request.headers,
+		});
+	});
+
+export const unassignAdminMqttBrokerSource = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			sourceId: string;
+			organizationId: string;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.unassignMqttBrokerSource({
+			body: data,
+			headers: request.headers,
+		});
+	});
+
+export const deleteAdminMqttBrokerSource = createServerFn({
+	method: "POST",
+})
+	.validator((data: { sourceId: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.deleteMqttBrokerSource({
+			body: data,
 			headers: request.headers,
 		});
 	});

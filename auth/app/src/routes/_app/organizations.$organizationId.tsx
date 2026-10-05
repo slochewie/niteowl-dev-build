@@ -61,6 +61,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
 	getAdminOrganizationGlauthSources,
 	getAdminOrganizationIntegrations,
+	getAdminOrganizationMqttSources,
 	getAdminOrganizationSevenShiftsApiSources,
 	getAdminOrganizationSevenShiftsCsvSources,
 	getAdminOrganizationUnifiAccessSources,
@@ -116,6 +117,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			sevenShiftsApiSources,
 			sevenShiftsCsvSources,
 			unifiAccessSources,
+			mqttSources,
 		] = await Promise.all([
 				getAdminOrganization({
 					data: {
@@ -154,6 +156,12 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 						organizationId: params.organizationId,
 					},
 				}),
+
+				getAdminOrganizationMqttSources({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
 			]);
 
 		return {
@@ -164,6 +172,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			sevenShiftsApiSources,
 			sevenShiftsCsvSources,
 			unifiAccessSources,
+			mqttSources,
 		};
 	},
 
@@ -179,6 +188,7 @@ function OrganizationPage() {
 		sevenShiftsApiSources,
 		sevenShiftsCsvSources,
 		unifiAccessSources,
+		mqttSources,
 	} = Route.useLoaderData();
 
 	const router = useRouter();
@@ -267,6 +277,7 @@ function OrganizationPage() {
 									sevenShiftsApiSources={sevenShiftsApiSources}
 									sevenShiftsCsvSources={sevenShiftsCsvSources}
 									unifiAccessSources={unifiAccessSources}
+									mqttSources={mqttSources}
 								/>
 							</AdminWriteBoundary>
 						</TabsContent>

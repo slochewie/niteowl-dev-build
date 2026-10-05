@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { GlauthSources } from "@/components/admin/plugins/glauth-sources";
 import { IntegrationLogo } from "@/components/admin/plugins/integration-logo";
+import { MqttSources } from "@/components/admin/plugins/mqtt-sources";
 import { SevenShiftsApiSources } from "@/components/admin/plugins/seven-shifts-api-sources";
 import { SevenShiftsCsvSources } from "@/components/admin/plugins/seven-shifts-csv-sources";
 import { UnifiApi } from "@/components/admin/plugins/unifi-api";
@@ -31,6 +32,7 @@ import {
 	setAdminOrganizationPluginEnabled,
 	setAdminOrganizationPluginSyncDirection,
 	type AdminGlauthSource,
+	type AdminMqttSource,
 	type AdminOrganizationIntegration,
 	type AdminSevenShiftsApiSource,
 	type AdminSevenShiftsCsvSource,
@@ -66,6 +68,7 @@ type OrganizationPluginsProps = {
 	sevenShiftsApiSources: AdminSevenShiftsApiSource[];
 	sevenShiftsCsvSources: AdminSevenShiftsCsvSource[];
 	unifiAccessSources: AdminUnifiAccessSource[];
+	mqttSources: AdminMqttSource[];
 };
 
 export function OrganizationPlugins({
@@ -75,6 +78,7 @@ export function OrganizationPlugins({
 	sevenShiftsApiSources,
 	sevenShiftsCsvSources,
 	unifiAccessSources,
+	mqttSources,
 }: OrganizationPluginsProps) {
 	const router = useRouter();
 
@@ -256,6 +260,7 @@ export function OrganizationPlugins({
 								sevenShiftsApiSources={sevenShiftsApiSources}
 								sevenShiftsCsvSources={sevenShiftsCsvSources}
 								unifiAccessSources={unifiAccessSources}
+								mqttSources={mqttSources}
 								apiIntegrationEnabled={
 									integrationById.get("seven-shifts-api")?.enabled ?? false
 								}
@@ -277,6 +282,7 @@ function PluginTabPanel({
 	sevenShiftsApiSources,
 	sevenShiftsCsvSources,
 	unifiAccessSources,
+	mqttSources,
 	apiIntegrationEnabled,
 	pendingPluginId,
 	onSetSyncDirection,
@@ -290,6 +296,7 @@ function PluginTabPanel({
 	sevenShiftsApiSources: AdminSevenShiftsApiSource[];
 	sevenShiftsCsvSources: AdminSevenShiftsCsvSource[];
 	unifiAccessSources: AdminUnifiAccessSource[];
+	mqttSources: AdminMqttSource[];
 	apiIntegrationEnabled: boolean;
 	pendingPluginId: string | null;
 	onSetSyncDirection: (
@@ -360,6 +367,16 @@ function PluginTabPanel({
 			<UnifiApi
 				mode="organization"
 				accessSources={unifiAccessSources}
+				organization={organization}
+			/>
+		);
+	}
+
+	if (integration.pluginId === "mqtt") {
+		return (
+			<MqttSources
+				mode="organization"
+				sources={mqttSources}
 				organization={organization}
 			/>
 		);

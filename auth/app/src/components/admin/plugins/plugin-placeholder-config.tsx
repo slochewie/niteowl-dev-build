@@ -5,8 +5,6 @@ import {
   KeyRound,
   LockKeyhole,
   Plus,
-  RadioTower,
-  Server,
   Settings2,
   Upload,
   Wifi
@@ -63,10 +61,6 @@ export function PluginPlaceholderConfig({
 
       {pluginId === "wifi" && (
         <WifiPreview />
-      )}
-
-      {pluginId === "mqtt" && (
-        <MqttPreview />
       )}
 
       {pluginId === "counter" && (
@@ -231,80 +225,6 @@ function WifiPreview() {
         >
           <Plus />
           Add Network
-        </Button>
-      </CardContent>
-    </Card>
-  )
-}
-
-function MqttPreview() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          MQTT Broker
-        </CardTitle>
-
-        <CardDescription>
-          Reusable broker settings for Counter and future MQTT-based plugins.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="grid gap-5">
-        <PreviewField
-          label="Broker"
-          icon={<Server />}
-          placeholder="mqtt.example.com"
-        />
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <PreviewField
-            label="Port"
-            placeholder="8883"
-          />
-
-          <PreviewField
-            label="Protocol"
-            placeholder="MQTTS"
-          />
-        </div>
-
-        <PreviewField
-          label="Username"
-          placeholder="MQTT username"
-        />
-
-        <PreviewField
-          label="Password"
-          type="password"
-          placeholder="••••••••••••••••"
-        />
-
-        <PreviewField
-          label="Topic Prefix"
-          icon={<RadioTower />}
-          placeholder="organizations/{organization}/"
-        />
-
-        <div className="flex items-center justify-between rounded-md border p-3">
-          <div>
-            <div className="text-sm font-medium">
-              TLS
-            </div>
-
-            <div className="text-xs text-muted-foreground">
-              Require an encrypted broker connection
-            </div>
-          </div>
-
-          <Switch
-            checked
-            disabled
-          />
-        </div>
-
-        <Button disabled>
-          Test Broker
         </Button>
       </CardContent>
     </Card>

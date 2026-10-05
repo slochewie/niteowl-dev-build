@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { GlauthSources } from "@/components/admin/plugins/glauth-sources";
 import { AdminWriteBoundary } from "@/components/auth/admin/admin-access-context";
 import { IntegrationLogo } from "@/components/admin/plugins/integration-logo";
+import { MqttSources } from "@/components/admin/plugins/mqtt-sources";
 import { PluginOrganizations } from "@/components/admin/plugins/plugin-organizations";
 import { getPluginIcon } from "@/components/admin/plugins/plugin-card";
 import { PluginPlaceholderConfig } from "@/components/admin/plugins/plugin-placeholder-config";
@@ -125,6 +126,16 @@ function PluginPage() {
 							</AdminWriteBoundary>
 						)}
 
+						{detail.plugin.id === "mqtt" && (
+							<AdminWriteBoundary>
+								<MqttSources
+									mode="admin"
+									sources={detail.mqttSources}
+									organizations={detail.organizations}
+								/>
+							</AdminWriteBoundary>
+						)}
+
 						{detail.plugin.id === "unifi-api" ? (
 							<AdminWriteBoundary>
 								<UnifiApi
@@ -142,7 +153,8 @@ function PluginPage() {
 								/>
 							</AdminWriteBoundary>
 						) : detail.plugin.id !== "seven-shifts-csv" &&
-							detail.plugin.id !== "seven-shifts-api" ? (
+							detail.plugin.id !== "seven-shifts-api" &&
+							detail.plugin.id !== "mqtt" ? (
 							<AdminWriteBoundary>
 								<PluginOrganizations detail={detail} />
 							</AdminWriteBoundary>
