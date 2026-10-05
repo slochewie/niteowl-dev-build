@@ -18,6 +18,9 @@ The Auth app is responsible for:
 - UniFi Identity and UniFi Access integrations;
 - GLAuth/LDAP projection;
 - shared Inventory master/organization data;
+- reusable MQTT broker and organization topic configuration;
+- organization WiFi credentials for managed-device provisioning;
+- trusted Counter runtime provisioning through organization-scoped MQTT configuration;
 - Counter, Tip Calculator, Inventory, and Network Status authorization APIs;
 - NiteOwl administration UI for users, organizations, plugins, integrations, schedules, and assignments.
 
@@ -122,7 +125,9 @@ Plugins live under `src/lib/plugins/`.
 | `organization-status` | Global organization enable/disable state and active-organization protection. |
 | `organization-member-status` | Membership active/inactive state and relationship metadata. |
 | `revision-history` | Reusable revision persistence/helpers. |
-| `counter` | Counter definitions, user assignments, delegated managers, access checks. |
+| `counter` | Counter definitions, user assignments, delegated managers, access checks, and trusted MQTT/WiFi provisioning. |
+| `mqtt` | Reusable MQTT broker sources, optional WS/WSS endpoints, encrypted credentials, and organization topic assignments. |
+| `wifi` | Organization WiFi networks and encrypted credentials for managed-device provisioning. |
 | `network-status` | Network Status assignments/managers/Fabric Overview access. |
 | `inventory` | Inventory authorization plus shared masters, organization variants, imports/config/catalog. |
 | `tip-claim` | Tip Calculator access, assignments, staffing, presets, claims, and tip-pool persistence. |
@@ -136,7 +141,7 @@ Plugins live under `src/lib/plugins/`.
 | `unifi-access` | UniFi Access source discovery, reconciliation, provisioning, and source assignment. |
 | `glauth` | LDAP source management and Better Auth identity projection. |
 
-`api-source/secret.ts` is a shared integration utility rather than a Better Auth plugin. It centralizes secret encryption/decryption for API-source plugins.
+`api-source/secret.ts` is a shared integration utility rather than a Better Auth plugin. It centralizes secret encryption/decryption for API-source plugins and is also used by MQTT/WiFi credential storage.
 
 Each plugin with its own README documents its endpoints and persistence model.
 
@@ -244,9 +249,43 @@ The following integrations persist encrypted external credentials using `INTEGRA
 - 7shifts API;
 - 7shifts Schedules (through its 7shifts API source);
 - UniFi Identity;
-- UniFi Access.
+- UniFi Access;
+- MQTT broker passwords;
+- WiFi passwords.
 
 Keep the key stable and backed up. Changing it without migrating ciphertext breaks existing saved credentials.
+
+## Counter runtime provisioning
+
+The Counter backend obtains trusted runtime configuration from:
+
+```text
+GET /counter/provisioning/internal
+```
+
+The endpoint requires `COUNTER_AUTH_INTERNAL_SECRET`, `organizationId`, and `counterId`.
+
+Provisioning requires:
+
+- an enabled Counter definition in an enabled organization;
+- an enabled MQTT organization assignment whose broker source is enabled.
+
+The MQTT result includes native MQTT connection fields and, when configured, a separate WebSocket endpoint (`ws`/`wss`). The WebSocket connection allows a backend to use a TLS reverse-proxy endpoint such as port 443 without placing MQTT credentials in browser code.
+
+WiFi is optional. Provisioning returns zero or more enabled WiFi networks, and an organization with no WiFi configuration still provisions successfully for Counter App/MQTT. WiFi exists for managed-device/hardware provisioning and is not a Counter App runtime dependency.
+
+The Counter backend is responsible for MQTT topic compatibility, including historical counters that predate the organization-scoped topic prefix model.
+
+## Plugins & APIs catalog counts
+
+The catalog's **Enabled Organizations** value uses the integration-specific source of truth when generic `organizationIntegration.enabled` is not authoritative:
+
+- GLAuth counts distinct organizations on enabled GLAuth sources;
+- WiFi counts distinct organizations with at least one enabled saved network;
+- MQTT counts distinct organizations with an enabled assignment to an enabled broker source;
+- Counter counts organizations with at least one enabled Counter definition.
+
+This prevents the catalog from showing stale or misleading counts for resource-backed integrations.
 
 ## 7shifts schedules
 

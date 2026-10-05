@@ -20,6 +20,9 @@ seven-shifts-api
 unifi-api
 glauth
 unifi-ldap
+mqtt
+wifi
+counter
 ```
 
 Planned catalog entries currently include:
@@ -27,12 +30,22 @@ Planned catalog entries currently include:
 ```text
 toast-api
 paychex-api
-wifi
-mqtt
-counter
 ```
 
-The planned `counter` catalog entry refers to future Integration Manager configuration for Counter infrastructure/settings. It is separate from the already-active `counter` Better Auth application-access plugin.
+MQTT, WiFi, and Counter are now implemented integrations with their own Better Auth plugins and administration UI.
+
+## Catalog enabled-organization counts
+
+The Plugins & APIs catalog does not assume every integration's real configuration state is represented by `organizationIntegration.enabled`.
+
+Where an integration has a more authoritative configuration model, the catalog derives its enabled-organization count from that model:
+
+- **GLAuth** — distinct organizations attached to enabled GLAuth sources;
+- **WiFi** — distinct organizations with at least one enabled `wifiNetwork`;
+- **MQTT** — distinct organizations with an enabled MQTT assignment to an enabled broker source;
+- **Counter** — organizations with at least one enabled Counter definition.
+
+Other available integrations continue to use their Integration Manager organization state where that is the appropriate source of truth.
 
 ## Synchronization directions
 
@@ -66,10 +79,13 @@ All routes require a session and enforce global/organization management checks.
 - `useGlobalConfiguration`;
 - `syncDirection`.
 
+That table remains the policy store for integrations that use generic Integration Manager state. It is not automatically the source of truth for integration-specific resource counts.
+
 ## Adding a new catalog integration
 
 1. Add a stable ID and catalog metadata in `registry.ts`.
 2. Move it into `INTEGRATION_IDS` only when the implementation is actually available.
 3. Implement the integration-specific Better Auth plugin/schema.
 4. Add admin configuration UI.
-5. Enforce enablement and sync direction in every synchronization path.
+5. Enforce enablement and sync direction in every synchronization path where those policies apply.
+6. If the integration has its own authoritative configuration resources, derive catalog counts from those resources instead of duplicating state in `organizationIntegration`.
