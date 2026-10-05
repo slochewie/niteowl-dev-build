@@ -30,6 +30,7 @@ import { counterAccess } from "./plugins/counter/index.js";
 import { networkStatus } from "./plugins/network-status/index.js";
 import { inventoryAccess } from "./plugins/inventory/index.js";
 import { integrationManager } from "./plugins/integration-manager/index.js";
+import { mqttIntegration } from "./plugins/mqtt/index.js";
 import { glauth } from "./plugins/glauth/index.js";
 import { organizationStatus } from "./plugins/organization-status/index.js";
 import { organizationMemberStatus } from "./plugins/organization-member-status/index.js";
@@ -339,6 +340,11 @@ export const auth = betterAuth({
 
 		integrationManager({
 			pool,
+		}),
+
+		mqttIntegration({
+			pool,
+			encryptionKey: env.integrationEncryptionKey,
 		}),
 
 		glauth({
