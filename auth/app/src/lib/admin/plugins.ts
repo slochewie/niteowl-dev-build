@@ -224,7 +224,6 @@ export const getAdminPluginCatalog = createServerFn({
 				};
 			}
 
-
 			if (plugin.id === "mqtt") {
 				const result = await auth.api.listMqttBrokerSources({
 					headers: request.headers,
