@@ -131,6 +131,7 @@ function PluginPage() {
 						) : detail.plugin.id === "glauth" ? (
 							<AdminWriteBoundary>
 								<GlauthSources
+									mode="admin"
 									sources={glauthSources}
 									organizations={detail.organizations}
 								/>

@@ -812,6 +812,22 @@ export const getAdminGlauthSources = createServerFn({
 	return result.sources;
 });
 
+export const getAdminOrganizationGlauthSources = createServerFn({
+	method: "GET",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }): Promise<AdminGlauthSource[]> => {
+		const { request } = await requireAdminRead();
+
+		const result = await auth.api.listGlauthSources({
+			headers: request.headers,
+		});
+
+		return result.sources.filter((source) =>
+			source.organizationIds.includes(data.organizationId),
+		);
+	});
+
 export const createAdminGlauthSource = createServerFn({
 	method: "POST",
 })

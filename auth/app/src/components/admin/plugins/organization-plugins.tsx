@@ -366,20 +366,11 @@ function PluginTabPanel({
 	}
 
 	if (integration.pluginId === "glauth") {
-		const detail = detailById.get("glauth");
-
-		const organizationSources = glauthSources.filter((source) =>
-			source.organizationIds.includes(organization.id),
-		);
-
-		const organizationRows = (detail?.organizations ?? []).filter(
-			(pluginOrganization) => pluginOrganization.id === organization.id,
-		);
-
 		return (
 			<GlauthSources
-				sources={organizationSources}
-				organizations={organizationRows}
+				mode="organization"
+				sources={glauthSources}
+				organization={organization}
 			/>
 		);
 	}

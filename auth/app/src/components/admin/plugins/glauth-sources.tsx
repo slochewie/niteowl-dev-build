@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 
+import type { PluginComponentMode } from "@/components/admin/plugins/plugin-component-mode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -59,13 +60,22 @@ function slugify(value: string) {
 }
 
 export function GlauthSources({
+  mode,
   sources,
-  organizations,
+  organizations = [],
+  organization,
 }: {
+  mode: PluginComponentMode;
   sources: AdminGlauthSource[];
-  organizations: AdminPluginOrganization[];
+  organizations?: AdminPluginOrganization[];
+  organization?: {
+    id: string;
+    name: string;
+  };
 }) {
   const router = useRouter();
+
+  const adminMode = mode === "admin";
 
   const [pendingOrganizationId, setPendingOrganizationId] = useState<
     string | null
@@ -308,15 +318,21 @@ export function GlauthSources({
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <CardTitle>GLAuth Sources</CardTitle>
+              <CardTitle>
+                {adminMode ? "GLAuth Sources" : "GLAuth Directory"}
+              </CardTitle>
 
               <CardDescription className="mt-1">
-                Each source represents an LDAP directory. A source can serve one
-                Better Auth organization or multiple related organizations.
+                {adminMode
+                  ? "Each source represents an LDAP directory. A source can serve one Better Auth organization or multiple related organizations."
+                  : organization
+                    ? `LDAP directory assigned to ${organization.name}.`
+                    : "LDAP directory assigned to this organization."}
               </CardDescription>
             </div>
 
-            <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            {adminMode && (
+              <Dialog open={createOpen} onOpenChange={setCreateOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 size-4" />
@@ -386,7 +402,8 @@ export function GlauthSources({
                   </Button>
                 </DialogFooter>
               </DialogContent>
-            </Dialog>
+              </Dialog>
+            )}
           </div>
         </CardHeader>
 
@@ -456,7 +473,8 @@ export function GlauthSources({
 
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                  {adminMode && (
+                    <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                   <Badge variant="secondary">
                     {source.organizationIds.length} organizations
                   </Badge>
@@ -514,7 +532,8 @@ export function GlauthSources({
                       ? "Reconciling..."
                       : "Reconcile"}
                   </Button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))
@@ -522,7 +541,8 @@ export function GlauthSources({
         </CardContent>
       </Card>
 
-      <Card>
+      {adminMode && (
+        <Card>
         <CardHeader>
           <CardTitle>Organization Sources</CardTitle>
 
@@ -599,9 +619,11 @@ export function GlauthSources({
             })
           )}
         </CardContent>
-      </Card>
+        </Card>
+      )}
 
-      <Dialog
+      {adminMode && (
+        <Dialog
         open={editingSource !== null}
         onOpenChange={(open) => {
           if (!open) {
@@ -703,7 +725,8 @@ export function GlauthSources({
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      )}
     </div>
   );
 }

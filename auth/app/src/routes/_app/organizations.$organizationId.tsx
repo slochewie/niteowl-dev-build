@@ -59,7 +59,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-	getAdminGlauthSources,
+	getAdminOrganizationGlauthSources,
 	getAdminOrganizationIntegrations,
 	getAdminPlugin,
 } from "@/lib/admin/plugins";
@@ -133,7 +133,11 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 					),
 				),
 
-				getAdminGlauthSources(),
+				getAdminOrganizationGlauthSources({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
 			]);
 
 		return {
