@@ -32,9 +32,9 @@ import {
 	setAdminOrganizationPluginSyncDirection,
 	type AdminGlauthSource,
 	type AdminOrganizationIntegration,
-	type AdminPluginDetail,
 	type AdminSevenShiftsApiSource,
 	type AdminSevenShiftsCsvSource,
+	type AdminUnifiAccessSource,
 } from "@/lib/admin/plugins";
 import {
 	getIntegration,
@@ -62,19 +62,19 @@ type OrganizationPluginsProps = {
 	};
 
 	integrations: AdminOrganizationIntegration[];
-	pluginDetails: AdminPluginDetail[];
 	glauthSources: AdminGlauthSource[];
 	sevenShiftsApiSources: AdminSevenShiftsApiSource[];
 	sevenShiftsCsvSources: AdminSevenShiftsCsvSource[];
+	unifiAccessSources: AdminUnifiAccessSource[];
 };
 
 export function OrganizationPlugins({
 	organization,
 	integrations,
-	pluginDetails,
 	glauthSources,
 	sevenShiftsApiSources,
 	sevenShiftsCsvSources,
+	unifiAccessSources,
 }: OrganizationPluginsProps) {
 	const router = useRouter();
 
@@ -89,17 +89,6 @@ export function OrganizationPlugins({
 				]),
 			),
 		[integrations],
-	);
-
-	const detailById = useMemo(
-		() =>
-			new Map(
-				pluginDetails.map((detail) => [
-					detail.plugin.id,
-					detail,
-				]),
-			),
-		[pluginDetails],
 	);
 
 	const enabledIntegrations = AVAILABLE_PLUGINS.map((plugin) =>
@@ -263,10 +252,10 @@ export function OrganizationPlugins({
 							<PluginTabPanel
 								integration={integration}
 								organization={organization}
-								detailById={detailById}
 								glauthSources={glauthSources}
 								sevenShiftsApiSources={sevenShiftsApiSources}
 								sevenShiftsCsvSources={sevenShiftsCsvSources}
+								unifiAccessSources={unifiAccessSources}
 								apiIntegrationEnabled={
 									integrationById.get("seven-shifts-api")?.enabled ?? false
 								}
@@ -284,10 +273,10 @@ export function OrganizationPlugins({
 function PluginTabPanel({
 	integration,
 	organization,
-	detailById,
 	glauthSources,
 	sevenShiftsApiSources,
 	sevenShiftsCsvSources,
+	unifiAccessSources,
 	apiIntegrationEnabled,
 	pendingPluginId,
 	onSetSyncDirection,
@@ -297,10 +286,10 @@ function PluginTabPanel({
 		id: string;
 		name: string;
 	};
-	detailById: Map<string, AdminPluginDetail>;
 	glauthSources: AdminGlauthSource[];
 	sevenShiftsApiSources: AdminSevenShiftsApiSource[];
 	sevenShiftsCsvSources: AdminSevenShiftsCsvSource[];
+	unifiAccessSources: AdminUnifiAccessSource[];
 	apiIntegrationEnabled: boolean;
 	pendingPluginId: string | null;
 	onSetSyncDirection: (
@@ -315,10 +304,6 @@ function PluginTabPanel({
 	}
 
 	if (integration.pluginId === "seven-shifts-csv") {
-		const csvDetail = detailById.get("seven-shifts-csv");
-
-		const apiDetail = detailById.get("seven-shifts-api");
-
 		return (
 			<div className="space-y-6">
 				<SevenShiftsCsvSources
@@ -353,8 +338,6 @@ function PluginTabPanel({
 	}
 
 	if (integration.pluginId === "seven-shifts-api") {
-		const detail = detailById.get("seven-shifts-api");
-
 		return (
 			<div className="space-y-6">
 				<SevenShiftsApiSources
@@ -373,12 +356,11 @@ function PluginTabPanel({
 	}
 
 	if (integration.pluginId === "unifi-api") {
-		const detail = detailById.get("unifi-api");
-
 		return (
 			<UnifiApi
-				accessSources={detail?.unifiAccessSources ?? []}
-				organizations={detail?.organizations ?? []}
+				mode="organization"
+				accessSources={unifiAccessSources}
+				organization={organization}
 			/>
 		);
 	}

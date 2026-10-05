@@ -79,6 +79,10 @@ const sourceBodySchema = z.object({
 	sourceId: z.string().min(1),
 });
 
+const organizationSourcesQuerySchema = z.object({
+	organizationId: z.string().min(1),
+});
+
 const cachedUsersQuerySchema = z.object({
 	sourceId: z.string().min(1),
 
@@ -548,6 +552,107 @@ export const unifiAccess = ({ pool, encryptionKey }: UnifiAccessOptions) =>
 							assignments: assignments.rows.filter(
 								(assignment) => assignment.sourceId === source.id,
 							),
+						})),
+					});
+				},
+			),
+
+			listUnifiAccessOrganizationSources: createAuthEndpoint(
+				"/unifi-access/organization-sources",
+				{
+					method: "GET",
+					use: [sessionMiddleware],
+					query: organizationSourcesQuerySchema,
+				},
+				async (ctx) => {
+					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id, true))) {
+						return ctx.json(
+							{
+								error: "Forbidden",
+							},
+							{
+								status: 403,
+							},
+						);
+					}
+
+					const result = await pool.query<{
+						id: string;
+						name: string;
+						url: string;
+						port: number;
+						verifyTls: boolean;
+						enabled: boolean;
+						lastTestedAt: Date | null;
+						lastError: string | null;
+						createdAt: Date;
+						updatedAt: Date;
+						organizationCount: number;
+						assignmentId: string;
+						assignmentEnabled: boolean;
+						assignmentCreatedAt: Date;
+						assignmentUpdatedAt: Date;
+						organizationName: string;
+					}>(
+						`
+							SELECT
+								s.id,
+								s.name,
+								s.url,
+								s.port,
+								s."verifyTls",
+								s.enabled,
+								s."lastTestedAt",
+								s."lastError",
+								s."createdAt",
+								s."updatedAt",
+								1::int AS "organizationCount",
+								aos.id AS "assignmentId",
+								aos.enabled AS "assignmentEnabled",
+								aos."createdAt" AS "assignmentCreatedAt",
+								aos."updatedAt" AS "assignmentUpdatedAt",
+								o.name AS "organizationName"
+							FROM
+								"unifiAccessSource" s
+							INNER JOIN
+								"unifiAccessOrganizationSource" aos
+								ON aos."sourceId" = s.id
+							INNER JOIN
+								organization o
+								ON o.id = aos."organizationId"
+							WHERE
+								aos."organizationId" = $1
+							ORDER BY
+								s.name ASC
+						`,
+						[ctx.query.organizationId],
+					);
+
+					return ctx.json({
+						sources: result.rows.map((source) => ({
+							id: source.id,
+							name: source.name,
+							url: source.url,
+							port: source.port,
+							verifyTls: source.verifyTls,
+							enabled: source.enabled,
+							lastTestedAt: source.lastTestedAt,
+							lastError: source.lastError,
+							createdAt: source.createdAt,
+							updatedAt: source.updatedAt,
+							organizationCount: source.organizationCount,
+							hasApiToken: true,
+							assignments: [
+								{
+									id: source.assignmentId,
+									organizationId: ctx.query.organizationId,
+									organizationName: source.organizationName,
+									sourceId: source.id,
+									enabled: source.assignmentEnabled,
+									createdAt: source.assignmentCreatedAt,
+									updatedAt: source.assignmentUpdatedAt,
+								},
+							],
 						})),
 					});
 				},

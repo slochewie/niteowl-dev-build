@@ -128,6 +128,7 @@ function PluginPage() {
 						{detail.plugin.id === "unifi-api" ? (
 							<AdminWriteBoundary>
 								<UnifiApi
+									mode="admin"
 									accessSources={detail.unifiAccessSources}
 									organizations={detail.organizations}
 								/>

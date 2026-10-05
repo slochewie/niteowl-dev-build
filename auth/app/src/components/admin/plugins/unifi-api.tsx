@@ -6,6 +6,9 @@ import {
   ShieldCheck
 } from "lucide-react"
 
+import type {
+  PluginComponentMode
+} from "@/components/admin/plugins/plugin-component-mode"
 import {
   Card,
   CardContent,
@@ -30,13 +33,20 @@ import {
 } from "./unifi-access-sources"
 
 export function UnifiApi({
+  mode,
   accessSources,
-  organizations
+  organizations = [],
+  organization
 }: {
+  mode: PluginComponentMode
   accessSources:
     AdminUnifiAccessSource[]
-  organizations:
+  organizations?:
     AdminPluginOrganization[]
+  organization?: {
+    id: string
+    name: string
+  }
 }) {
   return (
     <Tabs
@@ -77,11 +87,15 @@ export function UnifiApi({
         className="space-y-6"
       >
         <UnifiAccessSources
+          mode={mode}
           sources={
             accessSources
           }
           organizations={
             organizations
+          }
+          organization={
+            organization
           }
         />
       </TabsContent>

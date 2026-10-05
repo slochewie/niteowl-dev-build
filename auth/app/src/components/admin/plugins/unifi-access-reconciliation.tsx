@@ -3,6 +3,7 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import type { PluginComponentMode } from "@/components/admin/plugins/plugin-component-mode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +39,6 @@ import {
 } from "@/components/ui/table";
 
 import {
-	type AdminPluginOrganization,
 	type AdminUnifiAccessReconciliation,
 	type AdminUnifiAccessReconciliationRow,
 	type AdminUnifiAccessReconciliationStatus,
@@ -62,19 +62,31 @@ type SortDirection = "asc" | "desc";
 type StatusFilter = "all" | AdminUnifiAccessReconciliationStatus;
 
 export function UnifiAccessReconciliation({
+	mode,
 	sourceId,
 	sourceName,
 	organizations,
 	refreshKey,
 	onChanged,
 }: {
+	mode: PluginComponentMode;
 	sourceId: string;
 	sourceName: string;
-	organizations: AdminPluginOrganization[];
+	organizations: Array<{
+		id: string;
+		name: string;
+	}>;
 	refreshKey: number;
 	onChanged?: () => void;
 }) {
-	const [organizationId, setOrganizationId] = useState("");
+	const organizationMode = mode === "organization";
+
+	const lockedOrganizationId =
+		organizationMode ? organizations[0]?.id ?? "" : "";
+
+	const [organizationId, setOrganizationId] = useState(
+		lockedOrganizationId,
+	);
 
 	const [result, setResult] = useState<AdminUnifiAccessReconciliation | null>(
 		null,
@@ -104,12 +116,12 @@ export function UnifiAccessReconciliation({
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: sourceId intentionally resets reconciliation state when the Access source changes.
 	useEffect(() => {
-		setOrganizationId("");
+		setOrganizationId(lockedOrganizationId);
 		setResult(null);
 		setPage(1);
 		setStatusFilter("all");
 		setError(null);
-	}, [sourceId]);
+	}, [sourceId, organizationMode, lockedOrganizationId]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: refreshKey intentionally triggers reconciliation reloads after cached UniFi data changes.
 	useEffect(() => {
@@ -442,22 +454,28 @@ export function UnifiAccessReconciliation({
 					</div>
 
 					<div className="flex flex-wrap items-center gap-2">
-						<Select value={organizationId} onValueChange={selectOrganization}>
-							<SelectTrigger
-								className="w-[240px]"
-								aria-label="Select organization to reconcile"
-							>
-								<SelectValue placeholder="Select organization" />
-							</SelectTrigger>
+						{organizationMode ? (
+							organizations[0] ? (
+								<Badge variant="outline">{organizations[0].name}</Badge>
+							) : null
+						) : (
+							<Select value={organizationId} onValueChange={selectOrganization}>
+								<SelectTrigger
+									className="w-[240px]"
+									aria-label="Select organization to reconcile"
+								>
+									<SelectValue placeholder="Select organization" />
+								</SelectTrigger>
 
-							<SelectContent>
-								{organizations.map((organization) => (
-									<SelectItem key={organization.id} value={organization.id}>
-										{organization.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+								<SelectContent>
+									{organizations.map((organization) => (
+										<SelectItem key={organization.id} value={organization.id}>
+											{organization.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						)}
 
 						<Button
 							type="button"

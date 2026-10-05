@@ -63,9 +63,8 @@ import {
 	getAdminOrganizationIntegrations,
 	getAdminOrganizationSevenShiftsApiSources,
 	getAdminOrganizationSevenShiftsCsvSources,
-	getAdminPlugin,
+	getAdminOrganizationUnifiAccessSources,
 } from "@/lib/admin/plugins";
-import { INTEGRATION_IDS } from "@/lib/plugins/integration-manager/registry";
 
 import {
 	addAdminOrganizationMember,
@@ -113,10 +112,10 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			organization,
 			users,
 			integrations,
-			pluginDetails,
 			glauthSources,
 			sevenShiftsApiSources,
 			sevenShiftsCsvSources,
+			unifiAccessSources,
 		] = await Promise.all([
 				getAdminOrganization({
 					data: {
@@ -131,16 +130,6 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 						organizationId: params.organizationId,
 					},
 				}),
-
-				Promise.all(
-					INTEGRATION_IDS.map((pluginId) =>
-						getAdminPlugin({
-							data: {
-								pluginId,
-							},
-						}),
-					),
-				),
 
 				getAdminOrganizationGlauthSources({
 					data: {
@@ -159,16 +148,22 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 						organizationId: params.organizationId,
 					},
 				}),
+
+				getAdminOrganizationUnifiAccessSources({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
 			]);
 
 		return {
 			organization,
 			users,
 			integrations,
-			pluginDetails,
 			glauthSources,
 			sevenShiftsApiSources,
 			sevenShiftsCsvSources,
+			unifiAccessSources,
 		};
 	},
 
@@ -180,10 +175,10 @@ function OrganizationPage() {
 		organization,
 		users,
 		integrations,
-		pluginDetails,
 		glauthSources,
 		sevenShiftsApiSources,
 		sevenShiftsCsvSources,
+		unifiAccessSources,
 	} = Route.useLoaderData();
 
 	const router = useRouter();
@@ -268,10 +263,10 @@ function OrganizationPage() {
 										name: organization.name,
 									}}
 									integrations={integrations}
-									pluginDetails={pluginDetails}
 									glauthSources={glauthSources}
 									sevenShiftsApiSources={sevenShiftsApiSources}
 									sevenShiftsCsvSources={sevenShiftsCsvSources}
+									unifiAccessSources={unifiAccessSources}
 								/>
 							</AdminWriteBoundary>
 						</TabsContent>

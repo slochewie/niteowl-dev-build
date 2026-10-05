@@ -13,6 +13,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import type { PluginComponentMode } from "@/components/admin/plugins/plugin-component-mode";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -73,13 +74,22 @@ import { UnifiAccessUsers } from "@/components/admin/plugins/unifi-access-users"
 const DEFAULT_ACCESS_PORT = 12445;
 
 export function UnifiAccessSources({
+	mode,
 	sources,
-	organizations,
+	organizations = [],
+	organization,
 }: {
+	mode: PluginComponentMode;
 	sources: AdminUnifiAccessSource[];
-	organizations: AdminPluginOrganization[];
+	organizations?: AdminPluginOrganization[];
+	organization?: {
+		id: string;
+		name: string;
+	};
 }) {
 	const router = useRouter();
+
+	const adminMode = mode === "admin";
 
 	const [selectedSourceId, setSelectedSourceId] = useState(
 		sources[0]?.id ?? "",
@@ -486,20 +496,27 @@ export function UnifiAccessSources({
 		<div className="space-y-6">
 			<Card>
 				<CardHeader>
-					<CardTitle>Access API Sources</CardTitle>
+					<CardTitle>
+						{adminMode ? "Access API Sources" : "UniFi Access Connection"}
+					</CardTitle>
 
 					<CardDescription>
-						Create reusable UniFi Access API connections and assign
-						organizations to them.
+						{adminMode
+							? "Create reusable UniFi Access API connections and assign organizations to them."
+							: organization
+								? `UniFi Access connection assigned to ${organization.name}.`
+								: "UniFi Access connection assigned to this organization."}
 					</CardDescription>
 				</CardHeader>
 
 				<CardContent className="space-y-4">
 					{sources.length === 0 ? (
 						<p className="text-sm text-muted-foreground">
-							No UniFi Access API Sources have been created.
+							{adminMode
+								? "No UniFi Access API Sources have been created."
+								: "No UniFi Access API Source is assigned to this organization."}
 						</p>
-					) : (
+					) : adminMode ? (
 						<div className="space-y-2">
 							<Label>API Source</Label>
 
@@ -520,31 +537,66 @@ export function UnifiAccessSources({
 								</SelectContent>
 							</Select>
 						</div>
-					)}
+					) : selectedSource ? (
+						<div className="flex flex-wrap items-center gap-2">
+							<div className="font-medium">{selectedSource.name}</div>
+
+							<Badge
+								variant={selectedSource.enabled ? "default" : "secondary"}
+							>
+								{selectedSource.enabled ? "Enabled" : "Disabled"}
+							</Badge>
+
+							{selectedSource.assignments[0] ? (
+								<Badge
+									variant={
+										selectedSource.assignments[0].enabled
+											? "outline"
+											: "secondary"
+									}
+								>
+									{selectedSource.assignments[0].enabled
+										? "Organization enabled"
+										: "Organization disabled"}
+								</Badge>
+							) : null}
+						</div>
+					) : null}
 				</CardContent>
 			</Card>
 
 			{selectedSource && (
 				<>
-					<UnifiAccessUsers
-						sourceId={selectedSource.id}
-						sourceName={selectedSource.name}
-						refreshKey={usersRefreshKey}
-					/>
+					{adminMode && (
+						<UnifiAccessUsers
+							sourceId={selectedSource.id}
+							sourceName={selectedSource.name}
+							refreshKey={usersRefreshKey}
+						/>
+					)}
 
 					<UnifiAccessReconciliation
+						mode={mode}
 						sourceId={selectedSource.id}
 						sourceName={selectedSource.name}
-						organizations={organizations.filter((organization) =>
-							selectedSource.assignments.some(
-								(assignment) => assignment.organizationId === organization.id,
-							),
-						)}
+						organizations={
+							adminMode
+								? organizations.filter((organization) =>
+										selectedSource.assignments.some(
+											(assignment) =>
+												assignment.organizationId === organization.id,
+										),
+									)
+								: organization
+									? [organization]
+									: []
+						}
 						refreshKey={usersRefreshKey}
 						onChanged={() => setUsersRefreshKey((value) => value + 1)}
 					/>
 
-					<Card>
+					{adminMode && (
+						<Card>
 						<CardHeader>
 							<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 								<div>
@@ -762,9 +814,11 @@ export function UnifiAccessSources({
 								</AlertDialog>
 							</div>
 						</CardContent>
-					</Card>
+						</Card>
+					)}
 
-					<Card>
+					{adminMode && (
+						<Card>
 						<CardHeader>
 							<CardTitle>Organizations</CardTitle>
 
@@ -914,11 +968,13 @@ export function UnifiAccessSources({
 								</div>
 							</div>
 						</CardContent>
-					</Card>
+						</Card>
+					)}
 				</>
 			)}
 
-			<Card>
+			{adminMode && (
+				<Card>
 				<CardHeader>
 					<div className="flex items-start gap-3">
 						<div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
@@ -1025,7 +1081,8 @@ export function UnifiAccessSources({
 						{creating ? "Creating…" : "Create Access API Source"}
 					</Button>
 				</CardContent>
-			</Card>
+				</Card>
+			)}
 		</div>
 	);
 }

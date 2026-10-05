@@ -628,6 +628,23 @@ export const unassignAdminSevenShiftsApiLocation = createServerFn({
 		});
 	});
 
+export const getAdminOrganizationUnifiAccessSources = createServerFn({
+	method: "GET",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }): Promise<AdminUnifiAccessSource[]> => {
+		const { request } = await requireAdminRead();
+
+		const result = await auth.api.listUnifiAccessOrganizationSources({
+			query: {
+				organizationId: data.organizationId,
+			},
+			headers: request.headers,
+		});
+
+		return result.sources;
+	});
+
 export const createAdminUnifiAccessSource = createServerFn({
 	method: "POST",
 })
