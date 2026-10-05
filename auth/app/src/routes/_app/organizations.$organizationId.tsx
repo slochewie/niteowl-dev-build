@@ -62,6 +62,7 @@ import {
 	getAdminOrganizationGlauthSources,
 	getAdminOrganizationIntegrations,
 	getAdminOrganizationMqttSources,
+	getAdminOrganizationWifiNetworks,
 	getAdminOrganizationSevenShiftsApiSources,
 	getAdminOrganizationSevenShiftsCsvSources,
 	getAdminOrganizationUnifiAccessSources,
@@ -118,6 +119,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			sevenShiftsCsvSources,
 			unifiAccessSources,
 			mqttSources,
+			wifiNetworks,
 		] = await Promise.all([
 				getAdminOrganization({
 					data: {
@@ -162,6 +164,12 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 						organizationId: params.organizationId,
 					},
 				}),
+
+				getAdminOrganizationWifiNetworks({
+					data: {
+						organizationId: params.organizationId,
+					},
+				}),
 			]);
 
 		return {
@@ -173,6 +181,7 @@ export const Route = createFileRoute("/_app/organizations/$organizationId")({
 			sevenShiftsCsvSources,
 			unifiAccessSources,
 			mqttSources,
+			wifiNetworks,
 		};
 	},
 
@@ -189,6 +198,7 @@ function OrganizationPage() {
 		sevenShiftsCsvSources,
 		unifiAccessSources,
 		mqttSources,
+		wifiNetworks,
 	} = Route.useLoaderData();
 
 	const router = useRouter();
@@ -278,6 +288,7 @@ function OrganizationPage() {
 									sevenShiftsCsvSources={sevenShiftsCsvSources}
 									unifiAccessSources={unifiAccessSources}
 									mqttSources={mqttSources}
+									wifiNetworks={wifiNetworks}
 								/>
 							</AdminWriteBoundary>
 						</TabsContent>

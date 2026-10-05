@@ -4,7 +4,8 @@ export const INTEGRATION_IDS = [
   "unifi-api",
   "glauth",
   "unifi-ldap",
-  "mqtt"
+  "mqtt",
+  "wifi"
 ] as const
 
 export type IntegrationId =
@@ -13,7 +14,6 @@ export type IntegrationId =
 export const PLANNED_INTEGRATION_IDS = [
   "toast-api",
   "paychex-api",
-  "wifi",
   "counter"
 ] as const
 
@@ -105,7 +105,7 @@ export const INTEGRATIONS =
         "Store organization WiFi networks for managed device provisioning.",
       category: "Infrastructure",
       configurationLabel: "Networks & Credentials",
-      status: "planned"
+      status: "available"
     },
     {
       id: "mqtt",

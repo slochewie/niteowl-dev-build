@@ -95,6 +95,19 @@ export type AdminMqttSource = {
 	assignments: AdminMqttAssignment[];
 };
 
+export type AdminWifiNetwork = {
+	id: string;
+	organizationId: string;
+	organizationName: string;
+	name: string;
+	ssid: string;
+	hidden: boolean;
+	enabled: boolean;
+	hasPassword: boolean;
+	createdAt: Date;
+	updatedAt: Date;
+};
+
 export type AdminSevenShiftsApiLocation = {
 	id: number;
 	company_id: number;
@@ -124,6 +137,7 @@ export type AdminPluginDetail = {
 	apiSources: AdminSevenShiftsApiSource[];
 	unifiAccessSources: AdminUnifiAccessSource[];
 	mqttSources: AdminMqttSource[];
+	wifiNetworks: AdminWifiNetwork[];
 };
 
 async function getOrganizationsForPlugin(pluginId: IntegrationId) {
@@ -209,6 +223,7 @@ export const getAdminPlugin = createServerFn({
 				apiSources: [],
 				unifiAccessSources: [],
 				mqttSources: [],
+				wifiNetworks: [],
 			};
 		}
 
@@ -221,6 +236,8 @@ export const getAdminPlugin = createServerFn({
 		let unifiAccessSources: AdminUnifiAccessSource[] = [];
 
 		let mqttSources: AdminMqttSource[] = [];
+
+		let wifiNetworks: AdminWifiNetwork[] = [];
 
 		if (plugin.id === "seven-shifts-csv") {
 			const { request } = await requireAdminRead();
@@ -262,6 +279,16 @@ export const getAdminPlugin = createServerFn({
 			mqttSources = result.sources;
 		}
 
+		if (plugin.id === "wifi") {
+			const { request } = await requireAdminRead();
+
+			const result = await auth.api.listWifiNetworks({
+				headers: request.headers,
+			});
+
+			wifiNetworks = result.networks;
+		}
+
 		return {
 			plugin,
 			organizations,
@@ -269,6 +296,7 @@ export const getAdminPlugin = createServerFn({
 			apiSources,
 			unifiAccessSources,
 			mqttSources,
+			wifiNetworks,
 		};
 	});
 
@@ -665,6 +693,87 @@ export const unassignAdminSevenShiftsApiLocation = createServerFn({
 				sourceId: data.sourceId,
 				sevenShiftsLocationId: data.sevenShiftsLocationId,
 			},
+			headers: request.headers,
+		});
+	});
+
+export const getAdminOrganizationWifiNetworks = createServerFn({
+	method: "GET",
+})
+	.validator((data: { organizationId: string }) => data)
+	.handler(async ({ data }): Promise<AdminWifiNetwork[]> => {
+		const { request } = await requireAdminRead();
+
+		const result = await auth.api.listWifiOrganizationNetworks({
+			query: {
+				organizationId: data.organizationId,
+			},
+			headers: request.headers,
+		});
+
+		return result.networks;
+	});
+
+export const createAdminWifiNetwork = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			organizationId: string;
+			name: string;
+			ssid: string;
+			password?: string;
+			hidden: boolean;
+			enabled: boolean;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.createWifiNetwork({
+			body: data,
+			headers: request.headers,
+		});
+	});
+
+export const updateAdminWifiNetwork = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			networkId: string;
+			organizationId: string;
+			name: string;
+			ssid: string;
+			password?: string;
+			clearPassword: boolean;
+			hidden: boolean;
+			enabled: boolean;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.updateWifiNetwork({
+			body: data,
+			headers: request.headers,
+		});
+	});
+
+export const deleteAdminWifiNetwork = createServerFn({
+	method: "POST",
+})
+	.validator(
+		(data: {
+			networkId: string;
+			organizationId: string;
+		}) => data,
+	)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminWrite();
+
+		return auth.api.deleteWifiNetwork({
+			body: data,
 			headers: request.headers,
 		});
 	});

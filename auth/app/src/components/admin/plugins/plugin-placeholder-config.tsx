@@ -4,10 +4,8 @@ import {
   AlertCircle,
   KeyRound,
   LockKeyhole,
-  Plus,
   Settings2,
-  Upload,
-  Wifi
+  Upload
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -57,10 +55,6 @@ export function PluginPlaceholderConfig({
 
       {pluginId === "paychex-api" && (
         <PaychexPreview />
-      )}
-
-      {pluginId === "wifi" && (
-        <WifiPreview />
       )}
 
       {pluginId === "counter" && (
@@ -163,69 +157,6 @@ function PaychexPreview() {
             Test Connection
           </Button>
         </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function WifiPreview() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          WiFi Networks
-        </CardTitle>
-
-        <CardDescription>
-          Saved organization networks that could later be written to managed devices during provisioning.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-5">
-        <div className="rounded-lg border p-4">
-          <div className="mb-4 flex items-center gap-2">
-            <Wifi className="size-4" />
-
-            <span className="font-medium">
-              Primary Network
-            </span>
-          </div>
-
-          <div className="grid gap-4">
-            <PreviewField
-              label="SSID"
-              placeholder="Organization WiFi"
-            />
-
-            <PreviewField
-              label="Password"
-              placeholder="••••••••••••••••"
-              type="password"
-            />
-
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <div>
-                <div className="text-sm font-medium">
-                  Hidden network
-                </div>
-
-                <div className="text-xs text-muted-foreground">
-                  Device must explicitly connect to this SSID
-                </div>
-              </div>
-
-              <Switch disabled />
-            </div>
-          </div>
-        </div>
-
-        <Button
-          variant="outline"
-          disabled
-        >
-          <Plus />
-          Add Network
-        </Button>
       </CardContent>
     </Card>
   )

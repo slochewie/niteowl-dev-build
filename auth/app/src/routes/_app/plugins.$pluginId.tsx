@@ -10,6 +10,7 @@ import { PluginPlaceholderConfig } from "@/components/admin/plugins/plugin-place
 import { SevenShiftsApiSources } from "@/components/admin/plugins/seven-shifts-api-sources";
 import { SevenShiftsCsvSources } from "@/components/admin/plugins/seven-shifts-csv-sources";
 import { UnifiApi } from "@/components/admin/plugins/unifi-api";
+import { WifiNetworks } from "@/components/admin/plugins/wifi-networks";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getAdminGlauthSources, getAdminPlugin } from "@/lib/admin/plugins";
@@ -126,6 +127,16 @@ function PluginPage() {
 							</AdminWriteBoundary>
 						)}
 
+						{detail.plugin.id === "wifi" && (
+							<AdminWriteBoundary>
+								<WifiNetworks
+									mode="admin"
+									networks={detail.wifiNetworks}
+									organizations={detail.organizations}
+								/>
+							</AdminWriteBoundary>
+						)}
+
 						{detail.plugin.id === "mqtt" && (
 							<AdminWriteBoundary>
 								<MqttSources
@@ -154,7 +165,8 @@ function PluginPage() {
 							</AdminWriteBoundary>
 						) : detail.plugin.id !== "seven-shifts-csv" &&
 							detail.plugin.id !== "seven-shifts-api" &&
-							detail.plugin.id !== "mqtt" ? (
+							detail.plugin.id !== "mqtt" &&
+							detail.plugin.id !== "wifi" ? (
 							<AdminWriteBoundary>
 								<PluginOrganizations detail={detail} />
 							</AdminWriteBoundary>

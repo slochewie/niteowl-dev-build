@@ -11,6 +11,7 @@ import { MqttSources } from "@/components/admin/plugins/mqtt-sources";
 import { SevenShiftsApiSources } from "@/components/admin/plugins/seven-shifts-api-sources";
 import { SevenShiftsCsvSources } from "@/components/admin/plugins/seven-shifts-csv-sources";
 import { UnifiApi } from "@/components/admin/plugins/unifi-api";
+import { WifiNetworks } from "@/components/admin/plugins/wifi-networks";
 import { Badge } from "@/components/ui/badge";
 import {
 	Card,
@@ -37,6 +38,7 @@ import {
 	type AdminSevenShiftsApiSource,
 	type AdminSevenShiftsCsvSource,
 	type AdminUnifiAccessSource,
+	type AdminWifiNetwork,
 } from "@/lib/admin/plugins";
 import {
 	getIntegration,
@@ -69,6 +71,7 @@ type OrganizationPluginsProps = {
 	sevenShiftsCsvSources: AdminSevenShiftsCsvSource[];
 	unifiAccessSources: AdminUnifiAccessSource[];
 	mqttSources: AdminMqttSource[];
+	wifiNetworks: AdminWifiNetwork[];
 };
 
 export function OrganizationPlugins({
@@ -79,6 +82,7 @@ export function OrganizationPlugins({
 	sevenShiftsCsvSources,
 	unifiAccessSources,
 	mqttSources,
+	wifiNetworks,
 }: OrganizationPluginsProps) {
 	const router = useRouter();
 
@@ -261,6 +265,7 @@ export function OrganizationPlugins({
 								sevenShiftsCsvSources={sevenShiftsCsvSources}
 								unifiAccessSources={unifiAccessSources}
 								mqttSources={mqttSources}
+								wifiNetworks={wifiNetworks}
 								apiIntegrationEnabled={
 									integrationById.get("seven-shifts-api")?.enabled ?? false
 								}
@@ -283,6 +288,7 @@ function PluginTabPanel({
 	sevenShiftsCsvSources,
 	unifiAccessSources,
 	mqttSources,
+	wifiNetworks,
 	apiIntegrationEnabled,
 	pendingPluginId,
 	onSetSyncDirection,
@@ -297,6 +303,7 @@ function PluginTabPanel({
 	sevenShiftsCsvSources: AdminSevenShiftsCsvSource[];
 	unifiAccessSources: AdminUnifiAccessSource[];
 	mqttSources: AdminMqttSource[];
+	wifiNetworks: AdminWifiNetwork[];
 	apiIntegrationEnabled: boolean;
 	pendingPluginId: string | null;
 	onSetSyncDirection: (
@@ -367,6 +374,16 @@ function PluginTabPanel({
 			<UnifiApi
 				mode="organization"
 				accessSources={unifiAccessSources}
+				organization={organization}
+			/>
+		);
+	}
+
+	if (integration.pluginId === "wifi") {
+		return (
+			<WifiNetworks
+				mode="organization"
+				networks={wifiNetworks}
 				organization={organization}
 			/>
 		);
