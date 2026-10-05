@@ -399,9 +399,11 @@ export function GlauthSources({
             sources.map((source) => (
               <div
                 key={source.id}
-                className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center"
+                className="rounded-lg border p-4"
               >
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="flex min-w-0 gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
                   <ServerCog className="size-5" />
                 </div>
 
@@ -452,7 +454,9 @@ export function GlauthSources({
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 xl:justify-end">
                   <Badge variant="secondary">
                     {source.organizationIds.length} organizations
                   </Badge>
@@ -510,6 +514,7 @@ export function GlauthSources({
                       ? "Reconciling..."
                       : "Reconcile"}
                   </Button>
+                  </div>
                 </div>
               </div>
             ))
