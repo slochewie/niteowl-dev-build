@@ -131,6 +131,7 @@ Plugins live under `src/lib/plugins/`.
 | `network-status` | Network Status assignments/managers/Fabric Overview access. |
 | `inventory` | Inventory authorization plus shared masters, organization variants, imports/config/catalog. |
 | `tip-claim` | Tip Calculator access, assignments, staffing, presets, claims, and tip-pool persistence. |
+| `time-tracking` | Organization-scoped, self-managed time entries with server-calculated durations. |
 | `integration-manager` | Integration catalog and organization-level integration policy. |
 | `user-profile` | Extended user profile used by workforce integrations. |
 | `seven-shifts` | Normalized workforce model and role-to-app permission mapping. |
@@ -144,6 +145,10 @@ Plugins live under `src/lib/plugins/`.
 `api-source/secret.ts` is a shared integration utility rather than a Better Auth plugin. It centralizes secret encryption/decryption for API-source plugins and is also used by MQTT/WiFi credential storage.
 
 Each plugin with its own README documents its endpoints and persistence model.
+
+Time Tracking is intentionally independent of 7shifts. Its authenticated API
+derives user identity from the Better Auth session, requires active organization
+membership, and permits users to manage only their own entries.
 
 ## Authorization model
 

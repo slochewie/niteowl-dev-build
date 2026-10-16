@@ -13,6 +13,7 @@
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
+    "test": "node --test src/lib/plugins/time-tracking/core.test.ts",
     "start": "node .output/server/index.mjs"
   },
   "dependencies": {

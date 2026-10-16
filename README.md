@@ -134,6 +134,14 @@ Organization-scoped Network Status access, delegated managers, Fabric Overview p
 
 [Network Status plugin documentation](auth/app/src/lib/plugins/network-status/README.md)
 
+### Time Tracking
+
+Persistent organization-scoped time entries for the separate Time Tracking
+frontend. Users initially list and manage only their own entries, with identity
+derived from their Better Auth session. The plugin is independent of 7shifts.
+
+[Time Tracking plugin documentation](auth/app/src/lib/plugins/time-tracking/README.md)
+
 ## Organization-control plugins
 
 - [Organization Status](auth/app/src/lib/plugins/organization-status/README.md)

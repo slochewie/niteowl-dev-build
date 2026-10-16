@@ -37,6 +37,7 @@ import { organizationStatus } from "./plugins/organization-status/index.js";
 import { organizationMemberStatus } from "./plugins/organization-member-status/index.js";
 import { revisionHistory } from "./plugins/revision-history/index.js";
 import { tipClaim } from "./plugins/tip-claim/index.js";
+import { timeTracking } from "./plugins/time-tracking/index.js";
 import { userProfile } from "./plugins/user-profile/index.js";
 import { sevenShifts } from "./plugins/seven-shifts/index.js";
 import { sevenShiftsCsv } from "./plugins/seven-shifts-csv/index.js";
@@ -221,6 +222,10 @@ export const auth = betterAuth({
 		tipClaim({
 			pool,
 			internalSecret: process.env.TIP_CLAIM_INTERNAL_SECRET,
+		}),
+
+		timeTracking({
+			pool,
 		}),
 
 		multiSession(),
