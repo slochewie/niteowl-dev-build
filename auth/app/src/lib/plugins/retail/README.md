@@ -4,7 +4,9 @@ Standalone, explicit Retail assortment over the existing Inventory catalog.
 Registered with `enabled: false`; no organization is activated by this change.
 The user applied the reviewed schema migration and PostgreSQL uniqueness index.
 Read-only verification confirmed all eight Retail tables, 11 foreign keys and the
-expected indexes. All 421 existing variants remain menu-eligible with null variation
+expected initial indexes. The user also applied the three-table stock migration;
+read-only verification confirmed seven stock indexes, seven restrictive foreign keys,
+and empty operation/balance/movement tables. All 421 existing variants remain menu-eligible with null variation
 keys. No organization configuration or enrollment was created; Retail stays disabled.
 
 ## Initial endpoints
@@ -29,7 +31,7 @@ All endpoints require Better Auth sessions.
 POST enrollment accepts only organizationId and inventoryItemVariantId.
 Disable accepts organizationId and retailOrganizationVariantId.
 Enrollment requests cannot change price, menu destination or identifiers.
-Identifiers use the separate endpoints below. Stock and supplier writes are not implemented.
+Identifiers and stock use separate endpoints below. Supplier writes are not implemented.
 
 ## Ownership
 
@@ -37,7 +39,7 @@ retailOrganizationVariant has a unique, restrictive foreign key to
 inventoryOrganizationVariant.id. Organization and shared variant ownership
 are derived through that parent; there is no duplicate organization/item owner.
 This is a normalization refinement of the earlier proposed composite relationship.
-SKU/barcode metadata references this stable enrollment ID. Stock metadata is not implemented.
+SKU/barcode and stock metadata reference this stable enrollment ID.
 
 The Inventory-owned injected catalog service locks active master/variant records,
 creates a missing organization variant with enabled=false and exportToToast=false,
@@ -122,17 +124,17 @@ Capabilities are independent:
 
 | Capability | Current enforcement |
 | --- | --- |
-| retail:read | Organization catalog reads |
+| retail:read | Organization catalog and authorized location stock reads |
 | retail:item:write | Enroll, disable, and create product variations |
 | retail:manage | List and replace capability assignments |
-| retail:stock:adjust | Reserved for stock adjustments |
-| retail:stock:transfer | Reserved for stock transfers |
+| retail:stock:adjust | Adjust stock at explicitly authorized locations |
+| retail:stock:transfer | Transfer stock with authority at both locations |
 | retail:receive | Reserved for receiving |
 | retail:purchase | Reserved for purchasing |
 | retail:cost:read | Reserved for purchase-cost visibility |
 
 Unknown persisted capabilities grant nothing. No capability implies another.
-Stock, receiving, purchasing and cost endpoints are not implemented. Location scopes are described below.
+Receiving, purchasing and cost endpoints are not implemented. Location scopes and stock operations are described below.
 
 retailAssignment references member.id uniquely. Its organization/user ownership is
 derived from membership; membership deletion cascades through the assignment and
@@ -202,11 +204,78 @@ assignments retain scopes without effective access. Delegated managers cannot ed
 reactivate assignments carrying any location scope; administrators manage those.
 Location and grant mutations use the organization transaction lock and authorization
 recheck, with atomic revisionHistory auditing. Scope revisions include before/after.
-Future stock writes must call requireRetailLocationAccess inside that transaction;
-transfers must check both source and destination. No stock operations exist yet.
+Stock writes call requireRetailLocationAccess inside that transaction;
+transfers check both source and destination before any stock writes.
 
 Schema readiness requires the location tables and allLocations column as well as the
 previous Retail/Inventory fields. Keep the registration gate disabled until review.
+
+## Stock ledger and balances (schema deployment verified)
+
+retailStockOperation owns organization-scoped idempotency keys, request fingerprints,
+operation kind, reason and actor. The key is unique on (organizationId, idempotencyKey).
+retailStockBalance references existing Retail enrollment and location, unique on that
+pair. retailStockMovement references operation, enrollment and location and stores
+signed delta and the resulting quantity. Its unique (operationId, locationId,
+retailOrganizationVariantId) index prevents duplicate lines within one operation.
+All stock foreign keys restrict deletion, including actorUserId -> user.id, to preserve
+history. The declaration creates operation/balance before movement and follows existing
+location/enrollment models. No new catalog, item owner, menu price or cost is introduced.
+
+Organization ownership is derived from enrollment and location, while operations carry
+organizationId for idempotency scope. Services validate all three agree and read queries
+join those relationships explicitly. Independent foreign keys alone do not enforce that
+equality. Balances are nonnegative whole sellable units up to 2,147,483,647. Fractional
+units and negative inventory are rejected. Missing balances mean zero; a failed negative
+adjustment does not leave a newly initialized row behind.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | /retail/stock/adjust | Signed quantityDelta at locationId |
+| POST | /retail/stock/transfer | Positive quantity from sourceLocationId to destinationLocationId |
+| GET | /retail/stock/balances | Authorized location balances, including disabled enrollments |
+| GET | /retail/stock/movements | Authorized location ledger, newest first |
+
+Writes require organizationId, retailOrganizationVariantId, idempotencyKey and reason
+(trimmed 3–500 characters). Keys are case-sensitive ASCII letters/digits/dot/underscore/
+colon/hyphen, 1–128 characters, starting with a letter/digit. Adjustments require
+retail:stock:adjust; transfers require retail:stock:transfer at BOTH distinct active
+locations. New operations require an enabled enrollment and active shared master/variant.
+
+All stock mutation, receipt lookup and auditing share the existing organization advisory
+transaction lock. Location authority is rechecked after the lock. Balances lock in stable
+location order, both resulting transfer quantities validate before ledger insertion,
+and movements, balances, operation and revisionHistory commit or roll back together.
+Transfer deltas sum to zero. An audit or second movement failure rolls back both sides.
+
+The request fingerprint fixes kind, enrollment, locations, quantity and normalized
+reason. An identical retry returns the original operationId and movement quantities
+with replayed:true, without additional stock changes or audit. A changed payload under
+the same organization/key returns 409, even across adjustment and transfer endpoints.
+Retries still require current authority at all involved active locations, but may return
+an existing receipt after an enrollment is disabled. Idempotency is organization-wide;
+another currently authorized actor may retry the same request. Failed transactions do
+not reserve keys. A committed operation with an incomplete receipt fails closed.
+
+Reads require retail:read at locationId. They expose no other location's lines or costs.
+limit defaults 100, maximum 200. Balance pagination uses afterId and nextAfterId. Movement
+pagination uses a complete before/beforeId pair and returns next; timestamps preserve
+PostgreSQL microseconds to avoid dropping rows between pages. Archived locations deny
+these operational reads; historical administrative access can be added separately.
+
+Ledger operations have no update/delete endpoints. This is append-only service behavior,
+not a PostgreSQL trigger or RLS guarantee. Quantity bounds and cross-parent organization
+consistency are service-enforced. Direct SQL/adapter writes must not bypass this service.
+No reservations, receiving, sales deduction, reversal endpoint, costing, purchase orders
+or synchronization workers are implemented. Corrections use a new signed adjustment
+with its own key and reason; historical movement rows remain unchanged.
+
+The user applied the reviewed migration for retailStockOperation, retailStockBalance
+and retailStockMovement. Read-only verification confirmed all required fields, seven
+declared indexes and seven restrictive foreign keys. All three tables are empty.
+Retail registration remains disabled and no organization is enabled. Access fails
+closed if these tables are absent on another deployment. No stock writes, activation
+or Auth restart were performed during implementation or verification.
 
 ## Rollout
 

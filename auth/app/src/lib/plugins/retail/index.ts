@@ -10,6 +10,7 @@ import type { RetailCapability } from "./permissions.ts";
 import { retailAssignmentEndpoints, retailAssignmentSchema } from "./assignments.ts";
 import { retailIdentifierEndpoints, retailIdentifierSchema } from "./identifiers.ts";
 import { retailLocationEndpoints, retailLocationSchema } from "./locations.ts";
+import { retailStockEndpoints, retailStockSchema } from "./stock.ts";
 
 type RetailOptions = {
   pool: Pool;
@@ -82,11 +83,13 @@ export const retail = ({ pool, catalog, enabled = false }: RetailOptions): Bette
       // Enrollment must exist before identifiers can reference it.
       ...retailIdentifierSchema,
       ...retailLocationSchema,
+      ...retailStockSchema,
     },
     endpoints: {
       ...retailAssignmentEndpoints({ pool, requireAccess, transaction }),
       ...retailIdentifierEndpoints({ pool, requireAccess, transaction }),
       ...retailLocationEndpoints({ pool, requireAccess, resolveAccess: access, transaction }),
+      ...retailStockEndpoints({ pool, requireAccess, transaction }),
       getRetailAccess: createAuthEndpoint("/retail/access", {
         method: "GET", use: [sessionMiddleware], query: organizationQuery,
       }, async (ctx) => {

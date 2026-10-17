@@ -42,6 +42,9 @@ export async function resolveRetailAccess(
       AND to_regclass('public."retailBarcode"') IS NOT NULL
       AND to_regclass('public."retailLocation"') IS NOT NULL
       AND to_regclass('public."retailLocationGrant"') IS NOT NULL
+      AND to_regclass('public."retailStockOperation"') IS NOT NULL
+      AND to_regclass('public."retailStockBalance"') IS NOT NULL
+      AND to_regclass('public."retailStockMovement"') IS NOT NULL
       AND EXISTS (
         SELECT 1 FROM information_schema.columns
         WHERE table_schema = 'public' AND table_name = 'retailAssignmentCapability'
