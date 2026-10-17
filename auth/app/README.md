@@ -130,6 +130,7 @@ Plugins live under `src/lib/plugins/`.
 | `wifi` | Organization WiFi networks and encrypted credentials for managed-device provisioning. |
 | `network-status` | Network Status assignments/managers/Fabric Overview access. |
 | `inventory` | Inventory authorization plus shared masters, organization variants, imports/config/catalog. |
+| `retail` | Disabled-by-default Retail enrollment, variations, SKUs/barcodes, and organization capability assignments over existing Inventory records. |
 | `tip-claim` | Tip Calculator access, assignments, staffing, presets, claims, and tip-pool persistence. |
 | `time-tracking` | Organization-scoped, self-managed time entries with server-calculated durations. |
 | `integration-manager` | Integration catalog and organization-level integration policy. |

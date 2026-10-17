@@ -29,6 +29,9 @@ import {
 import { counterAccess } from "./plugins/counter/index.js";
 import { networkStatus } from "./plugins/network-status/index.js";
 import { inventoryAccess } from "./plugins/inventory/index.js";
+import { inventoryRetailCatalog } from "./plugins/inventory/retail-catalog.ts";
+import { retail } from "./plugins/retail/index.ts";
+import { retailMergeParticipant } from "./plugins/retail/merge-participant.ts";
 import { integrationManager } from "./plugins/integration-manager/index.js";
 import { mqttIntegration } from "./plugins/mqtt/index.js";
 import { wifiIntegration } from "./plugins/wifi/index.js";
@@ -217,6 +220,13 @@ export const auth = betterAuth({
 		inventoryAccess({
 			pool,
 			internalSecret: process.env.INVENTORY_AUTH_INTERNAL_SECRET,
+			mergeParticipants: [retailMergeParticipant],
+		}),
+
+		retail({
+			pool,
+			catalog: inventoryRetailCatalog,
+			enabled: false,
 		}),
 
 		tipClaim({

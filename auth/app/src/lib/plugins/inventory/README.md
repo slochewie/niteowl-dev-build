@@ -16,6 +16,85 @@ inventoryAccess({
 })
 ```
 
+## Menu and shared catalog boundary
+
+`GET /inventory/catalog` defaults to `scope=menu`, excluding variants explicitly
+marked `menuEligible=false`. Menu-eligible variants without organization assignments
+remain discoverable. `scope=shared` requires Inventory admin access and includes both
+assortments. Global master administration remains available through master-items.
+
+Catalog rows add `menuEligible`, nullable `inventoryOrganizationVariantId`, and
+`organization.assigned`; existing IDs, prices, and export flags retain their meaning.
+
+The declared `inventoryItemVariant.menuEligible` field defaults to true for legacy
+menu creation. Its migration has **not** been applied by this change. Until the column
+exists, JSON row reads treat variants as legacy menu-eligible. Retail variation
+creation explicitly persists false after schema deployment. The separate promotion
+endpoint described below handles audited system-admin promotion.
+
+Menu assignment writes, imports, and source mapping reject Retail-only targets with
+409. Existing menu variants on mixed masters remain usable. Whole-master category
+changes and merges involving Retail-only variants remain rejected; explicit global
+promotion is required before menu merge workflows. Retail enrollment must not reuse
+menu write endpoints.
+
+Run focused coverage with:
+
+```bash
+node --test src/lib/plugins/inventory/menu-boundary.test.ts
+```
+
+## Canonical variation identity and explicit menu promotion
+
+inventoryItemVariant.variationKey is nullable canonical JSON containing string
+attributes. The catalog service serializes combination creation under a master row
+lock and reuses existing combinations. The portable schema declares a non-unique
+lookup index because Better Auth rejects composite unique indexes over nullable
+fields. All canonical writes must use the locked service or merge transaction.
+The user separately applied inventoryItemVariant_master_variation_key_uidx, a
+PostgreSQL partial unique index on (inventoryItemId, variationKey) WHERE variationKey
+IS NOT NULL. Read-only inspection confirmed it is unique, valid and ready. Fresh
+databases require this additional index after the portable Better Auth migration.
+Legacy variants retain null keys. Canonical
+attribute combinations match during merges independently of display names;
+legacy beverage matching retains its previous kind/size/package/name semantics.
+Automatic menu identity matching excludes attributed variants; explicitly selected
+promoted variants remain usable through existing variant-ID workflows.
+
+POST /inventory/menu-eligibility/promote accepts organizationId,
+inventoryItemVariantId and a reason (3–1000 characters). It requires enabled
+organization/Inventory access and a non-banned global system admin, rechecked inside
+the transaction. Organization/delegated Inventory admins cannot promote shared
+variants globally. Promotion changes only shared eligibility/updatedAt, appends a
+revisionHistory snapshot with actor/reason atomically, and never changes organization
+menu availability, export settings or prices. Retrying an already promoted variant
+is a no-op. Undeployed eligibility schema returns 503; no demotion endpoint exists.
+
+Before activation, review migration SQL for the nullable variationKey column,
+non-unique combination lookup index, and menuEligible NOT NULL DEFAULT true/backfill. Installed
+Better Auth migration code supports this static boolean default. The user applied
+the reviewed migration; read-only verification confirmed all 421 existing variants
+remain menu-eligible. Retail creation must continue to persist false
+explicitly; existing raw menu inserts rely on the reviewed database default.
+
+## Transactional merge participants
+
+The composition root injects `mergeParticipants` into Inventory. Each participant
+receives the same PostgreSQL transaction and the source/target organization variant
+IDs before a duplicate parent is deleted. Any failure rolls back the entire merge.
+The response adds `organizationVariantMappings` so consumers can refresh old parent
+references. Moving a variant or retaining its organization parent preserves IDs and
+requires no callback. Inventory imports only the generic participant types.
+
+## Neutral Retail enrollment service
+
+`retail-catalog.ts` exports the Inventory-owned `inventoryRetailCatalog` service.
+The composition root injects it into the standalone Retail plugin. It creates a
+missing organization variant with menu availability/export disabled and preserves
+existing menu rows. Its caller must own the transaction and enforce Retail access.
+No shared master creation or price changes are performed. Its variation-creation
+method creates/reuses variants under an existing master using canonical attributes.
+
 ## Data model
 
 Current schema models are:

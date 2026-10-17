@@ -6,10 +6,15 @@ import {
 } from "better-auth/api";
 import type { Pool } from "pg";
 import * as z from "zod";
+import { assertMenuEligible } from "./menu-boundary.ts";
+import { variationAttributes } from "./variation-identity.ts";
+import { promoteVariantForMenu } from "./catalog-promotion.ts";
+import type { CatalogMergeParticipant, OrganizationVariantMerge } from "./merge-participants.ts";
 
 type InventoryOptions = {
 	pool: Pool;
 	internalSecret?: string;
+	mergeParticipants?: readonly CatalogMergeParticipant[];
 };
 
 type InventoryRole =
@@ -36,6 +41,10 @@ type AssignmentRow = {
 
 const organizationQuerySchema = z.object({
 	organizationId: z.string().min(1),
+});
+
+const inventoryCatalogQuerySchema = organizationQuerySchema.extend({
+	scope: z.enum(["menu", "shared"]).default("menu"),
 });
 
 const internalAccessQuerySchema =
@@ -707,6 +716,7 @@ function serializeInventoryLiquorModifier(
 export const inventoryAccess = ({
 	pool,
 	internalSecret,
+	mergeParticipants = [],
 }: InventoryOptions): BetterAuthPlugin => ({
 	id: "inventory",
 
@@ -1303,6 +1313,15 @@ export const inventoryAccess = ({
 						onDelete: "cascade",
 					},
 				},
+				variationKey: {
+					type: "string",
+					required: false,
+				},
+				menuEligible: {
+					type: "boolean",
+					required: true,
+					defaultValue: true,
+				},
 				kind: {
 					type: "string",
 					required: true,
@@ -1341,6 +1360,9 @@ export const inventoryAccess = ({
 				},
 			},
 			indexes: [
+				// Portable Better Auth indexes cannot be unique over nullable legacy keys.
+				// Canonical creation serializes under the master row lock.
+				{ fields: ["inventoryItemId", "variationKey"] },
 				{
 					fields: ["inventoryItemId"],
 				},
@@ -3176,6 +3198,10 @@ export const inventoryAccess = ({
 				try {
 					await client.query("BEGIN");
 
+					await assertMenuEligible(client, {
+						variantIds: body.items.filter((item) => item.status !== "ignored").flatMap((item) => item.targetVariantId ? [item.targetVariantId] : []),
+					});
+
 					const now = new Date();
 					const importId = randomUUID();
 
@@ -3484,6 +3510,7 @@ export const inventoryAccess = ({
 									);
 
 						if (existingItem.rows[0]?.id) {
+							await assertMenuEligible(client, { itemIds: [existingItem.rows[0].id] });
 							inventoryItemId =
 								existingItem.rows[0].id;
 						} else {
@@ -3613,6 +3640,7 @@ export const inventoryAccess = ({
 													IS NOT DISTINCT FROM $4
 												AND name
 													IS NOT DISTINCT FROM $5
+												AND COALESCE(to_jsonb("inventoryItemVariant")->>'variationKey', '{}') = '{}'
 											LIMIT 1
 										`,
 										[
@@ -3625,6 +3653,7 @@ export const inventoryAccess = ({
 									);
 
 						if (existingVariant.rows[0]?.id) {
+							await assertMenuEligible(client, { variantIds: [existingVariant.rows[0].id] });
 							variantId =
 								existingVariant.rows[0].id;
 
@@ -3988,6 +4017,8 @@ export const inventoryAccess = ({
 				try {
 					await client.query("BEGIN");
 
+					await assertMenuEligible(client, { itemIds: [body.itemId] });
+
 					const existingVariant = await client.query<{
 						id: string;
 					}>(
@@ -4000,6 +4031,7 @@ export const inventoryAccess = ({
 								AND "sizeOz" IS NOT DISTINCT FROM $3
 								AND "packageType" IS NOT DISTINCT FROM $4
 								AND name IS NOT DISTINCT FROM $5
+								AND COALESCE(to_jsonb("inventoryItemVariant")->>'variationKey', '{}') = '{}'
 							LIMIT 1
 						`,
 						[
@@ -4010,6 +4042,10 @@ export const inventoryAccess = ({
 							identity.name,
 						],
 					);
+
+					if (existingVariant.rows[0]) {
+						await assertMenuEligible(client, { variantIds: [existingVariant.rows[0].id] });
+					}
 
 					const now = new Date();
 					const variantId =
@@ -4140,6 +4176,8 @@ export const inventoryAccess = ({
 				const uniqueVariantIds = [
 					...new Set(body.variantIds),
 				];
+
+				await assertMenuEligible(pool, { variantIds: uniqueVariantIds });
 
 				const existingVariants = await pool.query<{
 					id: string;
@@ -4303,6 +4341,8 @@ export const inventoryAccess = ({
 						{ status: 403 },
 					);
 				}
+
+				await assertMenuEligible(pool, { variantIds: [body.variantId] });
 
 				const variant = await pool.query(
 					`
@@ -4756,6 +4796,8 @@ export const inventoryAccess = ({
 					);
 				}
 
+				await assertMenuEligible(pool, { itemIds: [body.itemId], allVariants: true });
+
 				const category = await pool.query<{
 					id: string;
 					name: string;
@@ -4862,6 +4904,7 @@ export const inventoryAccess = ({
 							SELECT id, name, "normalizedName"
 							FROM "inventoryItem"
 							WHERE id = ANY($1::text[])
+							ORDER BY id
 							FOR UPDATE
 						`,
 						[[body.sourceItemId, body.targetItemId]],
@@ -4882,6 +4925,9 @@ export const inventoryAccess = ({
 						);
 					}
 
+					// Cross-assortment promotion remains explicit; participants preserve dual-use enrollments.
+					await assertMenuEligible(client, { itemIds: [body.sourceItemId, body.targetItemId], allVariants: true });
+
 					const sourceVariants = await client.query(
 						`
 							SELECT
@@ -4889,7 +4935,8 @@ export const inventoryAccess = ({
 								kind,
 								"sizeOz",
 								"packageType",
-								name
+								name,
+								COALESCE(to_jsonb("inventoryItemVariant")->>'variationKey', '{}') AS "variationKey"
 							FROM "inventoryItemVariant"
 							WHERE "inventoryItemId" = $1
 							ORDER BY "createdAt", id
@@ -4898,6 +4945,7 @@ export const inventoryAccess = ({
 						[body.sourceItemId],
 					);
 
+					const organizationVariantMappings: OrganizationVariantMerge[] = [];
 					let movedVariants = 0;
 					let mergedVariants = 0;
 					const now = new Date();
@@ -4909,10 +4957,13 @@ export const inventoryAccess = ({
 								FROM "inventoryItemVariant"
 								WHERE
 									"inventoryItemId" = $1
-									AND kind = $2
-									AND "sizeOz" IS NOT DISTINCT FROM $3
-									AND "packageType" IS NOT DISTINCT FROM $4
-									AND name IS NOT DISTINCT FROM $5
+									AND COALESCE(to_jsonb("inventoryItemVariant")->>'variationKey', '{}') = $6
+									AND ($6 <> '{}' OR (
+										kind = $2
+										AND "sizeOz" IS NOT DISTINCT FROM $3
+										AND "packageType" IS NOT DISTINCT FROM $4
+										AND name IS NOT DISTINCT FROM $5
+									))
 								LIMIT 1
 								FOR UPDATE
 							`,
@@ -4922,6 +4973,7 @@ export const inventoryAccess = ({
 								sourceVariant.sizeOz,
 								sourceVariant.packageType,
 								sourceVariant.name,
+								sourceVariant.variationKey ?? "{}",
 							],
 						);
 
@@ -4994,53 +5046,30 @@ export const inventoryAccess = ({
 								existingTarget.rows[0]?.id ?? null;
 
 							if (existingTargetId) {
+								const merge: OrganizationVariantMerge = {
+									organizationId: organizationVariant.organizationId,
+									sourceOrganizationVariantId: organizationVariant.id,
+									targetOrganizationVariantId: existingTargetId,
+								};
+								for (const participant of mergeParticipants) {
+									await participant.beforeOrganizationVariantDelete(client, merge);
+								}
+								organizationVariantMappings.push(merge);
 								await client.query(
 									`
 										UPDATE "inventoryOrganizationVariant"
 										SET
-											enabled = (
-												enabled OR $1
-											),
-											"exportToToast" = (
-												"exportToToast" OR $2
-											),
-											"priceOverrideCents" =
-												COALESCE(
-													"priceOverrideCents",
-													$3
-												),
-											"happyHourPriceCents" =
-												COALESCE(
-													"happyHourPriceCents",
-													$4
-												),
-											"doublePriceCents" =
-												COALESCE(
-													"doublePriceCents",
-													$5
-												),
-											"toastNameOverride" =
-												COALESCE(
-													"toastNameOverride",
-													$5
-												),
-											"toastCategoryOverride" =
-												COALESCE(
-													"toastCategoryOverride",
-													$6
-												),
-											"toastDestinationOverride" =
-												COALESCE(
-													"toastDestinationOverride",
-													$7
-												),
-											"toastSlot" =
-												COALESCE(
-													"toastSlot",
-													$8
-												),
-											"updatedAt" = $9
-										WHERE id = $10
+											enabled = enabled OR $1,
+											"exportToToast" = "exportToToast" OR $2,
+											"priceOverrideCents" = COALESCE("priceOverrideCents", $3),
+											"happyHourPriceCents" = COALESCE("happyHourPriceCents", $4),
+											"doublePriceCents" = COALESCE("doublePriceCents", $5),
+											"toastNameOverride" = COALESCE("toastNameOverride", $6),
+											"toastCategoryOverride" = COALESCE("toastCategoryOverride", $7),
+											"toastDestinationOverride" = COALESCE("toastDestinationOverride", $8),
+											"toastSlot" = COALESCE("toastSlot", $9),
+											"updatedAt" = $10
+										WHERE id = $11
 									`,
 									[
 										organizationVariant.enabled,
@@ -5235,6 +5264,7 @@ export const inventoryAccess = ({
 						targetItemId: body.targetItemId,
 						movedVariants,
 						mergedVariants,
+						organizationVariantMappings,
 					});
 				} catch (error) {
 					await client.query("ROLLBACK");
@@ -5353,6 +5383,8 @@ export const inventoryAccess = ({
 						{ status: 403 },
 					);
 				}
+
+				await assertMenuEligible(pool, { variantIds: [body.variantId] });
 
 				const variant = await pool.query<{
 					inventoryItemId: string;
@@ -5976,12 +6008,47 @@ export const inventoryAccess = ({
 				});
 			},
 		),
+		promoteInventoryVariantForMenu: createAuthEndpoint(
+			"/inventory/menu-eligibility/promote",
+			{
+				method: "POST",
+				use: [sessionMiddleware],
+				body: z.object({
+					organizationId: z.string().min(1),
+					inventoryItemVariantId: z.string().min(1),
+					reason: z.string().trim().min(3).max(1000),
+				}).strict(),
+			},
+			async (ctx) => {
+				const access = await resolveInventoryAccess(pool, ctx.body.organizationId, ctx.context.session.user.id);
+				if (!access.allowed || !access.systemAdmin) {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+				const client = await pool.connect();
+				try {
+					await client.query("BEGIN");
+					const result = await promoteVariantForMenu(client, {
+						inventoryItemVariantId: ctx.body.inventoryItemVariantId,
+						actorUserId: ctx.context.session.user.id,
+						reason: ctx.body.reason,
+					});
+					await client.query("COMMIT");
+					return ctx.json(result);
+				} catch (error) {
+					await client.query("ROLLBACK");
+					throw error;
+				} finally {
+					client.release();
+				}
+			},
+		),
+
 		listInventoryCatalog: createAuthEndpoint(
 			"/inventory/catalog",
 			{
 				method: "GET",
 				use: [sessionMiddleware],
-				query: organizationQuerySchema,
+				query: inventoryCatalogQuerySchema,
 			},
 			async (ctx) => {
 				const organizationId = ctx.query.organizationId;
@@ -6000,6 +6067,10 @@ export const inventoryAccess = ({
 					);
 				}
 
+				if (ctx.query.scope === "shared" && access.role !== "admin") {
+					return ctx.json({ error: "Forbidden" }, { status: 403 });
+				}
+
 				const result = await pool.query<{
 					itemId: string;
 					itemName: string;
@@ -6009,6 +6080,9 @@ export const inventoryAccess = ({
 					categoryName: string | null;
 					toastCategory: string | null;
 					variantId: string;
+					menuEligible: boolean;
+					variationKey: string | null;
+					organizationVariantId: string | null;
 					variantKind: string;
 					variantSizeOz: number | null;
 					variantPackageType: string | null;
@@ -6035,6 +6109,9 @@ export const inventoryAccess = ({
 							c.name AS "categoryName",
 							c."toastCategory" AS "toastCategory",
 							v.id AS "variantId",
+							COALESCE((to_jsonb(v)->>'menuEligible')::boolean, true) AS "menuEligible",
+							ov.id AS "organizationVariantId",
+							to_jsonb(v)->>'variationKey' AS "variationKey",
 							v.kind AS "variantKind",
 							v."sizeOz" AS "variantSizeOz",
 							v."packageType" AS "variantPackageType",
@@ -6058,6 +6135,7 @@ export const inventoryAccess = ({
 						LEFT JOIN "inventoryOrganizationVariant" ov
 							ON ov."inventoryItemVariantId" = v.id
 							AND ov."organizationId" = $1
+						WHERE $2::boolean OR COALESCE((to_jsonb(v)->>'menuEligible')::boolean, true)
 						ORDER BY
 							COALESCE(c."sortOrder", 999999),
 							LOWER(COALESCE(c.name, '')),
@@ -6065,7 +6143,7 @@ export const inventoryAccess = ({
 							v."sizeOz" NULLS FIRST,
 							LOWER(COALESCE(v.name, ''))
 					`,
-					[organizationId],
+					[organizationId, ctx.query.scope === "shared"],
 				);
 
 				return ctx.json({
@@ -6073,6 +6151,8 @@ export const inventoryAccess = ({
 					role: access.role,
 					items: result.rows.map((row) => ({
 						id: row.itemId,
+						menuEligible: row.menuEligible,
+						inventoryOrganizationVariantId: row.organizationVariantId,
 						name: row.itemName,
 						normalizedName: row.itemNormalizedName,
 						active: row.itemActive,
@@ -6085,6 +6165,7 @@ export const inventoryAccess = ({
 							: null,
 						variant: {
 							id: row.variantId,
+							attributes: variationAttributes(row.variationKey),
 							kind: row.variantKind,
 							sizeOz: row.variantSizeOz,
 							packageType: row.variantPackageType,
@@ -6094,6 +6175,7 @@ export const inventoryAccess = ({
 							active: row.variantActive,
 						},
 						organization: {
+							assigned: row.organizationVariantId !== null,
 							enabled: row.organizationEnabled === true,
 							exportToToast: row.exportToToast ?? true,
 							priceOverrideCents: row.priceOverrideCents,
