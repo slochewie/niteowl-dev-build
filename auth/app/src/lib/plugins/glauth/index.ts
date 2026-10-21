@@ -974,14 +974,16 @@ export const glauth = ({ pool }: GlauthOptions) =>
                               MAX(
                                 "uidNumber"
                               ),
-                              5999
+                              $2 - 1
                             ) + 1,
-                            6000
+                            $2
                           )::int AS
                             "nextUid"
                         FROM
                           "glauthUser"
+                        WHERE "sourceId" = $1
                       `,
+									[sourceId, source.uidStart],
 								);
 
 								await client.query(
@@ -1505,7 +1507,6 @@ export const glauth = ({ pool }: GlauthOptions) =>
 					uidNumber: {
 						type: "number",
 						required: true,
-						unique: true,
 					},
 
 					primaryGroup: {
@@ -1577,6 +1578,12 @@ export const glauth = ({ pool }: GlauthOptions) =>
 						defaultValue: () => new Date(),
 					},
 				},
+				indexes: [
+					{
+						fields: ["sourceId", "uidNumber"],
+						unique: true,
+					},
+				],
 			},
 
 			glauthGroup: {
@@ -1601,7 +1608,6 @@ export const glauth = ({ pool }: GlauthOptions) =>
 					gidNumber: {
 						type: "number",
 						required: true,
-						unique: true,
 					},
 
 					createdAt: {
@@ -1616,6 +1622,12 @@ export const glauth = ({ pool }: GlauthOptions) =>
 						defaultValue: () => new Date(),
 					},
 				},
+				indexes: [
+					{
+						fields: ["sourceId", "gidNumber"],
+						unique: true,
+					},
+				],
 			},
 
 			glauthUserGroup: {
