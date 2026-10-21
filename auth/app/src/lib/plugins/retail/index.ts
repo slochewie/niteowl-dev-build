@@ -11,6 +11,8 @@ import { retailAssignmentEndpoints, retailAssignmentSchema } from "./assignments
 import { retailIdentifierEndpoints, retailIdentifierSchema } from "./identifiers.ts";
 import { retailLocationEndpoints, retailLocationSchema } from "./locations.ts";
 import { retailStockEndpoints, retailStockSchema } from "./stock.ts";
+import { retailSupplierEndpoints, retailSupplierSchema } from "./suppliers.ts";
+import { retailPurchaseCostEndpoints, retailPurchaseCostSchema } from "./purchase-costs.ts";
 
 type RetailOptions = {
   pool: Pool;
@@ -84,12 +86,16 @@ export const retail = ({ pool, catalog, enabled = false }: RetailOptions): Bette
       ...retailIdentifierSchema,
       ...retailLocationSchema,
       ...retailStockSchema,
+      ...retailSupplierSchema,
+      ...retailPurchaseCostSchema,
     },
     endpoints: {
       ...retailAssignmentEndpoints({ pool, requireAccess, transaction }),
       ...retailIdentifierEndpoints({ pool, requireAccess, transaction }),
       ...retailLocationEndpoints({ pool, requireAccess, resolveAccess: access, transaction }),
       ...retailStockEndpoints({ pool, requireAccess, transaction }),
+      ...retailSupplierEndpoints({ pool, requireAccess, transaction }),
+      ...retailPurchaseCostEndpoints({ pool, requireAccess, transaction }),
       getRetailAccess: createAuthEndpoint("/retail/access", {
         method: "GET", use: [sessionMiddleware], query: organizationQuery,
       }, async (ctx) => {

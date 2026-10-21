@@ -8,6 +8,11 @@ expected initial indexes. The user also applied the three-table stock migration;
 read-only verification confirmed seven stock indexes, seven restrictive foreign keys,
 and empty operation/balance/movement tables. All 421 existing variants remain menu-eligible with null variation
 keys. No organization configuration or enrollment was created; Retail stays disabled.
+The user also applied the supplier migration; read-only verification confirmed both
+supplier tables, three declared indexes and three restrictive foreign keys. Both
+supplier tables are empty. The user also applied the purchase-cost migration;
+read-only verification confirmed its table, four indexes and two restrictive foreign
+keys. The cost table is empty; Retail remains disabled.
 
 ## Initial endpoints
 
@@ -31,7 +36,7 @@ All endpoints require Better Auth sessions.
 POST enrollment accepts only organizationId and inventoryItemVariantId.
 Disable accepts organizationId and retailOrganizationVariantId.
 Enrollment requests cannot change price, menu destination or identifiers.
-Identifiers and stock use separate endpoints below. Supplier writes are not implemented.
+Identifiers, stock and suppliers use separate endpoints below.
 
 ## Ownership
 
@@ -130,11 +135,11 @@ Capabilities are independent:
 | retail:stock:adjust | Adjust stock at explicitly authorized locations |
 | retail:stock:transfer | Transfer stock with authority at both locations |
 | retail:receive | Reserved for receiving |
-| retail:purchase | Reserved for purchasing |
-| retail:cost:read | Reserved for purchase-cost visibility |
+| retail:purchase | Organization supplier directory and supplier-item mappings; purchasing operations remain future work |
+| retail:cost:read | Read supplier purchase-cost history/current cost; also required alongside purchase for new cost entries |
 
 Unknown persisted capabilities grant nothing. No capability implies another.
-Receiving, purchasing and cost endpoints are not implemented. Location scopes and stock operations are described below.
+Receiving and purchase-order endpoints are not implemented. Supplier metadata, purchase costs and stock operations are described below.
 
 retailAssignment references member.id uniquely. Its organization/user ownership is
 derived from membership; membership deletion cascades through the assignment and
@@ -276,6 +281,156 @@ declared indexes and seven restrictive foreign keys. All three tables are empty.
 Retail registration remains disabled and no organization is enabled. Access fails
 closed if these tables are absent on another deployment. No stock writes, activation
 or Auth restart were performed during implementation or verification.
+
+## Suppliers and supplier-item mappings (schema deployment verified)
+
+Read-only inspection found no purchasing supplier/vendor tables. The existing
+organizationMemberStatus.vendorCompany field describes a member's employer; it is
+not a supplier directory and is not reused for procurement ownership.
+
+retailSupplier references organization.id with restrictive deletion. Its code is
+unique per organization and immutable through the API. Names and optional contactName,
+email and phone can be updated, along with active/archive state. Supplier codes
+normalize Unicode, trim and uppercase to 1–64 ASCII letters/digits/underscore/hyphen,
+starting with a letter/digit. Duplicate names are allowed; code and ID are identity.
+Contacts are nullable, bounded strings; email is syntactically validated. No banking,
+payment, price, cost or external-provider credential fields are added.
+
+retailSupplierItem references supplier and existing Retail enrollment with restrictive
+foreign keys. It owns supplierSku, unitsPerPack and active state. Unique
+(supplierId, supplierSku) reserves a supplier code for one sellable enrollment, even
+when archived. Multiple SKUs/packs and multiple suppliers may map to the same enrollment.
+Supplier SKU normalization preserves case and leading zeros, while normalizing Unicode
+and trimming; accept 1–128 printable ASCII characters without spaces. Supplier SKU
+identity is separate from organization SKU and barcode mappings.
+
+unitsPerPack is a required integer from 1 to 1,000,000, defaulting to one on creation.
+It means sellable units per supplier purchase pack, not a duplicate item package/name
+field. This slice changes no stock. Future purchase-order/receiving/cost records must
+snapshot the conversion and price terms so later metadata edits do not rewrite history.
+Supplier, enrollment and supplier SKU cannot be retargeted by PATCH; archive and create
+a new mapping instead. Units per pack and active state can be updated with auditing.
+
+Ownership derives from supplier.organizationId and enrollment -> Inventory organization
+variant. Services require both organizations to agree, and list/update joins enforce
+both relationships. Separate foreign keys do not enforce their equality; there is no
+RLS boundary. New/enabled mappings require an active supplier, enabled enrollment and
+active shared master/variant. Archiving a mapping is allowed after its parents become
+inactive. Archives preserve IDs, code reservations and references; no delete API exists.
+Archiving a supplier leaves child flags intact. Reactivating it makes otherwise active
+children visible again; explicitly archived children remain archived.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | /retail/suppliers | Paginated supplier directory including contacts |
+| POST | /retail/supplier | Create supplier with code/name and optional contacts |
+| PATCH | /retail/supplier | Replace name, contacts and active state for supplierId |
+| GET | /retail/supplier-items | Paginated mappings, optionally filtered by supplierId/enrollment |
+| POST | /retail/supplier-item | Create/reuse supplierSku mapping and unitsPerPack |
+| PATCH | /retail/supplier-item | Replace unitsPerPack/active for supplierItemId |
+
+Every request requires organizationId and retail:purchase. Supplier metadata is an
+organization-wide procurement directory; location scopes apply to future purchase or
+receiving operations, not directory metadata. General retail:read, retail:manage,
+retail:item:write or cost:read alone does not authorize supplier contacts/mutations.
+These endpoints neither grant location authority nor expose any cost data.
+
+Supplier PATCH is a complete replacement: name, contactName, email, phone and active
+are required; nullable contacts explicitly clear values. Code/ownership are immutable.
+Mapping POST accepts supplierId, retailOrganizationVariantId, supplierSku and optional
+unitsPerPack. Identical normalized retries reuse the ID and preserve archived state
+without another audit, provided supplier/enrollment are active. Reusing the SKU for
+a different enrollment or pack conversion returns 409; explicit PATCH changes units.
+Supplier POST duplicate codes return 409 rather than updating an existing supplier.
+
+Lists default to active suppliers/mappings and active sellable parents. Explicit
+includeInactive=true (a query string) includes archived records for administration.
+limit defaults to 100, maximum 200. afterId/nextAfterId provide stable ID pagination.
+Foreign supplier filters return no results. Supplier/mapping mutations serialize on
+the existing organization transaction lock, recheck purchasing authority afterward,
+and commit data and revisionHistory atomically; failures roll back both. Update audit
+metadata retains the previous values. Stock, costs, menu fields and Inventory records
+are never mutated by supplier endpoints.
+
+The user applied the reviewed migration for retailSupplier and retailSupplierItem.
+Read-only verification confirmed required/nullable fields, three declared indexes and
+three restrictive foreign keys. Both tables are empty. Schema readiness fails closed
+if these tables are absent on another deployment. Retail registration remains disabled
+and no organization is enabled. Provider identifiers and xtraCHEF synchronization should
+use separate organization/provider mapping records over these stable IDs later;
+no external calls or synchronization are implemented here.
+
+## Purchase-cost history (schema deployment verified)
+
+Read-only inspection found no existing purchase-cost fields or tables in Auth.
+retailPurchaseCost references retailSupplierItem.id with restrictive deletion and
+preserves actorUserId -> user.id with restrictive deletion. It stores packCostMinor,
+explicit currency, unitsPerPackSnapshot, effectiveAt, reason, createdAt, and per-item
+idempotency metadata. There is no duplicate master item, organization owner, selling
+price or stock balance. Organization derives from supplier and enrolled Inventory
+organization variant, and all read/write paths require both to match the request.
+
+Entries are immutable manual supplier pack-cost history, not inventory valuation or
+an accounting ledger. packCostMinor is an integer from zero to 2,147,483,647 in the
+currency's minor unit. Currency normalizes to uppercase three-letter ASCII syntax;
+a current ISO currency registry and denomination validation are not provided here.
+Callers must supply the correct currency/minor-unit convention. Currencies are never
+converted or compared across codes. Responses return the pack cost and unit-count
+snapshot rather than a silently rounded per-unit cost.
+
+unitsPerPack is required on POST and must equal the current supplier mapping conversion
+when creating a new entry. A stale conversion returns 409. The stored snapshot remains
+unchanged when mapping metadata later changes. effectiveAt accepts ISO date-time with
+an offset and at most millisecond precision, normalizing to UTC. Recorded createdAt
+uses PostgreSQL timestamps and retains microseconds in history pagination. Reason
+normalizes Unicode, trims and requires 3–500 characters without control characters.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | /retail/purchase-cost | Append supplier pack-cost entry with conversion snapshot |
+| GET | /retail/purchase-costs | Paginated supplier-item history with optional currency filter |
+| GET | /retail/purchase-cost/current | Effective cost for one item and explicit currency |
+
+Every request includes organizationId and supplierItemId. POST additionally requires
+packCostMinor, currency, unitsPerPack, effectiveAt, reason and idempotencyKey. Keys use
+the existing 1–128 ASCII letter/digit/dot/underscore/colon/hyphen format, beginning with
+a letter/digit. Keys are unique per supplier item, not shared with stock operations.
+Identical normalized retries return the original immutable cost with created:false;
+a changed payload under that item/key returns 409. Retries recheck current permissions
+and ownership, but remain valid after parents are archived or conversion changes.
+New entries require active supplier, mapping, enrollment, shared master and variant.
+
+Reads require retail:cost:read. Writes require BOTH retail:purchase and retail:cost:read;
+neither capability implies the other. Supplier/item editing, general catalog read or
+retail:manage alone grants no cost access. These are organization-wide supplier quote
+records, not location-specific receiving/valuation data. No supplier contacts, stock
+quantities, credentials, internal fingerprint or idempotency key appear in cost history.
+Receiving and purchase orders must apply their own location permissions later.
+
+The history endpoint lists entries by recorded createdAt/id descending, default limit
+100 and maximum 200. It returns a next cursor containing before and beforeId; send both
+to continue. Archived parents remain readable. Current lookup requires currency and
+optionally asOf (otherwise database current time), excludes not-yet-effective entries,
+and sorts effectiveAt, createdAt and ID descending. It returns cost:null when no matching
+entry exists. A new correction with the same effective time supersedes an earlier
+record for current lookup; prior rows remain visible in history. There is no update or
+delete endpoint. A later entry may restate an earlier effective date; this is not a
+bitemporal accounting report of what was known at a previous recorded time.
+
+Writes share the organization advisory transaction lock, recheck both capabilities,
+lock parent/conversion state and atomically append cost plus revisionHistory. A failed
+audit rolls back the cost. Costs never modify supplier mappings, existing menu pricing,
+Inventory item fields or stock. Append-only behavior and value bounds are service
+guarantees, not PostgreSQL immutability triggers, CHECK constraints or RLS.
+
+The user applied the reviewed migration for retailPurchaseCost with its unique
+(supplierItemId, idempotencyKey) index, supplier-item/currency/effective-time index,
+supplier-item/created-time index, actor index and two restrictive foreign keys.
+It follows retailSupplierItem in declaration order and passes the installed Better Auth
+schema/index validator. Read-only verification confirmed the required columns, four
+declared indexes and two restrictive foreign keys. The table is empty. Schema readiness
+fails closed if it is absent on another deployment. Retail remains disabled and no
+organization is enabled. No cost data or Auth restart was introduced by verification.
 
 ## Rollout
 
