@@ -1310,6 +1310,24 @@ export const syncAdminSevenShiftsApiSource = createServerFn({
 		return result;
 	});
 
+export const getAdminGlauthUsers = createServerFn({ method: "GET" })
+	.validator((data: { sourceId: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminRead();
+		const result = await auth.api.listGlauthUsers({ query: data, headers: request.headers });
+		if ("error" in result) throw new Error("Unable to load directory users");
+		return result;
+	});
+
+export const getAdminGlauthGroups = createServerFn({ method: "GET" })
+	.validator((data: { sourceId: string }) => data)
+	.handler(async ({ data }) => {
+		const { request } = await requireAdminRead();
+		const result = await auth.api.listGlauthGroups({ query: data, headers: request.headers });
+		if ("error" in result) throw new Error("Unable to load directory groups");
+		return result;
+	});
+
 export type AdminGlauthSource = {
 	id: string;
 	name: string;

@@ -18,6 +18,8 @@ All endpoints require an authenticated session. Source management is restricted 
 
 | Method | Path | Purpose |
 | --- | --- | --- |
+| `GET` | `/glauth/sources/users?sourceId=…` | Read reconciled users for one source (admin/admin-viewer only; directory fields only). |
+| `GET` | `/glauth/sources/groups?sourceId=…` | Read reconciled groups for one source (admin/admin-viewer only; name and GID only). |
 | `GET` | `/glauth/sources` | List configured GLAuth sources and their assignments/runtime state. |
 | `POST` | `/glauth/sources/create` | Create a source from a display name and URL-safe slug. |
 | `POST` | `/glauth/sources/update` | Update source identity ranges, group settings, and enabled state. |

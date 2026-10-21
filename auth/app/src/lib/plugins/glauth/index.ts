@@ -166,6 +166,58 @@ export const glauth = ({ pool }: GlauthOptions) =>
 		id: "glauth",
 
 		endpoints: {
+			listGlauthUsers: createAuthEndpoint(
+				"/glauth/sources/users",
+				{
+					method: "GET",
+					query: z.object({ sourceId: z.string().trim().min(1).max(200) }),
+					use: [sessionMiddleware],
+				},
+				async (ctx) => {
+					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id, true))) {
+						return ctx.json({ error: "Forbidden" }, { status: 403 });
+					}
+					const { sourceId } = ctx.query;
+					const source = await pool.query('SELECT id FROM "glauthSource" WHERE id = $1', [sourceId]);
+					if (!source.rows.length) {
+						return ctx.json({ error: "Source not found" }, { status: 404 });
+					}
+					// Explicit public directory fields only; never select credentials or attributes.
+					const result = await pool.query<{ name: string; uidNumber: number; primaryGroup: number; givenName: string | null; sn: string | null; mail: string; disabled: boolean }>(
+						'SELECT name, "uidNumber", "primaryGroup", "givenName", sn, mail, disabled FROM "glauthUser" WHERE "sourceId" = $1 ORDER BY name, "uidNumber"',
+						[sourceId],
+					);
+					ctx.setHeader("Cache-Control", "no-store");
+					return ctx.json({ users: result.rows });
+				},
+			),
+
+			listGlauthGroups: createAuthEndpoint(
+				"/glauth/sources/groups",
+				{
+					method: "GET",
+					query: z.object({ sourceId: z.string().trim().min(1).max(200) }),
+					use: [sessionMiddleware],
+				},
+				async (ctx) => {
+					if (!(await isGlobalAdmin(pool, ctx.context.session.user.id, true))) {
+						return ctx.json({ error: "Forbidden" }, { status: 403 });
+					}
+					const { sourceId } = ctx.query;
+					const source = await pool.query('SELECT id FROM "glauthSource" WHERE id = $1', [sourceId]);
+					if (!source.rows.length) {
+						return ctx.json({ error: "Source not found" }, { status: 404 });
+					}
+					// Explicit public directory fields only; never select credentials or attributes.
+					const result = await pool.query<{ name: string; gidNumber: number }>(
+						'SELECT name, "gidNumber" FROM "glauthGroup" WHERE "sourceId" = $1 ORDER BY name, "gidNumber"',
+						[sourceId],
+					);
+					ctx.setHeader("Cache-Control", "no-store");
+					return ctx.json({ groups: result.rows });
+				},
+			),
+
 			listGlauthSources: createAuthEndpoint(
 				"/glauth/sources",
 				{

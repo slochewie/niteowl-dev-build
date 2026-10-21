@@ -12,6 +12,8 @@ import { useMemo, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { toast } from "sonner";
 
+import { GlauthDirectory } from "./glauth-directory";
+
 import type { PluginComponentMode } from "@/components/admin/plugins/plugin-component-mode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -475,6 +477,8 @@ export function GlauthSources({
 
                   {adminMode && (
                     <div className="flex flex-wrap items-center gap-2 xl:justify-end">
+                  <GlauthDirectory source={source} />
+
                   <Badge variant="secondary">
                     {source.organizationIds.length} organizations
                   </Badge>
